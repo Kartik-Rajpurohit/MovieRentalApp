@@ -6,6 +6,11 @@ import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import FormDialog from "../../components/common/FormDialog";
 import CountryFormFields from "../../components/locations/countries/CountryFormFields";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import SearchBar from "../../components/common/SearchBar";
+import usePagination from "../../hooks/usePagination";
+import { getCities } from "../../services/cityService";
 import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import {
@@ -23,10 +28,37 @@ export default function CountryDetailPage() {
   const [editVisible, setEditVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "" });
+  const [cities, setCities] = useState([]);
+  const [totalCities, setTotalCities] = useState(0);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+  const { lazyState, onPage, reset } = usePagination(10);
 
   useEffect(() => {
     loadCountry();
   }, [id]);
+
+  useEffect(() => {
+    if (id) loadCities();
+  }, [id, lazyState, citySearch]);
+
+  const loadCities = async () => {
+    setCitiesLoading(true);
+    try {
+      const res = await getCities({
+        countryId: id,
+        page: lazyState.page + 1,
+        pageSize: lazyState.rows,
+        search: citySearch,
+      });
+      setCities(res.data ?? []);
+      setTotalCities(res.totalRecords ?? 0);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCitiesLoading(false);
+    }
+  };
 
   const loadCountry = async () => {
     setLoading(true);
@@ -99,8 +131,19 @@ export default function CountryDetailPage() {
         title={country?.name}
         subtitle={`${country?.cityCount} cities`}
         actions={[
-          { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
-          { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
+          {
+            label: "Edit",
+            icon: "pi pi-pencil",
+            outlined: true,
+            onClick: () => setEditVisible(true),
+          },
+          {
+            label: "Delete",
+            icon: "pi pi-trash",
+            severity: "danger",
+            outlined: true,
+            onClick: handleDelete,
+          },
         ]}
       />
 
@@ -134,6 +177,54 @@ export default function CountryDetailPage() {
             </p>
           </div>
         </div>
+      </Card>
+      {/* Cities in this Country */}
+      <Card
+        style={{ marginTop: "24px" }}
+        title={`Cities in "${country?.name}"`}
+      >
+        <div style={{ marginBottom: "16px" }}>
+          <SearchBar
+            value={citySearch}
+            onChange={(v) => {
+              setCitySearch(v);
+              reset();
+            }}
+            placeholder="Search cities..."
+          />
+        </div>
+
+        <DataTable
+          value={cities}
+          loading={citiesLoading}
+          paginator
+          lazy
+          first={lazyState.first}
+          rows={lazyState.rows}
+          totalRecords={totalCities}
+          onPage={onPage}
+          rowsPerPageOptions={[5, 10, 20]}
+          emptyMessage="No cities found."
+          onRowClick={(e) => navigate(`/cities/${e.data.cityId}`)}
+          rowClassName={() => "cursor-pointer"}
+          tableStyle={{ minWidth: "30rem", tableLayout: "auto" }}
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+        >
+          <Column field="cityId" header="ID" style={{ width: "70px" }} />
+          <Column field="name" header="City Name" sortable />
+          <Column
+            field="addressCount"
+            header="Addresses"
+            style={{ width: "120px" }}
+          />
+          <Column
+            field="lastUpdate"
+            header="Last Update"
+            style={{ width: "140px" }}
+            body={(r) => new Date(r.lastUpdate).toLocaleDateString()}
+          />
+        </DataTable>
       </Card>
     </AppLayout>
   );
