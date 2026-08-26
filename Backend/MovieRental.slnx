@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="MovieRental.Apis/MovieRental.Apis.csproj" />
+  <Project Path="MovieRental.Domain/MovieRental.Domain.csproj" Id="a8824615-0ab5-4628-829f-2cea2b3a3c5f" />
+  <Project Path="MovieRental.Repository/MovieRental.Repository.csproj" />
+  <Project Path="MovieRental.Services/MovieRental.Services.csproj" />
+</Solution>

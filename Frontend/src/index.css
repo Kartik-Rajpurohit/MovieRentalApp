@@ -1,0 +1,21 @@
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+.cursor-pointer:hover > td {
+  background: #f8faff !important;
+}
+body {
+  margin: 0;
+  padding: 0;
+}
