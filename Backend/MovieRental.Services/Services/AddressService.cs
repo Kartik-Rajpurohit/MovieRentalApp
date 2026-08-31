@@ -24,6 +24,15 @@ public class AddressService : IAddressService
         if (queryParams.CityId.HasValue)
             query = query.Where(a => a.CityId == queryParams.CityId.Value);
 
+        if (!string.IsNullOrEmpty(queryParams.City))
+            query = query.Where(a => a.City.Name.ToLower().Contains(queryParams.City.ToLower()));
+
+        if (!string.IsNullOrEmpty(queryParams.District))
+            query = query.Where(a => a.District.ToLower().Contains(queryParams.District.ToLower()));
+
+        if (!string.IsNullOrEmpty(queryParams.PostalCode))
+            query = query.Where(a => a.PostalCode != null && a.PostalCode.Contains(queryParams.PostalCode));
+
         if (!string.IsNullOrEmpty(queryParams.Search))
         {
             var s = queryParams.Search.ToLower();

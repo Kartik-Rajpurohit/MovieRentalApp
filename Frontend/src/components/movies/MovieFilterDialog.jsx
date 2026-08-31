@@ -28,10 +28,24 @@ const INIT_FILTERS = {
   categoryId: null,
   rating: null,
   releaseYear: null,
+  minRentalRate: null,
+  maxRentalRate: null,
+  minLength: null,
+  maxLength: null,
 };
 
-export default function MovieFilterDialog({ visible, onHide, filters, onApply }) {
-  const { filters: local, setFilter: set, setFilters: setLocal, reset: resetLocal } = useFilters(filters);
+export default function MovieFilterDialog({
+  visible,
+  onHide,
+  filters,
+  onApply,
+}) {
+  const {
+    filters: local,
+    setFilter: set,
+    setFilters: setLocal,
+    reset: resetLocal,
+  } = useFilters(filters);
   const [languages, setLanguages] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -53,8 +67,14 @@ export default function MovieFilterDialog({ visible, onHide, filters, onApply })
     ]);
   };
 
-  const handleApply = () => { onApply(local); onHide(); };
-  const handleClear = () => { onApply(INIT_FILTERS); onHide(); };
+  const handleApply = () => {
+    onApply(local);
+    onHide();
+  };
+  const handleClear = () => {
+    onApply(INIT_FILTERS);
+    onHide();
+  };
 
   return (
     <FilterDialog
@@ -65,7 +85,6 @@ export default function MovieFilterDialog({ visible, onHide, filters, onApply })
       onClear={handleClear}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
         {/* Language */}
         <div>
           <label style={labelStyle}>Language</label>
@@ -116,6 +135,53 @@ export default function MovieFilterDialog({ visible, onHide, filters, onApply })
             style={{ width: "100%" }}
             inputStyle={{ width: "100%" }}
           />
+        </div>
+        {/* Rental Rate Range */}
+        <div>
+          <label style={labelStyle}>Rental Rate ($)</label>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <InputNumber
+              value={local.minRentalRate}
+              onValueChange={(e) => set("minRentalRate")(e.value)}
+              placeholder="Min"
+              mode="decimal"
+              minFractionDigits={2}
+              style={{ width: "100%" }}
+              inputStyle={{ width: "100%" }}
+            />
+            <span style={{ color: "#6b7280" }}>—</span>
+            <InputNumber
+              value={local.maxRentalRate}
+              onValueChange={(e) => set("maxRentalRate")(e.value)}
+              placeholder="Max"
+              mode="decimal"
+              minFractionDigits={2}
+              style={{ width: "100%" }}
+              inputStyle={{ width: "100%" }}
+            />
+          </div>
+        </div>
+
+        {/* Length Range */}
+        <div>
+          <label style={labelStyle}>Length (min)</label>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <InputNumber
+              value={local.minLength}
+              onValueChange={(e) => set("minLength")(e.value)}
+              placeholder="Min"
+              style={{ width: "100%" }}
+              inputStyle={{ width: "100%" }}
+            />
+            <span style={{ color: "#6b7280" }}>—</span>
+            <InputNumber
+              value={local.maxLength}
+              onValueChange={(e) => set("maxLength")(e.value)}
+              placeholder="Max"
+              style={{ width: "100%" }}
+              inputStyle={{ width: "100%" }}
+            />
+          </div>
         </div>
       </div>
     </FilterDialog>

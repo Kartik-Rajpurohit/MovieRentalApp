@@ -6,6 +6,9 @@ import PageHeader from "../../common/PageHeader";
 import SearchBar from "../../common/SearchBar";
 import usePagination from "../../../hooks/usePagination";
 import { getAddresses } from "../../../services/addressService";
+import { Button } from "primereact/button";
+import { Badge } from "primereact/badge";
+import AddressFilterDialog from "./AddressFilterDialog";
 
 export default function AddressTable() {
   const navigate = useNavigate();
@@ -16,8 +19,13 @@ export default function AddressTable() {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("addressId");
   const [sortOrder, setSortOrder] = useState(1);
+  const INIT_FILTERS = { city: null, district: null, postalCode: null };
+  const [filters, setFilters] = useState(INIT_FILTERS);
+  const [filterVisible, setFilterVisible] = useState(false);
 
-  useEffect(() => { loadAddresses(); }, [lazyState, search, sortField, sortOrder]);
+  useEffect(() => {
+    loadAddresses();
+  }, [lazyState, search, sortField, sortOrder, filters]);
 
   const loadAddresses = async () => {
     setLoading(true);
@@ -28,6 +36,9 @@ export default function AddressTable() {
         search,
         sortField,
         sortOrder: sortOrder === 1 ? "asc" : "desc",
+        city: filters.city ?? undefined,
+        district: filters.district ?? undefined,
+        postalCode: filters.postalCode ?? undefined,
       });
       setAddresses(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
@@ -41,20 +52,56 @@ export default function AddressTable() {
   return (
     <div>
       <PageHeader title="Addresses" />
-      <div style={{ marginBottom: "16px" }}>
+      <AddressFilterDialog
+        visible={filterVisible}
+        onHide={() => setFilterVisible(false)}
+        filters={filters}
+        onApply={(f) => {
+          setFilters(f);
+          reset();
+        }}
+      />
+      <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
-          onChange={(v) => { setSearch(v); reset(); }}
+          onChange={(v) => {
+            setSearch(v);
+            reset();
+          }}
           placeholder="Search by street, district or city..."
         />
+        <div style={{ position: "relative" }}>
+          <Button
+            label="Filters"
+            icon="pi pi-sliders-h"
+            outlined
+            onClick={() => setFilterVisible(true)}
+          />
+          {Object.values(filters).filter((v) => v !== null).length > 0 && (
+            <Badge
+              value={Object.values(filters).filter((v) => v !== null).length}
+              severity="danger"
+              style={{ position: "absolute", top: "-8px", right: "-8px" }}
+            />
+          )}
+        </div>
       </div>
       <DataTable
         value={addresses}
-        paginator lazy loading={loading}
-        first={lazyState.first} rows={lazyState.rows}
-        totalRecords={totalRecords} onPage={onPage}
-        onSort={(e) => { setSortField(e.sortField); setSortOrder(e.sortOrder); reset(); }}
-        sortField={sortField} sortOrder={sortOrder}
+        paginator
+        lazy
+        loading={loading}
+        first={lazyState.first}
+        rows={lazyState.rows}
+        totalRecords={totalRecords}
+        onPage={onPage}
+        onSort={(e) => {
+          setSortField(e.sortField);
+          setSortOrder(e.sortOrder);
+          reset();
+        }}
+        sortField={sortField}
+        sortOrder={sortOrder}
         rowsPerPageOptions={[5, 10, 20]}
         emptyMessage="No addresses found."
         onRowClick={(e) => navigate(`/addresses/${e.data.addressId}`)}
@@ -62,12 +109,21 @@ export default function AddressTable() {
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
-        <Column field="addressId" header="ID" sortable style={{ width: "70px" }} />
+        <Column
+          field="addressId"
+          header="ID"
+          sortable
+          style={{ width: "70px" }}
+        />
         <Column field="street" header="Street" sortable />
         <Column field="district" header="District" sortable />
         <Column field="cityName" header="City" sortable="city" />
         <Column field="countryName" header="Country" />
-        <Column field="postalCode" header="Postal Code" style={{ width: "120px" }} />
+        <Column
+          field="postalCode"
+          header="Postal Code"
+          style={{ width: "120px" }}
+        />
         <Column field="phone" header="Phone" style={{ width: "140px" }} />
       </DataTable>
     </div>

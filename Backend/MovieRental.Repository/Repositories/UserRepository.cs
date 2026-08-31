@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Users;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Data;
@@ -15,14 +15,14 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Returns IQueryable with all relations loaded — UserService applies filters on top
+        // Returns IQueryable with all relations loaded â€” UserService applies filters on top
         public IQueryable<User> GetAllUsers()
         {
             return _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Address)
-                    .ThenInclude(a => a.City)
-                        .ThenInclude(c => c.Country);
+                    .ThenInclude(a => a!.City)
+                        .ThenInclude(c => c!.Country);
         }
 
         public async Task<User?> GetUserByIdAsync(int id)
@@ -30,18 +30,18 @@ namespace MovieRental.Repository.Repositories
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Address)
-                    .ThenInclude(a => a.City)
-                        .ThenInclude(c => c.Country)
+                    .ThenInclude(a => a!.City)
+                        .ThenInclude(c => c!.Country)
                 .FirstOrDefaultAsync(u => u.UserId == id);
         }
 
-        // Check if email already exists — used by service before creating a user
+        // Check if email already exists â€” used by service before creating a user
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
-        // Insert user record — service passes fully built entity
+        // Insert user record â€” service passes fully built entity
         public async Task<User> CreateUserAsync(User user)
         {
             _context.Users.Add(user);
@@ -60,7 +60,7 @@ namespace MovieRental.Repository.Repositories
             return user;
         }
 
-        // Update user record — service passes fully updated entity
+        // Update user record â€” service passes fully updated entity
         public async Task<User?> UpdateUserAsync(User user)
         {
             user.UpdatedAt = DateTime.UtcNow;
@@ -73,20 +73,20 @@ namespace MovieRental.Repository.Repositories
             var user = await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Address)
-                    .ThenInclude(a => a.City)
-                        .ThenInclude(c => c.Country)
+                    .ThenInclude(a => a!.City)
+                        .ThenInclude(c => c!.Country)
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user == null) return null;
 
-            // Flip IsActive — true becomes false, false becomes true
+            // Flip IsActive â€” true becomes false, false becomes true
             user.IsActive = !user.IsActive;
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return user;
         }
 
-        // Fetch role name — used by service to decide staff/customer creation
+        // Fetch role name â€” used by service to decide staff/customer creation
         public async Task<string?> GetRoleNameAsync(int roleId)
         {
             return await _context.Roles
@@ -95,7 +95,7 @@ namespace MovieRental.Repository.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        // Insert staff record — called by service after user creation
+        // Insert staff record â€” called by service after user creation
         public async Task CreateStaffAsync(int userId, int storeId)
         {
             var staff = new Staff { UserId = userId, StoreId = storeId };
@@ -103,7 +103,7 @@ namespace MovieRental.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // Insert customer record — called by service after user creation
+        // Insert customer record â€” called by service after user creation
         public async Task CreateCustomerAsync(int userId, int storeId)
         {
             var customer = new Customer
@@ -117,7 +117,7 @@ namespace MovieRental.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // Raw IQueryable — service applies pagination and maps to DropdownDto
+        // Raw IQueryable â€” service applies pagination and maps to DropdownDto
         public IQueryable<Country> GetAllCountries()
             => _context.Countries.AsQueryable();
 
@@ -138,8 +138,8 @@ namespace MovieRental.Repository.Repositories
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Address)
-                    .ThenInclude(a => a.City)
-                        .ThenInclude(c => c.Country)
+                    .ThenInclude(a => a!.City)
+                        .ThenInclude(c => c!.Country)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
         public async Task SaveRefreshTokenAsync(int userId, string refreshToken, DateTime expiry)
@@ -189,7 +189,7 @@ namespace MovieRental.Repository.Repositories
             }
         }
 
-        // Insert new address record — returns AddressId for user assignment
+        // Insert new address record â€” returns AddressId for user assignment
         public async Task<int> CreateAddressAsync(Address address)
         {
             address.LastUpdate = DateTime.UtcNow;

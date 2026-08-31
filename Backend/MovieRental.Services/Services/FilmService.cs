@@ -38,6 +38,20 @@ namespace MovieRental.Services.Services
             if (queryParams.ReleaseYear.HasValue)
                 query = query.Where(f => f.ReleaseYear == queryParams.ReleaseYear.Value);
 
+            // Filter by rental rate range
+            if (queryParams.MinRentalRate.HasValue)
+                query = query.Where(f => f.RentalRate >= queryParams.MinRentalRate.Value);
+
+            if (queryParams.MaxRentalRate.HasValue)
+                query = query.Where(f => f.RentalRate <= queryParams.MaxRentalRate.Value);
+
+            // Filter by length range
+            if (queryParams.MinLength.HasValue)
+                query = query.Where(f => f.Length >= queryParams.MinLength.Value);
+
+            if (queryParams.MaxLength.HasValue)
+                query = query.Where(f => f.Length <= queryParams.MaxLength.Value);
+
             // Global search — title, description, actor name, category name
             if (!string.IsNullOrEmpty(queryParams.Search))
             {

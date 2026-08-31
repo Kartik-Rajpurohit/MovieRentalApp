@@ -13,6 +13,9 @@ import useDialog from "../../hooks/useDialog";
 import usePagination from "../../hooks/usePagination";
 import useFilters from "../../hooks/useFilters";
 import { getStores } from "../../services/storeService";
+import FormDialog from "../common/FormDialog";
+import StoreFormFields from "./StoreFormFields";
+import { createStore } from "../../services/storeService";
 
 const INIT_FILTERS = { city: "", country: "" };
 
@@ -21,15 +24,41 @@ export default function StoreTable() {
   const filterDialog = useDialog();
   const { lazyState, onPage, reset } = usePagination(10);
   const { filters, setFilters, reset: resetFilters } = useFilters(INIT_FILTERS);
-  const { filters: localFilters, setFilter: setLocalFilter, setFilters: setLocalFilters } = useFilters(INIT_FILTERS);
+  const {
+    filters: localFilters,
+    setFilter: setLocalFilter,
+    setFilters: setLocalFilters,
+  } = useFilters(INIT_FILTERS);
 
-  const [stores, setStores]             = useState([]);
+  const [stores, setStores] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [loading, setLoading]           = useState(false);
-  const [sortField, setSortField]       = useState("storeid");
-  const [sortOrder, setSortOrder]       = useState(1);
-  const [search, setSearch]             = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sortField, setSortField] = useState("storeid");
+  const [sortOrder, setSortOrder] = useState(1);
+  const [search, setSearch] = useState("");
+  const addDialog = useDialog();
+  const [form, setForm] = useState({ addressId: null });
+  const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
+  const handleAdd = async () => {
+    if (!form.addressId) {
+      setFormErrors({ addressId: "Address is required" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await createStore({ addressId: form.addressId });
+      addDialog.close();
+      setForm({ addressId: null });
+      setFormErrors({});
+      loadStores();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
   useEffect(() => {
     loadStores();
   }, [lazyState, sortField, sortOrder, search, filters]);
@@ -45,7 +74,7 @@ export default function StoreTable() {
         sortOrderStr,
         search,
         filters.city || null,
-        filters.country || null
+        filters.country || null,
       );
       setStores(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
@@ -101,17 +130,46 @@ export default function StoreTable() {
       >
         <StoreFilters filters={localFilters} setFilter={setLocalFilter} />
       </FilterDialog>
+      <FormDialog
+        visible={addDialog.visible}
+        onHide={() => {
+          addDialog.close();
+          setForm({ addressId: null });
+          setFormErrors({});
+        }}
+        title="Add Store"
+        onSubmit={handleAdd}
+        loading={saving}
+        submitLabel="Add Store"
+      >
+        <StoreFormFields form={form} setForm={setForm} errors={formErrors} />
+      </FormDialog>
 
-      <PageHeader title="Stores" />
+      <PageHeader title="Stores" onAdd={addDialog.open} addLabel="Add Store" />
 
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          marginBottom: "16px",
+        }}
+      >
         <SearchBar
           value={search}
-          onChange={(v) => { setSearch(v); reset(); }}
+          onChange={(v) => {
+            setSearch(v);
+            reset();
+          }}
           placeholder="Search by city, country, manager..."
         />
         <div style={{ position: "relative" }}>
-          <Button label="Filters" icon="pi pi-sliders-h" outlined onClick={openFilter} />
+          <Button
+            label="Filters"
+            icon="pi pi-sliders-h"
+            outlined
+            onClick={openFilter}
+          />
           {activeCount > 0 && (
             <Badge
               value={activeCount}
@@ -143,11 +201,30 @@ export default function StoreTable() {
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
-        <Column field="storeId" header="Store ID" sortable style={{ width: "100px" }}
-          body={(r) => `Store #${r.storeId}`} />
-        <Column field="managerName" header="Manager" style={{ minWidth: "150px" }} />
-        <Column field="cityName" header="City" sortable style={{ width: "130px" }} />
-        <Column field="countryName" header="Country" sortable style={{ width: "130px" }} />
+        <Column
+          field="storeId"
+          header="Store ID"
+          sortable
+          style={{ width: "100px" }}
+          body={(r) => `Store #${r.storeId}`}
+        />
+        <Column
+          field="managerName"
+          header="Manager"
+          style={{ minWidth: "150px" }}
+        />
+        <Column
+          field="cityName"
+          header="City"
+          sortable
+          style={{ width: "130px" }}
+        />
+        <Column
+          field="countryName"
+          header="Country"
+          sortable
+          style={{ width: "130px" }}
+        />
         <Column field="street" header="Address" style={{ minWidth: "180px" }} />
         <Column field="phone" header="Phone" style={{ width: "130px" }} />
         <Column header="Stats" style={{ minWidth: "260px" }} body={statsBody} />

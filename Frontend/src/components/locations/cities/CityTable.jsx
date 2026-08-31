@@ -6,6 +6,9 @@ import PageHeader from "../../common/PageHeader";
 import SearchBar from "../../common/SearchBar";
 import usePagination from "../../../hooks/usePagination";
 import { getCities } from "../../../services/cityService";
+import { Button } from "primereact/button";
+import { Badge } from "primereact/badge";
+import CityFilterDialog from "./CityFilterDialog";
 
 export default function CityTable() {
   const navigate = useNavigate();
@@ -16,10 +19,13 @@ export default function CityTable() {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("cityId");
   const [sortOrder, setSortOrder] = useState(1);
+  const INIT_FILTERS = { countryId: null };
+  const [filters, setFilters] = useState(INIT_FILTERS);
+  const [filterVisible, setFilterVisible] = useState(false);
 
   useEffect(() => {
     loadCities();
-  }, [lazyState, search, sortField, sortOrder]);
+  }, [lazyState, search, sortField, sortOrder, filters]);
 
   const loadCities = async () => {
     setLoading(true);
@@ -30,6 +36,7 @@ export default function CityTable() {
         search,
         sortField,
         sortOrder: sortOrder === 1 ? "asc" : "desc",
+        countryId: filters.countryId ?? undefined,
       });
       setCities(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
@@ -43,7 +50,16 @@ export default function CityTable() {
   return (
     <div>
       <PageHeader title="Cities" />
-      <div style={{ marginBottom: "16px" }}>
+      <CityFilterDialog
+        visible={filterVisible}
+        onHide={() => setFilterVisible(false)}
+        filters={filters}
+        onApply={(f) => {
+          setFilters(f);
+          reset();
+        }}
+      />
+      <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
           onChange={(v) => {
@@ -52,6 +68,21 @@ export default function CityTable() {
           }}
           placeholder="Search cities..."
         />
+        <div style={{ position: "relative" }}>
+          <Button
+            label="Filters"
+            icon="pi pi-sliders-h"
+            outlined
+            onClick={() => setFilterVisible(true)}
+          />
+          {filters.countryId !== null && (
+            <Badge
+              value={1}
+              severity="danger"
+              style={{ position: "absolute", top: "-8px", right: "-8px" }}
+            />
+          )}
+        </div>
       </div>
       <DataTable
         value={cities}

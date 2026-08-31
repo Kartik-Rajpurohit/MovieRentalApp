@@ -23,6 +23,6 @@ export const refreshToken = async (refreshToken) => {
 export const logoutUser = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
   if (refreshToken) {
-    await axios.post(`${API}/logout`, { refreshToken });
+    await api.post("/Auth/logout", { refreshToken });
   }
 };

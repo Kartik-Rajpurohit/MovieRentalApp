@@ -255,6 +255,9 @@ namespace MovieRental.Services.Services
             RoleName = u.Role?.RoleName ?? "Unassigned",
             AddressId = u.AddressId ?? 0,
             Street = u.Address?.Street,
+            District = u.Address?.District,    
+            PostalCode = u.Address?.PostalCode,
+            Phone = u.Address?.Phone,
             CityName = u.Address?.City?.Name,
             CountryName = u.Address?.City?.Country?.Name,
         };

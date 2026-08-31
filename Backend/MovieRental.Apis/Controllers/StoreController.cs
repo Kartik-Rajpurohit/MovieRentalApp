@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Stores;
 using MovieRental.Domain.QueryParameters;
 using MovieRental.Services.Interfaces;
 
@@ -31,6 +32,13 @@ namespace MovieRental.Apis.Controllers
         {
             var result = await _storeService.GetStoreByIdAsync(id);
             return result is null ? NotFound($"Store {id} not found") : Ok(result);
+        }
+        // POST api/store — create new store
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateStoreDto dto)
+        {
+            var result = await _storeService.CreateStoreAsync(dto);
+            return Ok(result);
         }
     }
 }

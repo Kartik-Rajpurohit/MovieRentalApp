@@ -8,6 +8,9 @@ import SearchBar from "../common/SearchBar";
 import InventoryDialog from "./InventoryDialog";
 import usePagination from "../../hooks/usePagination";
 import { getInventory } from "../../services/inventoryService";
+import { Button } from "primereact/button";
+import { Badge } from "primereact/badge";
+import InventoryFilterDialog from "./InventoryFilterDialog";
 
 export default function InventoryTable() {
   const navigate = useNavigate();
@@ -19,10 +22,14 @@ export default function InventoryTable() {
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState(1);
   const [search, setSearch] = useState("");
-  const [storeFilter, setStoreFilter] = useState("");
   const [dialogVisible, setDialogVisible] = useState(false);
+  const INIT_FILTERS = { storeId: null, isAvailable: null };
+  const [filters, setFilters] = useState(INIT_FILTERS);
+  const [filterVisible, setFilterVisible] = useState(false);
 
-  useEffect(() => { loadInventory(); }, [lazyState, sortField, sortOrder, search, storeFilter]);
+  useEffect(() => {
+    loadInventory();
+  }, [lazyState, sortField, sortOrder, search, filters]);
 
   const loadInventory = async () => {
     setLoading(true);
@@ -34,7 +41,8 @@ export default function InventoryTable() {
         search,
         sortField,
         sortOrder: sortOrderStr,
-        storeId: storeFilter || undefined,
+        storeId: filters.storeId ?? undefined,
+        isAvailable: filters.isAvailable ?? undefined,
       });
       setInventory(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
@@ -45,7 +53,11 @@ export default function InventoryTable() {
     }
   };
 
-  const onSort = (e) => { setSortField(e.sortField); setSortOrder(e.sortOrder); reset(); };
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    reset();
+  };
 
   return (
     <div>
@@ -55,12 +67,42 @@ export default function InventoryTable() {
         onAdd={() => setDialogVisible(true)}
       />
 
+      <InventoryFilterDialog
+        visible={filterVisible}
+        onHide={() => setFilterVisible(false)}
+        filters={filters}
+        onApply={(f) => {
+          setFilters(f);
+          reset();
+        }}
+      />
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
-          onChange={(v) => { setSearch(v); reset(); }}
+          onChange={(v) => {
+            setSearch(v);
+            reset();
+          }}
           placeholder="Search by film title or ID..."
         />
+        <div style={{ position: "relative" }}>
+          <Button
+            label="Filters"
+            icon="pi pi-sliders-h"
+            outlined
+            onClick={() => setFilterVisible(true)}
+          />
+          {(filters.storeId !== null || filters.isAvailable !== null) && (
+            <Badge
+              value={
+                [filters.storeId, filters.isAvailable].filter((v) => v !== null)
+                  .length
+              }
+              severity="danger"
+              style={{ position: "absolute", top: "-8px", right: "-8px" }}
+            />
+          )}
+        </div>
       </div>
 
       <InventoryDialog
@@ -88,11 +130,23 @@ export default function InventoryTable() {
         onRowClick={(e) => navigate(`/inventory/${e.data.inventoryId}`)}
         rowClassName={() => "cursor-pointer"}
       >
-        <Column field="inventoryId" header="ID" sortable style={{ width: "80px" }} />
+        <Column
+          field="inventoryId"
+          header="ID"
+          sortable
+          style={{ width: "80px" }}
+        />
         <Column field="filmTitle" header="Film" sortable />
-        <Column field="storeId" header="Store" style={{ width: "90px" }}
-          body={(r) => `Store ${r.storeId}`} />
-        <Column field="isAvailable" header="Status" style={{ width: "110px" }}
+        <Column
+          field="storeId"
+          header="Store"
+          style={{ width: "90px" }}
+          body={(r) => `Store ${r.storeId}`}
+        />
+        <Column
+          field="isAvailable"
+          header="Status"
+          style={{ width: "110px" }}
           body={(r) => (
             <Tag
               value={r.isAvailable ? "Available" : "Rented"}
@@ -100,8 +154,12 @@ export default function InventoryTable() {
             />
           )}
         />
-        <Column field="lastUpdate" header="Last Updated" style={{ width: "140px" }}
-          body={(r) => new Date(r.lastUpdate).toLocaleDateString()} />
+        <Column
+          field="lastUpdate"
+          header="Last Updated"
+          style={{ width: "140px" }}
+          body={(r) => new Date(r.lastUpdate).toLocaleDateString()}
+        />
       </DataTable>
     </div>
   );

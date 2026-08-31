@@ -8,5 +8,6 @@ namespace MovieRental.Services.Interfaces
     {
         Task<PaginatedResponseDto<StoreResponseDto>> GetAllStoresAsync(StoreQueryParametersDto queryParams);
         Task<StoreDetailDto?> GetStoreByIdAsync(int id);
+        Task<StoreResponseDto> CreateStoreAsync(CreateStoreDto dto);
     }
 }

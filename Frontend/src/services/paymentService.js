@@ -3,7 +3,7 @@ import api from "./api";
 const PAYMENT = "/Payment";
 
 // Get paginated, filtered, sorted list of payments
-export const getPayments = (
+export const getPayments = ({
   page = 1,
   pageSize = 10,
   sortField = "",
@@ -11,11 +11,28 @@ export const getPayments = (
   search = "",
   customerId = null,
   staffId = null,
-  rentalId = null
-) =>
+  rentalId = null,
+  minAmount = null,
+  maxAmount = null,
+  fromDate = null,
+  toDate = null,
+} = {}) =>
   api
     .get(PAYMENT, {
-      params: { page, pageSize, sortField, sortOrder, search, customerId, staffId, rentalId },
+      params: {
+        page,
+        pageSize,
+        sortField,
+        sortOrder,
+        search,
+        customerId,
+        staffId,
+        rentalId,
+        minAmount,
+        maxAmount,
+        fromDate,
+        toDate,
+      },
     })
     .then((r) => r.data);
 

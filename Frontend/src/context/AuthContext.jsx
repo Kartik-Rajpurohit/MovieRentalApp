@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useCallback } from "react";
 import { refreshToken as refreshTokenApi } from "../services/authService";
+import api from "../services/api";
 
 export const AuthContext = createContext();
 

@@ -18,6 +18,10 @@ const INIT_FILTERS = {
   categoryId: null,
   rating: null,
   releaseYear: null,
+  minRentalRate: null,
+  maxRentalRate: null,
+  minLength: null,
+  maxLength: null,
 };
 
 // MPAA rating color map
@@ -60,7 +64,11 @@ export default function MovieTable() {
         filters.languageId,
         filters.categoryId,
         filters.rating,
-        filters.releaseYear
+        filters.releaseYear,
+        filters.minRentalRate,
+        filters.maxRentalRate,
+        filters.minLength,
+        filters.maxLength,
       );
       setMovies(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
@@ -126,7 +134,10 @@ export default function MovieTable() {
       >
         <SearchBar
           value={search}
-          onChange={(v) => { setSearch(v); reset(); }}
+          onChange={(v) => {
+            setSearch(v);
+            reset();
+          }}
           placeholder="Search movies..."
         />
         <div style={{ position: "relative" }}>
@@ -151,7 +162,10 @@ export default function MovieTable() {
         visible={filterVisible}
         onHide={() => setFilterVisible(false)}
         filters={filters}
-        onApply={(f) => { setFilters(f); reset(); }}
+        onApply={(f) => {
+          setFilters(f);
+          reset();
+        }}
       />
 
       {/* Add Dialog */}
@@ -183,15 +197,48 @@ export default function MovieTable() {
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
-        <Column field="title" header="Title" sortable style={{ minWidth: "200px" }} />
-        <Column field="releaseYear" header="Year" sortable style={{ width: "90px" }} />
-        <Column field="languageName" header="Language" style={{ width: "110px" }} />
-        <Column field="rentalRate" header="Rate ($)" sortable style={{ width: "100px" }}
-          body={(r) => `$${r.rentalRate?.toFixed(2)}`} />
-        <Column field="length" header="Length" sortable style={{ width: "90px" }}
-          body={(r) => r.length ? `${r.length} min` : "—"} />
-        <Column field="rating" header="Rating" style={{ width: "100px" }} body={ratingBody} />
-        <Column header="Categories" style={{ minWidth: "160px" }} body={categoriesBody} />
+        <Column
+          field="title"
+          header="Title"
+          sortable
+          style={{ minWidth: "200px" }}
+        />
+        <Column
+          field="releaseYear"
+          header="Year"
+          sortable
+          style={{ width: "90px" }}
+        />
+        <Column
+          field="languageName"
+          header="Language"
+          style={{ width: "110px" }}
+        />
+        <Column
+          field="rentalRate"
+          header="Rate ($)"
+          sortable
+          style={{ width: "100px" }}
+          body={(r) => `$${r.rentalRate?.toFixed(2)}`}
+        />
+        <Column
+          field="length"
+          header="Length"
+          sortable
+          style={{ width: "90px" }}
+          body={(r) => (r.length ? `${r.length} min` : "—")}
+        />
+        <Column
+          field="rating"
+          header="Rating"
+          style={{ width: "100px" }}
+          body={ratingBody}
+        />
+        <Column
+          header="Categories"
+          style={{ minWidth: "160px" }}
+          body={categoriesBody}
+        />
       </DataTable>
     </div>
   );

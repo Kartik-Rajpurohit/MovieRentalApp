@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Stores;
+using MovieRental.Domain.Entities;
 using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
@@ -35,7 +36,9 @@ namespace MovieRental.Services.Services
                     st.StoreId.ToString().Contains(s) ||
                     st.Address.City.Name.ToLower().Contains(s) ||
                     st.Address.City.Country.Name.ToLower().Contains(s) ||
-                    (st.ManagerStaff.User.FirstName + " " + st.ManagerStaff.User.LastName).ToLower().Contains(s));
+                    (st.ManagerStaff != null && st.ManagerStaff.User != null
+                        ? (st.ManagerStaff.User.FirstName + " " + st.ManagerStaff.User.LastName).ToLower()
+                        : "").Contains(s));
             }
 
             query = queryParams.SortField?.ToLower() switch
@@ -114,5 +117,36 @@ namespace MovieRental.Services.Services
                 })
                 .FirstOrDefaultAsync();
         }
+        public async Task<StoreResponseDto> CreateStoreAsync(CreateStoreDto dto)
+        {
+            var store = new Store
+            {
+                ManagerStaffId = dto.ManagerStaffId,
+                AddressId = dto.AddressId,
+                LastUpdate = DateTime.UtcNow,
+            };
+            var created = await _storeRepository.CreateStoreAsync(store);
+            return MapToDto(created);
+        }
+
+        // Private helper - maps Store entity to StoreResponseDto (same pattern as UserService, InventoryService)
+        // Used only for in-memory mapping after Create; GetAll/GetById use EF .Select() for DB-side count aggregation
+        private static StoreResponseDto MapToDto(Store s) => new StoreResponseDto
+        {
+            StoreId        = s.StoreId,
+            ManagerStaffId = s.ManagerStaffId,
+            ManagerName    = s.ManagerStaff?.User != null
+                ? (s.ManagerStaff.User.FirstName + " " + s.ManagerStaff.User.LastName).Trim()
+                : "Unassigned",
+            Street      = s.Address?.Street ?? "",
+            District    = s.Address?.District ?? "",
+            PostalCode  = s.Address?.PostalCode,
+            Phone       = s.Address?.Phone ?? "",
+            CityName    = s.Address?.City?.Name ?? "",
+            CountryName = s.Address?.City?.Country?.Name ?? "",
+            TotalStaff     = 0,
+            TotalCustomers = 0,
+            TotalInventory = 0,
+        };
     }
 }

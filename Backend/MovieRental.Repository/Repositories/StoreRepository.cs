@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Data;
 using MovieRental.Repository.Interfaces;
@@ -19,10 +19,20 @@ namespace MovieRental.Repository.Repositories
         {
             return _context.Stores
                 .Include(s => s.ManagerStaff)
-                    .ThenInclude(st => st.User)
+                    .ThenInclude(st => st!.User)
                 .Include(s => s.Address)
-                    .ThenInclude(a => a.City)
-                        .ThenInclude(c => c.Country);
+                    .ThenInclude(a => a!.City)
+                        .ThenInclude(c => c!.Country);
+        }
+
+        public async Task<Store> CreateStoreAsync(Store store)
+        {
+            store.LastUpdate = DateTime.UtcNow;
+            _context.Stores.Add(store);
+            await _context.SaveChangesAsync();
+            // Re-fetch with all includes so service can map to DTO — same pattern as CategoryRepository
+            return await GetAllStores()
+                .FirstAsync(s => s.StoreId == store.StoreId);
         }
     }
 }
