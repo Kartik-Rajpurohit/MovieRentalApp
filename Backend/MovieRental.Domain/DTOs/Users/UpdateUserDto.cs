@@ -7,5 +7,6 @@
         public string? LastName { get; set; }
         public int? RoleId { get; set; }
         public int? AddressId { get; set; }
+        public int? StoreId { get; set; }
     }
 }

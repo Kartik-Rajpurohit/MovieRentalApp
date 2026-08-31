@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Roles;
+using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -48,6 +49,28 @@ namespace MovieRental.Services.Services
                 CurrentPage = page,
                 PageSize = pageSize,
                 Data = data
+            };
+        }
+        public async Task<RoleResponseDto> CreateRoleAsync(CreateRoleDto dto)
+        {
+            // Business logic — duplicate role check
+            if (await _roleRepository.RoleExistsAsync(dto.RoleName))
+                throw new InvalidOperationException("Role already exists");
+
+            var role = new Role
+            {
+                RoleName = dto.RoleName,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var created = await _roleRepository.CreateRoleAsync(role);
+
+            return new RoleResponseDto
+            {
+                RoleId = created.RoleId,
+                RoleName = created.RoleName,
+                CreatedAt = created.CreatedAt
             };
         }
     }

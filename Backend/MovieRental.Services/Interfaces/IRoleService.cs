@@ -6,5 +6,6 @@ namespace MovieRental.Services.Interfaces
     public interface IRoleService
     {
         Task<PaginatedResponseDto<RoleResponseDto>> GetAllRolesAsync(int page, int pageSize, string? search);
+        Task<RoleResponseDto> CreateRoleAsync(CreateRoleDto dto);
     }
 }

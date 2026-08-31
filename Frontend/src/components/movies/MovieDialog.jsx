@@ -34,6 +34,7 @@ const emptyForm = {
   length: null,
   replacementCost: 19.99,
   rating: null,
+  specialFeatures: [],
   categoryIds: [],
   actorIds: [],
 };
@@ -80,6 +81,7 @@ export default function MovieDialog({
         length: movie.length ?? null,
         replacementCost: movie.replacementCost ?? 19.99,
         rating: movie.rating ?? null,
+        specialFeatures: movie.specialFeatures ?? [],
         categoryIds: movie.categories?.map((c) => c.categoryId) ?? [],
         actorIds: movie.actors?.map((a) => a.actorId) ?? [],
       });
@@ -140,6 +142,7 @@ export default function MovieDialog({
           length: form.length,
           replacementCost: form.replacementCost,
           rating: form.rating,
+          specialFeatures: form.specialFeatures,
           categoryIds: form.categoryIds,
           actorIds: form.actorIds,
         });
@@ -155,6 +158,7 @@ export default function MovieDialog({
           length: form.length,
           replacementCost: form.replacementCost,
           rating: form.rating,
+          specialFeatures: form.specialFeatures,
           categoryIds: form.categoryIds,
           actorIds: form.actorIds,
         });
@@ -404,6 +408,25 @@ export default function MovieDialog({
             style={{ width: "100%" }}
             display="chip"
             filter
+          />
+        </div>
+        {/* Special Features */}
+        <div>
+          <label style={labelStyle}>Special Features</label>
+          <MultiSelect
+            value={form.specialFeatures}
+            options={[
+              { label: "Trailers", value: "Trailers" },
+              { label: "Commentaries", value: "Commentaries" },
+              { label: "Deleted Scenes", value: "Deleted Scenes" },
+              { label: "Behind the Scenes", value: "Behind the Scenes" },
+            ]}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, specialFeatures: e.value }))
+            }
+            placeholder="Select special features"
+            style={{ width: "100%" }}
+            display="chip"
           />
         </div>
 

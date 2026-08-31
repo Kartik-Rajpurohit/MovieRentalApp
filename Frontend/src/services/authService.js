@@ -8,13 +8,10 @@ export const loginUser = async (email, password) => {
   return res.data;
 };
 
-export const signUpUser = async (firstName, lastName, email, password) => {
-  const res = await api.post(`${AUTH}/signup`, {
-    firstName,
-    lastName,
-    email,
-    password,
-  });
+export const signUpUser = async (payload) => {
+  // payload contains: firstName, lastName, email, password, cityId,
+  // district, postalCode, phone, and either existingAddressId OR street
+  const res = await api.post(`${AUTH}/signup`, payload);
   return res.data;
 };
 

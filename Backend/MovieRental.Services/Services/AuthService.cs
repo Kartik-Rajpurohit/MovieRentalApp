@@ -57,6 +57,30 @@ public class AuthService : IAuthService
         if (await _userRepository.EmailExistsAsync(dto.Email))
             throw new InvalidOperationException("Email already registered");
 
+        // Determine AddressId — use existing or create new
+        int? addressId = null;
+
+        if (dto.ExistingAddressId.HasValue)
+        {
+            // User selected an existing address from suggestions
+            addressId = dto.ExistingAddressId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(dto.Street) && dto.CityId.HasValue)
+        {
+            // User typed a new address — create it in DB
+            var newAddress = new Address
+            {
+                Street = dto.Street,
+                Street2 = null,
+                District = dto.District ?? string.Empty,
+                PostalCode = dto.PostalCode,
+                Phone = dto.Phone ?? string.Empty,
+                CityId = dto.CityId.Value,
+                LastUpdate = DateTime.UtcNow
+            };
+            addressId = await _userRepository.CreateAddressAsync(newAddress);
+        }
+
         var user = new User
         {
             FirstName = dto.FirstName,
@@ -64,14 +88,13 @@ public class AuthService : IAuthService
             Email = dto.Email,
             PasswordHash = dto.Password,
             RoleId = null,
-            AddressId = null,
+            AddressId = addressId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         var created = await _userRepository.CreateUserAsync(user);
-        await _userRepository.CreateCustomerAsync(created.UserId, 1);
 
         var reloaded = await _userRepository.GetUserByIdAsync(created.UserId);
         if (reloaded == null)

@@ -6,5 +6,7 @@ namespace MovieRental.Repository.Interfaces
     public interface IRoleRepository
     {
         IQueryable<Role> GetAllRoles();
+        Task<Role> CreateRoleAsync(Role role);
+        Task<bool> RoleExistsAsync(string roleName);
     }
 }

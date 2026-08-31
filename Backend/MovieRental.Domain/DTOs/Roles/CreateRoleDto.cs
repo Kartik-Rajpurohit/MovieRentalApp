@@ -2,4 +2,5 @@ namespace MovieRental.Domain.DTOs.Roles;
 
 public class CreateRoleDto
 {
+    public string RoleName { get; set; } = string.Empty;
 }

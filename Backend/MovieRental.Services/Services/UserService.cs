@@ -144,11 +144,38 @@ namespace MovieRental.Services.Services
             var user = await _userRepository.GetUserByIdAsync(dto.UserId);
             if (user == null) return null;
 
+            // Fetch old role name before update — needed for role change logic
+            var oldRoleName = user.RoleId.HasValue
+                ? await _userRepository.GetRoleNameAsync(user.RoleId.Value)
+                : null;
+
             // Only update fields that were actually sent — PATCH behaviour
             if (!string.IsNullOrWhiteSpace(dto.FirstName)) user.FirstName = dto.FirstName;
             if (!string.IsNullOrWhiteSpace(dto.LastName)) user.LastName = dto.LastName;
-            if (dto.RoleId.HasValue) user.RoleId = dto.RoleId.Value;
             if (dto.AddressId.HasValue) user.AddressId = dto.AddressId.Value;
+
+            // Role change logic
+            if (dto.RoleId.HasValue && dto.RoleId.Value != user.RoleId)
+            {
+                var newRoleName = await _userRepository.GetRoleNameAsync(dto.RoleId.Value);
+
+                // Delete old staff/customer record
+                if (oldRoleName?.ToLower() == "staff")
+                    await _userRepository.DeleteStaffByUserIdAsync(user.UserId);
+
+                if (oldRoleName?.ToLower() == "customer")
+                    await _userRepository.DeleteCustomerByUserIdAsync(user.UserId);
+
+                // Create new staff/customer record
+                if (newRoleName?.ToLower() == "staff" && dto.StoreId.HasValue)
+                    await _userRepository.CreateStaffAsync(user.UserId, dto.StoreId.Value);
+
+                if (newRoleName?.ToLower() == "customer" && dto.StoreId.HasValue)
+                    await _userRepository.CreateCustomerAsync(user.UserId, dto.StoreId.Value);
+
+                // Update role on user entity
+                user.RoleId = dto.RoleId.Value;
+            }
 
             // Repository handles save only
             var updated = await _userRepository.UpdateUserAsync(user);

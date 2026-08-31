@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Roles;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -25,6 +26,19 @@ namespace MovieRental.Apis.Controllers
         {
             var result = await _roleService.GetAllRolesAsync(page, pageSize, search);
             return Ok(result);
+        }
+        [HttpPost]
+        public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto dto)
+        {
+            try
+            {
+                var result = await _roleService.CreateRoleAsync(dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
     }
 }

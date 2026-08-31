@@ -7,6 +7,7 @@ import PageHeader from "../common/PageHeader";
 import usePagination from "../../hooks/usePagination";
 import { getRoles } from "../../services/roleService";
 import { useNavigate } from "react-router-dom";
+import RoleDialog from "./RoleDialog";
 
 export default function RoleTable() {
   const { lazyState, onPage, reset } = usePagination(10);
@@ -16,6 +17,7 @@ export default function RoleTable() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const [addVisible, setAddVisible] = useState(false);
 
   useEffect(() => {
     loadRoles();
@@ -41,7 +43,13 @@ export default function RoleTable() {
 
   return (
     <div>
-      <PageHeader title="Roles" onAdd={null} />
+      <RoleDialog
+        visible={addVisible}
+        onHide={() => setAddVisible(false)}
+        onSuccess={loadRoles}
+        mode="add"
+      />
+      <PageHeader title="Roles" onAdd={() => setAddVisible(true)} />
 
       <div style={{ marginBottom: "16px" }}>
         <SearchBar

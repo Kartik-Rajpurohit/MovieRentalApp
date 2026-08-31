@@ -24,5 +24,8 @@ namespace MovieRental.Repository.Interfaces
         Task SaveRefreshTokenAsync(int userId, string refreshToken, DateTime expiry);
         Task<User?> GetUserByRefreshTokenAsync(string refreshToken);
         Task RevokeRefreshTokenAsync(string refreshToken);
+        Task DeleteStaffByUserIdAsync(int userId);
+        Task DeleteCustomerByUserIdAsync(int userId);
+        Task<int> CreateAddressAsync(Address address); // Creates new address, returns AddressId
     }
 }

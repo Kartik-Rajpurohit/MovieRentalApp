@@ -167,5 +167,35 @@ namespace MovieRental.Repository.Repositories
             user.RefreshTokenExpiry = null;
             await _context.SaveChangesAsync();
         }
+        public async Task DeleteStaffByUserIdAsync(int userId)
+        {
+            var staff = await _context.Staff
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+            if (staff != null)
+            {
+                _context.Staff.Remove(staff);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteCustomerByUserIdAsync(int userId)
+        {
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            if (customer != null)
+            {
+                _context.Customers.Remove(customer);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // Insert new address record — returns AddressId for user assignment
+        public async Task<int> CreateAddressAsync(Address address)
+        {
+            address.LastUpdate = DateTime.UtcNow;
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+            return address.AddressId;
+        }
     }
 }
