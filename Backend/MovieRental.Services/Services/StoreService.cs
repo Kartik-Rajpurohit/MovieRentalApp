@@ -69,7 +69,6 @@ namespace MovieRental.Services.Services
                         ? (s.ManagerStaff.User.FirstName + " " + s.ManagerStaff.User.LastName).Trim()
                         : "Staff #" + s.ManagerStaffId,
                     Street      = s.Address != null ? s.Address.Street ?? "" : "",
-                    District    = s.Address != null ? s.Address.District ?? "" : "",
                     PostalCode  = s.Address != null ? s.Address.PostalCode : null,
                     Phone       = s.Address != null ? s.Address.Phone ?? "" : "",
                     CityName    = s.Address != null && s.Address.City != null ? s.Address.City.Name : "",
@@ -104,7 +103,6 @@ namespace MovieRental.Services.Services
                         : "Staff #" + s.ManagerStaffId,
                     AddressId   = s.AddressId,
                     Street      = s.Address != null ? s.Address.Street ?? "" : "",
-                    District    = s.Address != null ? s.Address.District ?? "" : "",
                     PostalCode  = s.Address != null ? s.Address.PostalCode : null,
                     Phone       = s.Address != null ? s.Address.Phone ?? "" : "",
                     CityName    = s.Address != null && s.Address.City != null ? s.Address.City.Name : "",
@@ -121,7 +119,7 @@ namespace MovieRental.Services.Services
         {
             var store = new Store
             {
-                ManagerStaffId = dto.ManagerStaffId,
+                ManagerStaffId = dto.ManagerStaffId ?? 0,
                 AddressId = dto.AddressId,
                 LastUpdate = DateTime.UtcNow,
             };
@@ -139,7 +137,6 @@ namespace MovieRental.Services.Services
                 ? (s.ManagerStaff.User.FirstName + " " + s.ManagerStaff.User.LastName).Trim()
                 : "Unassigned",
             Street      = s.Address?.Street ?? "",
-            District    = s.Address?.District ?? "",
             PostalCode  = s.Address?.PostalCode,
             Phone       = s.Address?.Phone ?? "",
             CityName    = s.Address?.City?.Name ?? "",

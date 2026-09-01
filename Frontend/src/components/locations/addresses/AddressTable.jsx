@@ -9,6 +9,10 @@ import { getAddresses } from "../../../services/addressService";
 import { Button } from "primereact/button";
 import { Badge } from "primereact/badge";
 import AddressFilterDialog from "./AddressFilterDialog";
+import useDialog from "../../../hooks/useDialog";
+import FormDialog from "../../common/FormDialog";
+import AddressFormFields from "./AddressFormFields";
+import { createAddress } from "../../../services/addressService";
 
 export default function AddressTable() {
   const navigate = useNavigate();
@@ -19,9 +23,51 @@ export default function AddressTable() {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("addressId");
   const [sortOrder, setSortOrder] = useState(1);
-  const INIT_FILTERS = { city: null, district: null, postalCode: null };
+  const INIT_FILTERS = { city: null, postalCode: null };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  const addDialog = useDialog();
+  const [form, setForm] = useState({
+    cityId: null,
+    street: "",
+    postalCode: "",
+    phone: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  const handleAdd = async () => {
+    const errs = {};
+    if (!form.cityId) errs.cityId = "City is required";
+    if (!form.street?.trim()) errs.street = "Street is required";
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createAddress({
+        cityId: form.cityId,
+        street: form.street,
+        postalCode: form.postalCode || null,
+        phone: form.phone || "",
+      });
+      addDialog.close();
+      setForm({
+        cityId: null,
+        street: "",
+        postalCode: "",
+        phone: "",
+      });
+      setFormErrors({});
+      loadAddresses();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     loadAddresses();
@@ -37,7 +83,6 @@ export default function AddressTable() {
         sortField,
         sortOrder: sortOrder === 1 ? "asc" : "desc",
         city: filters.city ?? undefined,
-        district: filters.district ?? undefined,
         postalCode: filters.postalCode ?? undefined,
       });
       setAddresses(res.data ?? []);
@@ -51,7 +96,31 @@ export default function AddressTable() {
 
   return (
     <div>
-      <PageHeader title="Addresses" />
+      <FormDialog
+        visible={addDialog.visible}
+        onHide={() => {
+          addDialog.close();
+          setForm({
+            cityId: null,
+            street: "",
+            postalCode: "",
+            phone: "",
+          });
+          setFormErrors({});
+        }}
+        title="Add Address"
+        onSubmit={handleAdd}
+        loading={saving}
+        submitLabel="Add Address"
+      >
+        <AddressFormFields form={form} setForm={setForm} errors={formErrors} />
+      </FormDialog>
+
+      <PageHeader
+        title="Addresses"
+        onAdd={addDialog.open}
+        addLabel="Add Address"
+      />
       <AddressFilterDialog
         visible={filterVisible}
         onHide={() => setFilterVisible(false)}
@@ -68,7 +137,7 @@ export default function AddressTable() {
             setSearch(v);
             reset();
           }}
-          placeholder="Search by street, district or city..."
+          placeholder="Search by street or city..."
         />
         <div style={{ position: "relative" }}>
           <Button
@@ -116,7 +185,6 @@ export default function AddressTable() {
           style={{ width: "70px" }}
         />
         <Column field="street" header="Street" sortable />
-        <Column field="district" header="District" sortable />
         <Column field="cityName" header="City" sortable="city" />
         <Column field="countryName" header="Country" />
         <Column

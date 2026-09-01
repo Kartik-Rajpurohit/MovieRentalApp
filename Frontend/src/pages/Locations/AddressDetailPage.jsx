@@ -103,10 +103,6 @@ export default function AddressDetailPage() {
             </div>
           )}
           <div>
-            <p style={FIELD_LABEL}>District</p>
-            <p style={FIELD_VALUE}>{address.district || "—"}</p>
-          </div>
-          <div>
             <p style={FIELD_LABEL}>City</p>
             <p
               style={{ ...FIELD_VALUE, color: "#6366f1", cursor: "pointer" }}

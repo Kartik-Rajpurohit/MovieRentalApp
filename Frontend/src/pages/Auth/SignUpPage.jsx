@@ -43,10 +43,8 @@ export default function SignUpPage() {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressInput, setAddressInput] = useState(""); // what user typed
   const [selectedAddressId, setSelectedAddressId] = useState(null); // if user picked existing
-  const [district, setDistrict] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [phone, setPhone] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -161,7 +159,6 @@ export default function SignUpPage() {
         email,
         password,
         cityId: selectedCityId,
-        district,
         postalCode,
         phone,
       };
@@ -378,22 +375,6 @@ export default function SignUpPage() {
                 Type a new address or select from suggestions
               </small>
             )}
-          </div>
-
-          {/* District */}
-          <div>
-            <label style={labelStyle}>
-              District{" "}
-              <span style={{ color: "#9ca3af", fontWeight: 400 }}>
-                (optional)
-              </span>
-            </label>
-            <InputText
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              placeholder="District"
-              style={{ width: "100%" }}
-            />
           </div>
 
           {/* Postal Code */}

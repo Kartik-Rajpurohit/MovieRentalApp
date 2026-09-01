@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Staff;
+using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -12,7 +13,7 @@ namespace MovieRental.Services.Services
         public StaffService(IStaffRepository staffRepository) => _staffRepository = staffRepository;
 
         public async Task<PaginatedResponseDto<StaffResponseDto>> GetAllStaffAsync(
-            int page, int pageSize, string? search, bool? isActive)
+            int page, int pageSize, string? search, bool? isActive, int? storeId = null)
         {
             var query = _staffRepository.GetAllStaff();
 
@@ -31,6 +32,9 @@ namespace MovieRental.Services.Services
             // Filter by active status
             if (isActive.HasValue)
                 query = query.Where(s => s.User != null && s.User.IsActive == isActive.Value);
+
+            if (storeId.HasValue)
+                query = query.Where(s => s.StoreId == storeId.Value);
 
             var totalRecords = await query.CountAsync();
 
@@ -72,7 +76,6 @@ namespace MovieRental.Services.Services
                 IsActive = s.User?.IsActive ?? false,
                 StoreId = s.StoreId,
                 Street = s.User?.Address?.Street,
-                District = s.User?.Address?.District,
                 PostalCode = s.User?.Address?.PostalCode,
                 Phone = s.User?.Address?.Phone,
                 CityName = s.User?.Address?.City?.Name,

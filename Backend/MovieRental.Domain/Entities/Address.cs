@@ -15,13 +15,6 @@ namespace MovieRental.Domain.Entities
         [Column("address")]
         public string Street { get; set; } = string.Empty;
 
-        // Optional secondary street line
-        [Column("address2")]
-        public string? Street2 { get; set; }
-
-        [Column("district")]
-        public string District { get; set; } = string.Empty;
-
         // FK → City
         [Column("city_id")]
         [ForeignKey("City")]

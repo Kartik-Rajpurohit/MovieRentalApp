@@ -27,9 +27,6 @@ public class AddressService : IAddressService
         if (!string.IsNullOrEmpty(queryParams.City))
             query = query.Where(a => a.City.Name.ToLower().Contains(queryParams.City.ToLower()));
 
-        if (!string.IsNullOrEmpty(queryParams.District))
-            query = query.Where(a => a.District.ToLower().Contains(queryParams.District.ToLower()));
-
         if (!string.IsNullOrEmpty(queryParams.PostalCode))
             query = query.Where(a => a.PostalCode != null && a.PostalCode.Contains(queryParams.PostalCode));
 
@@ -38,7 +35,6 @@ public class AddressService : IAddressService
             var s = queryParams.Search.ToLower();
             query = query.Where(a =>
                 a.Street.ToLower().Contains(s) ||
-                a.District.ToLower().Contains(s) ||
                 a.City.Name.ToLower().Contains(s));
         }
 
@@ -47,9 +43,6 @@ public class AddressService : IAddressService
             "street" => queryParams.SortOrder?.ToLower() == "desc"
                 ? query.OrderByDescending(a => a.Street)
                 : query.OrderBy(a => a.Street),
-            "district" => queryParams.SortOrder?.ToLower() == "desc"
-                ? query.OrderByDescending(a => a.District)
-                : query.OrderBy(a => a.District),
             "city" => queryParams.SortOrder?.ToLower() == "desc"
                 ? query.OrderByDescending(a => a.City.Name)
                 : query.OrderBy(a => a.City.Name),
@@ -65,8 +58,6 @@ public class AddressService : IAddressService
             {
                 AddressId = a.AddressId,
                 Street = a.Street,
-                Street2 = a.Street2,
-                District = a.District,
                 PostalCode = a.PostalCode,
                 Phone = a.Phone,
                 CityId = a.CityId,
@@ -94,8 +85,6 @@ public class AddressService : IAddressService
         {
             AddressId = a.AddressId,
             Street = a.Street,
-            Street2 = a.Street2,
-            District = a.District,
             PostalCode = a.PostalCode,
             Phone = a.Phone,
             CityId = a.CityId,
@@ -112,8 +101,6 @@ public class AddressService : IAddressService
         var address = new Address
         {
             Street = dto.Street,
-            Street2 = dto.Street2,
-            District = dto.District,
             PostalCode = dto.PostalCode,
             Phone = dto.Phone,
             CityId = dto.CityId,
@@ -124,8 +111,6 @@ public class AddressService : IAddressService
         {
             AddressId = created.AddressId,
             Street = created.Street,
-            Street2 = created.Street2,
-            District = created.District,
             PostalCode = created.PostalCode,
             Phone = created.Phone,
             CityId = created.CityId,
@@ -141,8 +126,6 @@ public class AddressService : IAddressService
         {
             AddressId = dto.AddressId,
             Street = dto.Street,
-            Street2 = dto.Street2,
-            District = dto.District,
             PostalCode = dto.PostalCode,
             Phone = dto.Phone,
             CityId = dto.CityId,
@@ -153,8 +136,6 @@ public class AddressService : IAddressService
         {
             AddressId = updated.AddressId,
             Street = updated.Street,
-            Street2 = updated.Street2,
-            District = updated.District,
             PostalCode = updated.PostalCode,
             Phone = updated.Phone,
             CityId = updated.CityId,

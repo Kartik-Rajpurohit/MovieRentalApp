@@ -18,8 +18,9 @@ namespace MovieRental.Apis.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null)
-            => Ok(await _customerService.GetAllCustomersAsync(page, pageSize, search, isActive));
+            [FromQuery] bool? isActive = null,
+            [FromQuery] int? storeId = null)
+            => Ok(await _customerService.GetAllCustomersAsync(page, pageSize, search, isActive, storeId));
 
         // GET api/customer/{id} — returns single customer by CustomerId
         [HttpGet("{id}")]

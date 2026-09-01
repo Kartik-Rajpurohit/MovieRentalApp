@@ -37,20 +37,27 @@ export default function StoreTable() {
   const [sortOrder, setSortOrder] = useState(1);
   const [search, setSearch] = useState("");
   const addDialog = useDialog();
-  const [form, setForm] = useState({ addressId: null });
+  const [form, setForm] = useState({ addressId: null, managerStaffId: null });
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
   const handleAdd = async () => {
-    if (!form.addressId) {
-      setFormErrors({ addressId: "Address is required" });
+    const errs = {};
+    if (!form.managerStaffId) errs.managerStaffId = "Manager is required";
+    if (!form.addressId) errs.addressId = "Address is required";
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
       return;
     }
+
     setSaving(true);
     try {
-      await createStore({ addressId: form.addressId });
+      await createStore({
+        addressId: form.addressId,
+        managerStaffId: form.managerStaffId,
+      });
       addDialog.close();
-      setForm({ addressId: null });
+      setForm({ addressId: null, managerStaffId: null });
       setFormErrors({});
       loadStores();
     } catch (err) {
@@ -134,7 +141,7 @@ export default function StoreTable() {
         visible={addDialog.visible}
         onHide={() => {
           addDialog.close();
-          setForm({ addressId: null });
+          setForm({ addressId: null, managerStaffId: null });
           setFormErrors({});
         }}
         title="Add Store"

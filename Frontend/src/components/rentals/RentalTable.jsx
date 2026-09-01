@@ -10,6 +10,10 @@ import { getRentals } from "../../services/rentalService";
 import { Button } from "primereact/button";
 import { Badge } from "primereact/badge";
 import RentalFilterDialog from "./RentalFilterDialog";
+import useDialog from "../../hooks/useDialog";
+import FormDialog from "../common/FormDialog";
+import RentalFormFields from "./RentalFormFields";
+import { createRental } from "../../services/rentalService";
 
 export default function RentalTable() {
   const navigate = useNavigate();
@@ -24,6 +28,42 @@ export default function RentalTable() {
   const INIT_FILTERS = { isReturned: null, customerId: null, staffId: null };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  const addDialog = useDialog();
+  const [form, setForm] = useState({
+    inventoryId: null,
+    customerId: null,
+    staffId: null,
+  });
+  const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  const handleAdd = async () => {
+    const errs = {};
+    if (!form.inventoryId) errs.inventoryId = "Inventory item is required";
+    if (!form.customerId) errs.customerId = "Customer is required";
+    if (!form.staffId) errs.staffId = "Staff is required";
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createRental({
+        inventoryId: form.inventoryId,
+        customerId: form.customerId,
+        staffId: form.staffId,
+      });
+      addDialog.close();
+      setForm({ inventoryId: null, customerId: null, staffId: null });
+      setFormErrors({});
+      loadRentals();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     loadRentals();
@@ -68,7 +108,26 @@ export default function RentalTable() {
 
   return (
     <div>
-      <PageHeader title="Rentals" />
+      <FormDialog
+        visible={addDialog.visible}
+        onHide={() => {
+          addDialog.close();
+          setForm({ inventoryId: null, customerId: null, staffId: null });
+          setFormErrors({});
+        }}
+        title="Add Rental"
+        onSubmit={handleAdd}
+        loading={saving}
+        submitLabel="Add Rental"
+      >
+        <RentalFormFields form={form} setForm={setForm} errors={formErrors} />
+      </FormDialog>
+
+      <PageHeader
+        title="Rentals"
+        onAdd={addDialog.open}
+        addLabel="Add Rental"
+      />
 
       <RentalFilterDialog
         visible={filterVisible}

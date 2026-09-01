@@ -34,7 +34,9 @@ export default function UserDetailPage() {
   const [toggleLoading, setToggleLoading] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
 
-  useEffect(() => { fetchUser(); }, [id]);
+  useEffect(() => {
+    fetchUser();
+  }, [id]);
 
   const fetchUser = async () => {
     setPageLoading(true);
@@ -83,7 +85,12 @@ export default function UserDetailPage() {
         backLabel="Users"
         title={user?.fullName}
         actions={[
-          { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
+          {
+            label: "Edit",
+            icon: "pi pi-pencil",
+            outlined: true,
+            onClick: () => setEditVisible(true),
+          },
           {
             label: user?.isActive ? "Disable" : "Enable",
             icon: user?.isActive ? "pi pi-ban" : "pi pi-check-circle",
@@ -97,21 +104,56 @@ export default function UserDetailPage() {
 
       <Card>
         {/* Header — Avatar + Name */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "32px", flexWrap: "wrap" }}>
-          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <i className="pi pi-user" style={{ fontSize: "1.8rem", color: "#6366f1" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            marginBottom: "32px",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              width: "64px",
+              height: "64px",
+              borderRadius: "50%",
+              background: "#ede9fe",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <i
+              className="pi pi-user"
+              style={{ fontSize: "1.8rem", color: "#6366f1" }}
+            />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 600 }}>{user?.fullName}</h2>
-            <span style={{ color: "#6b7280", fontSize: "14px" }}>{user?.email}</span>
+            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 600 }}>
+              {user?.fullName}
+            </h2>
+            <span style={{ color: "#6b7280", fontSize: "14px" }}>
+              {user?.email}
+            </span>
             <div style={{ marginTop: "6px" }}>
-              <Tag value={user?.isActive ? "Active" : "Inactive"} severity={user?.isActive ? "success" : "danger"} />
+              <Tag
+                value={user?.isActive ? "Active" : "Inactive"}
+                severity={user?.isActive ? "success" : "danger"}
+              />
             </div>
           </div>
         </div>
 
         {/* Info Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "24px",
+          }}
+        >
           <div>
             <p style={fieldLabelStyle}>ID</p>
             <p style={fieldValueStyle}>{user?.userId}</p>
@@ -126,27 +168,68 @@ export default function UserDetailPage() {
           </div>
           <div>
             <p style={fieldLabelStyle}>Role</p>
-            <p style={{ ...fieldValueStyle, textTransform: "capitalize" }}>{user?.roleName}</p>
+            <p style={{ ...fieldValueStyle, textTransform: "capitalize" }}>
+              {user?.roleName}
+            </p>
           </div>
           <div>
             <p style={fieldLabelStyle}>Status</p>
-            <Tag value={user?.isActive ? "Active" : "Inactive"} severity={user?.isActive ? "success" : "danger"} />
+            <Tag
+              value={user?.isActive ? "Active" : "Inactive"}
+              severity={user?.isActive ? "success" : "danger"}
+            />
           </div>
         </div>
 
         {/* Address Section */}
-        <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "24px", marginTop: "28px" }}>
-          <h3 style={{ margin: "0 0 20px 0", fontSize: "16px", fontWeight: 600, color: "#374151" }}>
-            <i className="pi pi-map-marker" style={{ marginRight: "8px", color: "#6366f1" }} />
+        <div
+          style={{
+            borderTop: "1px solid #e5e7eb",
+            paddingTop: "24px",
+            marginTop: "28px",
+          }}
+        >
+          <h3
+            style={{
+              margin: "0 0 20px 0",
+              fontSize: "16px",
+              fontWeight: 600,
+              color: "#374151",
+            }}
+          >
+            <i
+              className="pi pi-map-marker"
+              style={{ marginRight: "8px", color: "#6366f1" }}
+            />
             Address
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
-            <div><p style={fieldLabelStyle}>Street</p><p style={fieldValueStyle}>{user?.street ?? "—"}</p></div>
-            <div><p style={fieldLabelStyle}>District</p><p style={fieldValueStyle}>{user?.district ?? "—"}</p></div>
-            <div><p style={fieldLabelStyle}>Postal Code</p><p style={fieldValueStyle}>{user?.postalCode ?? "—"}</p></div>
-            <div><p style={fieldLabelStyle}>Phone</p><p style={fieldValueStyle}>{user?.phone ?? "—"}</p></div>
-            <div><p style={fieldLabelStyle}>City</p><p style={fieldValueStyle}>{user?.cityName ?? "—"}</p></div>
-            <div><p style={fieldLabelStyle}>Country</p><p style={fieldValueStyle}>{user?.countryName ?? "—"}</p></div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "24px",
+            }}
+          >
+            <div>
+              <p style={fieldLabelStyle}>Street</p>
+              <p style={fieldValueStyle}>{user?.street ?? "—"}</p>
+            </div>
+            <div>
+              <p style={fieldLabelStyle}>Postal Code</p>
+              <p style={fieldValueStyle}>{user?.postalCode ?? "—"}</p>
+            </div>
+            <div>
+              <p style={fieldLabelStyle}>Phone</p>
+              <p style={fieldValueStyle}>{user?.phone ?? "—"}</p>
+            </div>
+            <div>
+              <p style={fieldLabelStyle}>City</p>
+              <p style={fieldValueStyle}>{user?.cityName ?? "—"}</p>
+            </div>
+            <div>
+              <p style={fieldLabelStyle}>Country</p>
+              <p style={fieldValueStyle}>{user?.countryName ?? "—"}</p>
+            </div>
           </div>
         </div>
       </Card>

@@ -71,8 +71,6 @@ public class AuthService : IAuthService
             var newAddress = new Address
             {
                 Street = dto.Street,
-                Street2 = null,
-                District = dto.District ?? string.Empty,
                 PostalCode = dto.PostalCode,
                 Phone = dto.Phone ?? string.Empty,
                 CityId = dto.CityId.Value,

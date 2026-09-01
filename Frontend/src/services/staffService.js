@@ -10,6 +10,7 @@ export const getStaff = async (
   const params = { page, pageSize };
   if (search) params.search = search;
   if (isActive !== null && isActive !== undefined) params.isActive = isActive;
+  if (storeId !== null) params.storeId = storeId;
   const res = await api.get(API, { params });
   return res.data;
 };

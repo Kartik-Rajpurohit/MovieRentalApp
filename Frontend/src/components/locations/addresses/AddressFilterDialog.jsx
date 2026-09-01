@@ -3,7 +3,7 @@ import FilterDialog from "../../common/FilterDialog";
 import AddressFilters from "./AddressFilters";
 import useFilters from "../../../hooks/useFilters";
 
-const INIT_FILTERS = { city: null, district: null, postalCode: null };
+const INIT_FILTERS = { city: null, postalCode: null };
 
 export default function AddressFilterDialog({
   visible,

@@ -14,15 +14,6 @@ export default function AddressFilters({ filters, setFilter }) {
         />
       </div>
       <div>
-        <label style={LABEL_STYLE}>District</label>
-        <InputText
-          value={filters.district ?? ""}
-          onChange={(e) => setFilter("district")(e.target.value || null)}
-          placeholder="Filter by district"
-          style={{ width: "100%" }}
-        />
-      </div>
-      <div>
         <label style={LABEL_STYLE}>Postal Code</label>
         <InputText
           value={filters.postalCode ?? ""}

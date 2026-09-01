@@ -5,7 +5,7 @@ namespace MovieRental.Services.Interfaces
 {
     public interface IStaffService
     {
-        Task<PaginatedResponseDto<StaffResponseDto>> GetAllStaffAsync(int page, int pageSize, string? search, bool? isActive);
+        Task<PaginatedResponseDto<StaffResponseDto>> GetAllStaffAsync(int page, int pageSize, string? search, bool? isActive, int? storeId = null);
         Task<StaffDetailDto?> GetStaffByIdAsync(int id);
     }
 }

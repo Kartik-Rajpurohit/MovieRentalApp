@@ -38,8 +38,6 @@ public class AddressRepository : IAddressRepository
         var existing = await _context.Addresses.FindAsync(address.AddressId);
         if (existing == null) return null;
         existing.Street = address.Street;
-        existing.Street2 = address.Street2;
-        existing.District = address.District;
         existing.PostalCode = address.PostalCode;
         existing.Phone = address.Phone;
         existing.CityId = address.CityId;
