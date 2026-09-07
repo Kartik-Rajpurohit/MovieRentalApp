@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tag } from "primereact/tag";
 import { Card } from "primereact/card";
@@ -9,6 +9,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import MovieDialog from "../../components/movies/MovieDialog";
 import { getMovieById, deleteMovie } from "../../services/movieService";
+import { AuthContext } from "../../context/AuthContext";
 
 const RATING_SEVERITY = { G: "success", PG: "info", "PG-13": "warning", R: "danger", "NC-17": "danger" };
 const fieldStyle = { display: "flex", flexDirection: "column", gap: "4px" };
@@ -16,6 +17,7 @@ const labelStyle = { fontSize: "12px", color: "#6b7280", textTransform: "upperca
 const valueStyle = { fontSize: "15px", color: "#111827", fontWeight: 500 };
 
 export default function MovieDetailPage() {
+  const { user } = useContext(AuthContext);
   const { id } = useParams();
   const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
@@ -75,7 +77,7 @@ export default function MovieDetailPage() {
         backPath="/movies"
         backLabel="Movies"
         title={movie.title}
-        actions={[
+        actions={user?.role === "Customer" ? [] : [
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
         ]}

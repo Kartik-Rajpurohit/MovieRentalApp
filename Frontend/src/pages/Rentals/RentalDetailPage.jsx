@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
@@ -8,6 +8,7 @@ import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import { getRentalById, returnRental } from "../../services/rentalService";
+import { AuthContext } from "../../context/AuthContext";
 
 const FIELD_LABEL = {
   margin: "0 0 4px 0",
@@ -26,6 +27,7 @@ const FIELD_VALUE = {
 };
 
 export default function RentalDetailPage() {
+  const { user } = useContext(AuthContext);
   const { id } = useParams();
   const navigate = useNavigate();
   const [rental, setRental] = useState(null);
@@ -86,10 +88,12 @@ export default function RentalDetailPage() {
 
       <DetailPageHeader
         backPath="/rentals"
-        backLabel="Rentals"
+        backLabel={user?.role === "Customer" ? "My Rentals" : "Rentals"}
         title={`Rental #${rental.rentalId}`}
         actions={[
-          ...(!rental.isReturned ? [{ label: "Mark as Returned", icon: "pi pi-check", severity: "success", outlined: true, loading: returning, onClick: handleReturn }] : []),
+          ...(!rental.isReturned && user?.role !== "Customer"
+            ? [{ label: "Mark as Returned", icon: "pi pi-check", severity: "success", outlined: true, loading: returning, onClick: handleReturn }]
+            : []),
         ]}
       />
 

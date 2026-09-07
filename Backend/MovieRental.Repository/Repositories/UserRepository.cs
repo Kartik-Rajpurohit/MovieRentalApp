@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Users;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Data;
@@ -29,6 +29,8 @@ namespace MovieRental.Repository.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Customer)
+                .Include(u => u.Staff)
                 .Include(u => u.Address)
                     .ThenInclude(a => a!.City)
                         .ThenInclude(c => c!.Country)
@@ -137,6 +139,8 @@ namespace MovieRental.Repository.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Customer)
+                .Include(u => u.Staff)
                 .Include(u => u.Address)
                     .ThenInclude(a => a!.City)
                         .ThenInclude(c => c!.Country)
@@ -155,14 +159,17 @@ namespace MovieRental.Repository.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Customer)
+                .Include(u => u.Staff)
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
         }
 
-        public async Task RevokeRefreshTokenAsync(string refreshToken)
+        public async Task RevokeRefreshTokenAsync(string refreshToken, int userId)
         {
+            // Match both the token AND the userId — prevents revoking someone else's token
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
-            if (user == null) return;
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken && u.UserId == userId);
+            if (user == null) return; // Token doesn't exist or doesn't belong to this user
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
             await _context.SaveChangesAsync();

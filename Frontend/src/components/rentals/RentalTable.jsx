@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -14,8 +14,10 @@ import useDialog from "../../hooks/useDialog";
 import FormDialog from "../common/FormDialog";
 import RentalFormFields from "./RentalFormFields";
 import { createRental } from "../../services/rentalService";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function RentalTable() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const { lazyState, onPage, reset } = usePagination(10);
 
@@ -79,7 +81,7 @@ export default function RentalTable() {
         sortField,
         sortOrder: sortOrder === 1 ? "asc" : "desc",
         isReturned: filters.isReturned ?? undefined,
-        customerId: filters.customerId ?? undefined,
+        customerId: user?.role === "Customer" ? user.customerId : (filters.customerId ?? undefined),
         staffId: filters.staffId ?? undefined,
       });
       setRentals(res.data ?? []);
@@ -124,8 +126,8 @@ export default function RentalTable() {
       </FormDialog>
 
       <PageHeader
-        title="Rentals"
-        onAdd={addDialog.open}
+        title={user?.role === "Customer" ? "My Rentals" : "Rentals"}
+        onAdd={user?.role !== "Customer" ? addDialog.open : undefined}
         addLabel="Add Rental"
       />
 
@@ -198,15 +200,17 @@ export default function RentalTable() {
           style={{ width: "80px" }}
         />
         <Column field="filmTitle" header="Film" sortable />
-        <Column
-          field="customerName"
-          header="Customer"
-          body={(r) => (
-            <span style={{ textTransform: "capitalize" }}>
-              {r.customerName?.toLowerCase()}
-            </span>
-          )}
-        />
+        {user?.role !== "Customer" && (
+          <Column
+            field="customerName"
+            header="Customer"
+            body={(r) => (
+              <span style={{ textTransform: "capitalize" }}>
+                {r.customerName?.toLowerCase()}
+              </span>
+            )}
+          />
+        )}
         <Column
           field="staffName"
           header="Staff"

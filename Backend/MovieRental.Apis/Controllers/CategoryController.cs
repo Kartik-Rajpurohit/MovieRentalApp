@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Categories;
 using MovieRental.Domain.QueryParameters;
@@ -38,6 +38,7 @@ namespace MovieRental.Apis.Controllers
 
         // POST api/category — create new category
         [HttpPost]
+        [Authorize(Roles = "Admin,Staff")] // Customers can only read categories
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
         {
             var result = await _categoryService.CreateCategoryAsync(dto);
@@ -46,6 +47,7 @@ namespace MovieRental.Apis.Controllers
 
         // PATCH api/category — partial update
         [HttpPatch]
+        [Authorize(Roles = "Admin,Staff")] // Customers can only read categories
         public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryDto dto)
         {
             var result = await _categoryService.UpdateCategoryAsync(dto);
@@ -55,6 +57,7 @@ namespace MovieRental.Apis.Controllers
 
         // DELETE api/category/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Staff")] // Customers can only read categories
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var result = await _categoryService.DeleteCategoryAsync(id);

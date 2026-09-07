@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import HomeRoute from "./routes/HomeRoute";
 
 import LoginPage from "./pages/Auth/LoginPage";
 import SignUpPage from "./pages/Auth/SignUpPage";
@@ -37,13 +38,6 @@ import CityDetailPage from "./pages/Locations/CityDetailPage";
 import AddressesPage from "./pages/Locations/AddressesPage";
 import AddressDetailPage from "./pages/Locations/AddressDetailPage";
 
-// HomeRoute — only for logged in users with no role
-function HomeRoute({ children }) {
-  const savedToken = localStorage.getItem("token");
-  if (!savedToken) return <Navigate to="/login" replace />;
-  return children;
-}
-
 function App() {
   return (
     <AuthProvider>
@@ -54,24 +48,10 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
 
           {/* Home — logged in but no role assigned */}
-          <Route
-            path="/home"
-            element={
-              <HomeRoute>
-                <HomePage />
-              </HomeRoute>
-            }
-          />
+          <Route path="/home" element={<HomeRoute><HomePage /></HomeRoute>} />
 
-          {/* Dashboard — role wale users */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Dashboard — all roles */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
 
           {/* Users — Admin only */}
           <Route path="/users" element={<ProtectedRoute allowedRoles={["Admin"]}><UsersPage /></ProtectedRoute>} />
@@ -85,49 +65,49 @@ function App() {
           <Route path="/staff" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StaffPage /></ProtectedRoute>} />
           <Route path="/staff/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StaffDetailPage /></ProtectedRoute>} />
 
-          {/* Customers — Admin, Staff, Customer */}
-          <Route path="/customers" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CustomersPage /></ProtectedRoute>} />
-          <Route path="/customers/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CustomerDetailPage /></ProtectedRoute>} />
+          {/* Customers — Admin and Staff */}
+          <Route path="/customers" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CustomersPage /></ProtectedRoute>} />
+          <Route path="/customers/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CustomerDetailPage /></ProtectedRoute>} />
 
-          {/* Movies — Admin and Staff */}
-          <Route path="/movies" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><MoviesPage /></ProtectedRoute>} />
-          <Route path="/movies/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><MovieDetailPage /></ProtectedRoute>} />
+          {/* Movies — Admin, Staff, Customer */}
+          <Route path="/movies" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><MoviesPage /></ProtectedRoute>} />
+          <Route path="/movies/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><MovieDetailPage /></ProtectedRoute>} />
 
-          {/* Actors — Admin and Staff */}
-          <Route path="/actors" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><ActorsPage /></ProtectedRoute>} />
-          <Route path="/actors/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><ActorDetailPage /></ProtectedRoute>} />
+          {/* Actors — Admin, Staff, Customer */}
+          <Route path="/actors" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><ActorsPage /></ProtectedRoute>} />
+          <Route path="/actors/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><ActorDetailPage /></ProtectedRoute>} />
 
-          {/* Categories — Admin and Staff */}
-          <Route path="/categories" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CategoriesPage /></ProtectedRoute>} />
-          <Route path="/categories/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CategoryDetailPage /></ProtectedRoute>} />
+          {/* Categories — Admin, Staff, Customer */}
+          <Route path="/categories" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CategoriesPage /></ProtectedRoute>} />
+          <Route path="/categories/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CategoryDetailPage /></ProtectedRoute>} />
 
-          {/* Languages — Admin and Staff */}
-          <Route path="/languages" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><LanguagesPage /></ProtectedRoute>} />
-          <Route path="/languages/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><LanguageDetailPage /></ProtectedRoute>} />
+          {/* Languages — Admin, Staff, Customer */}
+          <Route path="/languages" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><LanguagesPage /></ProtectedRoute>} />
+          <Route path="/languages/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><LanguageDetailPage /></ProtectedRoute>} />
 
           {/* Inventory — Admin and Staff */}
           <Route path="/inventory" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><InventoryPage /></ProtectedRoute>} />
           <Route path="/inventory/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><InventoryDetailPage /></ProtectedRoute>} />
 
-          {/* Rentals — Admin and Staff */}
-          <Route path="/rentals" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><RentalsPage /></ProtectedRoute>} />
-          <Route path="/rentals/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><RentalDetailPage /></ProtectedRoute>} />
+          {/* Rentals — Admin, Staff, Customer */}
+          <Route path="/rentals" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><RentalsPage /></ProtectedRoute>} />
+          <Route path="/rentals/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><RentalDetailPage /></ProtectedRoute>} />
 
-          {/* Payments — Admin and Staff */}
-          <Route path="/payments" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><PaymentsPage /></ProtectedRoute>} />
-          <Route path="/payments/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><PaymentDetailPage /></ProtectedRoute>} />
+          {/* Payments — Admin, Staff, Customer */}
+          <Route path="/payments" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><PaymentsPage /></ProtectedRoute>} />
+          <Route path="/payments/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><PaymentDetailPage /></ProtectedRoute>} />
 
           {/* Stores — Admin and Staff */}
           <Route path="/stores" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoresPage /></ProtectedRoute>} />
           <Route path="/stores/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoreDetailPage /></ProtectedRoute>} />
 
-          {/* Locations — Admin and Staff */}
-          <Route path="/countries" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CountriesPage /></ProtectedRoute>} />
-          <Route path="/countries/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CountryDetailPage /></ProtectedRoute>} />
-          <Route path="/cities" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CitiesPage /></ProtectedRoute>} />
-          <Route path="/cities/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CityDetailPage /></ProtectedRoute>} />
-          <Route path="/addresses" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><AddressesPage /></ProtectedRoute>} />
-          <Route path="/addresses/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><AddressDetailPage /></ProtectedRoute>} />
+          {/* Locations — Admin only */}
+          <Route path="/countries" element={<ProtectedRoute allowedRoles={["Admin"]}><CountriesPage /></ProtectedRoute>} />
+          <Route path="/countries/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CountryDetailPage /></ProtectedRoute>} />
+          <Route path="/cities" element={<ProtectedRoute allowedRoles={["Admin"]}><CitiesPage /></ProtectedRoute>} />
+          <Route path="/cities/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CityDetailPage /></ProtectedRoute>} />
+          <Route path="/addresses" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressesPage /></ProtectedRoute>} />
+          <Route path="/addresses/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressDetailPage /></ProtectedRoute>} />
 
           {/* Default redirects */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

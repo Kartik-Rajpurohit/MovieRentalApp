@@ -1,53 +1,51 @@
 import axios from "axios";
 
+// Uses VITE_API_BASE_URL from .env — no hardcoded URLs (fixes Issue #11)
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7176/api";
+
 const api = axios.create({
-  baseURL: "https://localhost:7176/api",
+  baseURL: API_BASE,
+  withCredentials: true, // Sends HttpOnly refresh token cookie automatically on every request
 });
 
-// Har request mein token automatically lagao
+// Attach access token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// 401 aaye toh refresh karo
+// On 401 — silently refresh the access token using the HttpOnly cookie
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
 
-    // 401 aaya + already retry nahi kiya + login/refresh endpoint nahi hai
+    // Retry once on 401 — but not for auth endpoints (avoid infinite loops)
     if (
       error.response?.status === 401 &&
       !original._retry &&
-      !original.url?.includes("/auth/")
+      !original.url?.includes("/Auth/")
     ) {
       original._retry = true;
 
-      const storedRefreshToken = localStorage.getItem("refreshToken");
-      if (!storedRefreshToken) {
-        localStorage.clear();
-        window.location.href = "/login";
-        return Promise.reject(error);
-      }
-
       try {
+        // Cookie is sent automatically — no refresh token in the request body
         const res = await axios.post(
-          "https://localhost:7176/api/Auth/refresh",
-          { refreshToken: storedRefreshToken },
+          `${API_BASE}/Auth/refresh`,
+          {},
+          { withCredentials: true }
         );
 
         const newToken = res.data.token;
         localStorage.setItem("token", newToken);
-        localStorage.setItem("refreshToken", res.data.refreshToken);
         localStorage.setItem("user", JSON.stringify(res.data));
 
-        // Original request retry karo naye token ke saath
         original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
       } catch {
-        localStorage.clear();
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         window.location.href = "/login";
         return Promise.reject(error);
       }

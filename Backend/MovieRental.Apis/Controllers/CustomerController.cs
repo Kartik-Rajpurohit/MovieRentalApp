@@ -6,7 +6,7 @@ namespace MovieRental.Apis.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")] // All roles can access customer endpoints
+    [Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can view customer records
     public class CustomerController : ControllerBase
     {
         private readonly ICustomerService _customerService;

@@ -1,6 +1,8 @@
+import { useContext } from "react";
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE } from "../../utils/constants";
+import { AuthContext } from "../../context/AuthContext";
 
 const RETURN_STATUS_OPTIONS = [
   { label: "All", value: null },
@@ -9,6 +11,8 @@ const RETURN_STATUS_OPTIONS = [
 ];
 
 export default function RentalFilters({ filters, setFilter }) {
+  const { user } = useContext(AuthContext);
+
   return (
     <>
       <div>
@@ -21,26 +25,30 @@ export default function RentalFilters({ filters, setFilter }) {
           style={{ width: "100%" }}
         />
       </div>
-      <div>
-        <label style={LABEL_STYLE}>Customer ID</label>
-        <InputText
-          value={filters.customerId ?? ""}
-          onChange={(e) => setFilter("customerId")(e.target.value || null)}
-          placeholder="Filter by customer ID"
-          style={{ width: "100%" }}
-          keyfilter="int"
-        />
-      </div>
-      <div>
-        <label style={LABEL_STYLE}>Staff ID</label>
-        <InputText
-          value={filters.staffId ?? ""}
-          onChange={(e) => setFilter("staffId")(e.target.value || null)}
-          placeholder="Filter by staff ID"
-          style={{ width: "100%" }}
-          keyfilter="int"
-        />
-      </div>
+      {user?.role !== "Customer" && (
+        <>
+          <div>
+            <label style={LABEL_STYLE}>Customer ID</label>
+            <InputText
+              value={filters.customerId ?? ""}
+              onChange={(e) => setFilter("customerId")(e.target.value || null)}
+              placeholder="Filter by customer ID"
+              style={{ width: "100%" }}
+              keyfilter="int"
+            />
+          </div>
+          <div>
+            <label style={LABEL_STYLE}>Staff ID</label>
+            <InputText
+              value={filters.staffId ?? ""}
+              onChange={(e) => setFilter("staffId")(e.target.value || null)}
+              placeholder="Filter by staff ID"
+              style={{ width: "100%" }}
+              keyfilter="int"
+            />
+          </div>
+        </>
+      )}
     </>
   );
 }

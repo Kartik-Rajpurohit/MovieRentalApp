@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -25,10 +25,7 @@ public class AuthService : IAuthService
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
         var user = await _userRepository.GetUserByEmailAsync(dto.Email);
-        if (user == null)
-            throw new UnauthorizedAccessException("No User Found");
-
-        if (user.PasswordHash != dto.Password)
+        if (user == null || user.PasswordHash != dto.Password)
             throw new UnauthorizedAccessException("Invalid email or password");
 
         if (!user.IsActive)
@@ -47,6 +44,9 @@ public class AuthService : IAuthService
             Email = user.Email,
             FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role?.RoleName ?? "Unassigned",
+            CustomerId = user.Customer?.CustomerId,
+            StoreId = user.Staff?.StoreId,
+            StaffId = user.Staff?.StaffId,
             Token = accessToken,
             RefreshToken = refreshToken
         };
@@ -110,6 +110,9 @@ public class AuthService : IAuthService
             Email = reloaded.Email,
             FullName = $"{reloaded.FirstName} {reloaded.LastName}".Trim(),
             Role = reloaded.Role?.RoleName ?? "Unassigned",
+            CustomerId = reloaded.Customer?.CustomerId,
+            StoreId = reloaded.Staff?.StoreId,
+            StaffId = reloaded.Staff?.StaffId,
             Token = accessToken,
             RefreshToken = refreshToken
         };
@@ -141,6 +144,9 @@ public class AuthService : IAuthService
             Email = user.Email,
             FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role?.RoleName ?? "Unassigned",
+            CustomerId = user.Customer?.CustomerId,
+            StoreId = user.Staff?.StoreId,
+            StaffId = user.Staff?.StaffId,
             Token = newAccessToken,
             RefreshToken = newRefreshToken
         };
@@ -153,13 +159,24 @@ public class AuthService : IAuthService
             Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
             new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "Unassigned")
         };
+
+        if (user.Customer != null)
+        {
+            claims.Add(new Claim("customerId", user.Customer.CustomerId.ToString()));
+        }
+
+        if (user.Staff != null)
+        {
+            claims.Add(new Claim("staffId", user.Staff.StaffId.ToString()));
+            claims.Add(new Claim("storeId", user.Staff.StoreId.ToString()));
+        }
 
         var descriptor = new SecurityTokenDescriptor
         {
@@ -181,8 +198,13 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(bytes);
     }
 
-    public async Task LogoutAsync(string refreshToken)
+    public async Task LogoutAsync(string refreshToken, int userId)
     {
-        await _userRepository.RevokeRefreshTokenAsync(refreshToken);
+        // Verify the token actually belongs to this user before revoking
+        var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
+        if (user == null || user.UserId != userId)
+            throw new UnauthorizedAccessException("Invalid or mismatched refresh token");
+
+        await _userRepository.RevokeRefreshTokenAsync(refreshToken, userId);
     }
 }

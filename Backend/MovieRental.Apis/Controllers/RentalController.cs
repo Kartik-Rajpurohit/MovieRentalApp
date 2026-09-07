@@ -8,7 +8,7 @@ namespace MovieRental.Apis.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Roles = "Admin,Staff,Customer")] // Customer can view their own rentals
     public class RentalController : ControllerBase
     {
         private readonly IRentalService _rentalService;
@@ -18,6 +18,7 @@ namespace MovieRental.Apis.Controllers
             _rentalService = rentalService;
         }
 
+        // GET api/rental — paginated list
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] RentalQueryParametersDto queryParams)
         {
@@ -25,6 +26,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
+        // GET api/rental/{id} — single rental detail
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -33,14 +35,18 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
+        // POST api/rental — create rental (Admin and Staff only)
         [HttpPost]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreateRentalDto dto)
         {
             var result = await _rentalService.CreateRentalAsync(dto);
             return Ok(result);
         }
 
+        // PATCH api/rental/{id}/return — mark as returned (Admin and Staff only)
         [HttpPatch("{id}/return")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Return(int id)
         {
             var result = await _rentalService.ReturnRentalAsync(id);

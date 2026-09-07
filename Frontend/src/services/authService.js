@@ -15,14 +15,13 @@ export const signUpUser = async (payload) => {
   return res.data;
 };
 
-export const refreshToken = async (refreshToken) => {
-  const res = await api.post(`${AUTH}/refresh`, { refreshToken });
+export const refreshToken = async () => {
+  // HttpOnly cookie is sent automatically — no token in request body
+  const res = await api.post(`${AUTH}/refresh`);
   return res.data;
 };
 
 export const logoutUser = async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (refreshToken) {
-    await api.post("/Auth/logout", { refreshToken });
-  }
+  // HttpOnly cookie sent automatically; backend revokes and clears it
+  await api.post("/Auth/logout");
 };

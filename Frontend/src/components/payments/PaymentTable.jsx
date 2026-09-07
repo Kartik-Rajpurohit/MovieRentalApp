@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { useNavigate } from "react-router-dom";
@@ -13,8 +13,10 @@ import useDialog from "../../hooks/useDialog";
 import FormDialog from "../common/FormDialog";
 import PaymentFormFields from "./PaymentFormFields";
 import { createPayment } from "../../services/paymentService";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function PaymentTable() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const { lazyState, onPage, reset } = usePagination(10);
 
@@ -94,6 +96,7 @@ export default function PaymentTable() {
         sortField,
         sortOrder: sortOrderStr,
         search,
+        customerId: user?.role === "Customer" ? user.customerId : undefined,
         minAmount: filters.minAmount ?? undefined,
         maxAmount: filters.maxAmount ?? undefined,
         fromDate: filters.fromDate ? filters.fromDate.toISOString() : undefined,
@@ -158,8 +161,8 @@ export default function PaymentTable() {
       </FormDialog>
 
       <PageHeader
-        title="Payments"
-        onAdd={addDialog.open}
+        title={user?.role === "Customer" ? "My Payments" : "Payments"}
+        onAdd={user?.role !== "Customer" ? addDialog.open : undefined}
         addLabel="Add Payment"
       />
 
@@ -231,11 +234,13 @@ export default function PaymentTable() {
           sortable
           style={{ minWidth: "180px" }}
         />
-        <Column
-          field="customerName"
-          header="Customer"
-          style={{ minWidth: "140px" }}
-        />
+        {user?.role !== "Customer" && (
+          <Column
+            field="customerName"
+            header="Customer"
+            style={{ minWidth: "140px" }}
+          />
+        )}
         <Column
           field="staffName"
           header="Processed By"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
 import { Button } from "primereact/button";
@@ -6,6 +6,7 @@ import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import { getPaymentById } from "../../services/paymentService";
+import { AuthContext } from "../../context/AuthContext";
 
 const fieldStyle = { display: "flex", flexDirection: "column", gap: "4px" };
 
@@ -19,6 +20,7 @@ const labelStyle = {
 const valueStyle = { fontSize: "15px", color: "#111827", fontWeight: 500 };
 
 export default function PaymentDetailPage() {
+  const { user } = useContext(AuthContext);
   const { id } = useParams();
   const navigate = useNavigate();
   const [payment, setPayment] = useState(null);
@@ -52,7 +54,7 @@ export default function PaymentDetailPage() {
     <AppLayout>
       <DetailPageHeader
         backPath="/payments"
-        backLabel="Payments"
+        backLabel={user?.role === "Customer" ? "My Payments" : "Payments"}
         title={`Payment #${payment.paymentId}`}
       />
 

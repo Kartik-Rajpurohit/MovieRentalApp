@@ -86,18 +86,17 @@ namespace MovieRental.Apis.Controllers
             return Ok(cities);
         }
 
-        // GET api/user/roles — public endpoint for role dropdown
+        // GET api/user/roles — requires Admin authorization (inherits class level)
         [HttpGet("roles")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetRoles([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var roles = await _userService.GetAllRolesAsync(page, pageSize);
             return Ok(roles);
         }
 
-        // GET api/user/stores — public endpoint for store dropdown
+        // GET api/user/stores — requires Admin or Staff authorization
         [HttpGet("stores")]
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> GetStores([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             var stores = await _userService.GetAllStoresAsync(page, pageSize);

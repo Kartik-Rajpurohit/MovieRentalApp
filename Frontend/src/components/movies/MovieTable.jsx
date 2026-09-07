@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Tag } from "primereact/tag";
@@ -12,6 +12,7 @@ import MovieDialog from "./MovieDialog";
 import usePagination from "../../hooks/usePagination";
 import useFilters from "../../hooks/useFilters";
 import { getMovies } from "../../services/movieService";
+import { AuthContext } from "../../context/AuthContext";
 
 const INIT_FILTERS = {
   languageId: null,
@@ -34,6 +35,7 @@ const RATING_SEVERITY = {
 };
 
 export default function MovieTable() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const { lazyState, onPage, reset } = usePagination(10);
   const { filters, setFilters } = useFilters(INIT_FILTERS);
@@ -120,7 +122,7 @@ export default function MovieTable() {
       <PageHeader
         title="Movies"
         addLabel="Add Movie"
-        onAdd={() => setDialogVisible(true)}
+        onAdd={user?.role !== "Customer" ? () => setDialogVisible(true) : undefined}
       />
 
       {/* Toolbar */}

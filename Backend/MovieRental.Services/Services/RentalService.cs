@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Rentals;
@@ -5,16 +6,19 @@ using MovieRental.Domain.Entities;
 using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
+using System.Security.Claims;
 
 namespace MovieRental.Services.Services
 {
     public class RentalService : IRentalService
     {
         private readonly IRentalRepository _rentalRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public RentalService(IRentalRepository rentalRepository)
+        public RentalService(IRentalRepository rentalRepository, IHttpContextAccessor httpContextAccessor)
         {
             _rentalRepository = rentalRepository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         private static RentalResponseDto MapToResponse(Rental r) => new()
@@ -61,11 +65,43 @@ namespace MovieRental.Services.Services
         {
             var query = _rentalRepository.GetAllRentals();
 
-            // Filters
-            if (queryParams.CustomerId.HasValue)
-                query = query.Where(r => r.CustomerId == queryParams.CustomerId.Value);
+            var userPrincipal = _httpContextAccessor.HttpContext?.User;
+            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
-            if (queryParams.StaffId.HasValue)
+            // Automatic server-side role scoping
+            if (role == "Customer")
+            {
+                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
+                if (int.TryParse(customerIdClaim, out var customerId))
+                {
+                    query = query.Where(r => r.CustomerId == customerId);
+                }
+                else
+                {
+                    return new PaginatedResponseDto<RentalResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = queryParams.Page,
+                        PageSize = queryParams.PageSize,
+                        Data = new List<RentalResponseDto>()
+                    };
+                }
+            }
+            else if (role == "Staff")
+            {
+                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
+                if (int.TryParse(storeIdClaim, out var storeId))
+                {
+                    query = query.Where(r => r.Staff.StoreId == storeId);
+                }
+            }
+            else if (queryParams.CustomerId.HasValue)
+            {
+                query = query.Where(r => r.CustomerId == queryParams.CustomerId.Value);
+            }
+
+            if (role != "Staff" && queryParams.StaffId.HasValue)
                 query = query.Where(r => r.StaffId == queryParams.StaffId.Value);
 
             if (queryParams.InventoryId.HasValue)
@@ -147,6 +183,23 @@ namespace MovieRental.Services.Services
         {
             var rental = await _rentalRepository.GetRentalByIdAsync(id);
             if (rental == null) return null;
+
+            var userPrincipal = _httpContextAccessor.HttpContext?.User;
+            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (role == "Customer")
+            {
+                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
+                if (!int.TryParse(customerIdClaim, out var customerId) || rental.CustomerId != customerId)
+                    return null; // IDOR protection: Customer cannot view another's rental
+            }
+            else if (role == "Staff")
+            {
+                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
+                if (int.TryParse(storeIdClaim, out var storeId) && rental.Staff?.StoreId != storeId)
+                    return null; // Staff can only view their store's rental
+            }
+
             return MapToDetail(rental);
         }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Badge } from "primereact/badge";
@@ -9,8 +9,10 @@ import SearchBar from "../common/SearchBar";
 import CategoryDialog from "./CategoryDialog";
 import usePagination from "../../hooks/usePagination";
 import { getCategories } from "../../services/categoryService";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function CategoryTable() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const { lazyState, onPage, reset } = usePagination(10);
 
@@ -57,7 +59,7 @@ export default function CategoryTable() {
       <PageHeader
         title="Categories"
         addLabel="Add Category"
-        onAdd={() => setDialogVisible(true)}
+        onAdd={user?.role !== "Customer" ? () => setDialogVisible(true) : undefined}
       />
 
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Actors;
 using MovieRental.Domain.QueryParameters;
@@ -34,6 +34,7 @@ public class ActorController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Staff")] // Customers can only read actors
     public async Task<IActionResult> Create([FromBody] CreateActorDto dto)
     {
         var result = await _actorService.CreateActorAsync(dto);
@@ -41,6 +42,7 @@ public class ActorController : ControllerBase
     }
 
     [HttpPatch]
+    [Authorize(Roles = "Admin,Staff")] // Customers can only read actors
     public async Task<IActionResult> Update([FromBody] UpdateActorDto dto)
     {
         var result = await _actorService.UpdateActorAsync(dto);
@@ -49,6 +51,7 @@ public class ActorController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,Staff")] // Customers can only read actors
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _actorService.DeleteActorAsync(id);

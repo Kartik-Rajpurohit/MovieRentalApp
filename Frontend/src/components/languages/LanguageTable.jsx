@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { useNavigate } from "react-router-dom";
@@ -6,8 +6,10 @@ import PageHeader from "../common/PageHeader";
 import SearchBar from "../common/SearchBar";
 import LanguageDialog from "./LanguageDialog";
 import { getLanguages } from "../../services/languageService";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function LanguageTable() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [languages, setLanguages] = useState([]);
@@ -43,7 +45,7 @@ export default function LanguageTable() {
       <PageHeader
         title="Languages"
         addLabel="Add Language"
-        onAdd={() => setDialogVisible(true)}
+        onAdd={user?.role !== "Customer" ? () => setDialogVisible(true) : undefined}
       />
 
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Payments;
@@ -5,16 +6,19 @@ using MovieRental.Domain.Entities;
 using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
+using System.Security.Claims;
 
 namespace MovieRental.Services.Services
 {
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PaymentService(IPaymentRepository paymentRepository)
+        public PaymentService(IPaymentRepository paymentRepository, IHttpContextAccessor httpContextAccessor)
         {
             _paymentRepository = paymentRepository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         private static PaymentResponseDto MapToResponse(Payment p) => new()
@@ -55,11 +59,43 @@ namespace MovieRental.Services.Services
         {
             var query = _paymentRepository.GetAllPayments();
 
-            // Filters
-            if (queryParams.CustomerId.HasValue)
-                query = query.Where(p => p.CustomerId == queryParams.CustomerId.Value);
+            var userPrincipal = _httpContextAccessor.HttpContext?.User;
+            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
-            if (queryParams.StaffId.HasValue)
+            // Automatic server-side role scoping
+            if (role == "Customer")
+            {
+                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
+                if (int.TryParse(customerIdClaim, out var customerId))
+                {
+                    query = query.Where(p => p.CustomerId == customerId);
+                }
+                else
+                {
+                    return new PaginatedResponseDto<PaymentResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = queryParams.Page,
+                        PageSize = queryParams.PageSize,
+                        Data = new List<PaymentResponseDto>()
+                    };
+                }
+            }
+            else if (role == "Staff")
+            {
+                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
+                if (int.TryParse(storeIdClaim, out var storeId))
+                {
+                    query = query.Where(p => p.Staff.StoreId == storeId);
+                }
+            }
+            else if (queryParams.CustomerId.HasValue)
+            {
+                query = query.Where(p => p.CustomerId == queryParams.CustomerId.Value);
+            }
+
+            if (role != "Staff" && queryParams.StaffId.HasValue)
                 query = query.Where(p => p.StaffId == queryParams.StaffId.Value);
 
             if (queryParams.RentalId.HasValue)
@@ -124,6 +160,23 @@ namespace MovieRental.Services.Services
         {
             var payment = await _paymentRepository.GetPaymentByIdAsync(id);
             if (payment == null) return null;
+
+            var userPrincipal = _httpContextAccessor.HttpContext?.User;
+            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (role == "Customer")
+            {
+                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
+                if (!int.TryParse(customerIdClaim, out var customerId) || payment.CustomerId != customerId)
+                    return null; // IDOR protection: Customer cannot view another's payment
+            }
+            else if (role == "Staff")
+            {
+                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
+                if (int.TryParse(storeIdClaim, out var storeId) && payment.Staff?.StoreId != storeId)
+                    return null; // Staff can only view their store's payment
+            }
+
             return MapToDetail(payment);
         }
 

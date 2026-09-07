@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -8,6 +9,7 @@ using MovieRental.Repository.Repositories;
 using MovieRental.Services.Interfaces;
 using MovieRental.Services.Services;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,8 +54,32 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(builder.Configuration["Cors:AllowedOrigins"]!)
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials(); // Required for HttpOnly cookie to be sent with Axios withCredentials: true
     });
+});
+
+// ── Rate Limiting ─────────────────────────────────────────────
+// Protects auth endpoints from brute-force and abuse.
+// Fixed window: max 10 requests per IP per 60 seconds.
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("AuthRateLimit", limiterOptions =>
+    {
+        limiterOptions.PermitLimit         = 10;                          // max 10 requests
+        limiterOptions.Window              = TimeSpan.FromMinutes(1);     // per 60 seconds
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit          = 0;                           // no queuing — reject immediately
+    });
+
+    // Return 429 Too Many Requests with a Retry-After header
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+        await context.HttpContext.Response.WriteAsync(
+            "Too many requests. Please try again in 60 seconds.", cancellationToken);
+    };
 });
 
 // ── Database Configuration ────────────────────────────────────
@@ -128,6 +154,8 @@ builder.Services.AddScoped<IAddressService, AddressService>();
 // Dashboard
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
+builder.Services.AddHttpContextAccessor();
+
 // ── JWT Authentication Configuration ──────────────────────────
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
 var jwtIssuer    = builder.Configuration["Jwt:Issuer"];
@@ -145,11 +173,25 @@ builder.Services.AddAuthentication("Bearer")
             ValidIssuer              = jwtIssuer,
             ValidAudience            = jwtAudience,
             IssuerSigningKey         = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSecretKey!))
+                Encoding.UTF8.GetBytes(jwtSecretKey!)),
+            ClockSkew                = TimeSpan.Zero
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Default policy — any plain [Authorize] requires a real assigned role.
+    // This blocks Unassigned users from all endpoints that don't specify a role explicitly.
+    options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .RequireRole("Admin", "Staff", "Customer")
+        .Build();
+
+    // Named policy for Logout — only requires a valid JWT (any role including Unassigned).
+    // Unassigned users must be able to log out and have their refresh token revoked.
+    options.AddPolicy("AuthenticatedOnly", policy =>
+        policy.RequireAuthenticatedUser());
+});
 
 // ── Build App ─────────────────────────────────────────────────
 var app = builder.Build();
@@ -164,6 +206,9 @@ if (app.Environment.IsDevelopment())
 // ── Pipeline Setup ────────────────────────────────────────────
 app.UseHttpsRedirection();
 app.UseCors("ReactPolicy");
+
+// Rate limiting must come before auth in the pipeline
+app.UseRateLimiter();
 
 // Authentication must come before Authorization in pipeline
 app.UseAuthentication();

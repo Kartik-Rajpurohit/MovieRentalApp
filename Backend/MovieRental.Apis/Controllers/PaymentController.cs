@@ -8,7 +8,7 @@ namespace MovieRental.Apis.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Roles = "Admin,Staff,Customer")] // Customer can view their own payments
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
@@ -18,6 +18,7 @@ namespace MovieRental.Apis.Controllers
             _paymentService = paymentService;
         }
 
+        // GET api/payment — paginated list
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PaymentQueryParametersDto queryParams)
         {
@@ -25,6 +26,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
+        // GET api/payment/{id} — single payment detail
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -33,7 +35,9 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
+        // POST api/payment — create payment (Admin and Staff only)
         [HttpPost]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDto dto)
         {
             var result = await _paymentService.CreatePaymentAsync(dto);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -14,10 +14,12 @@ import {
   createActor,
   deleteActor,
 } from "../../services/actorService";
+import { AuthContext } from "../../context/AuthContext";
 
 const EMPTY_FORM = { firstName: "", lastName: "" };
 
 export default function ActorTable() {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const addDialog = useDialog();
   const { lazyState, onPage, reset } = usePagination(10);
@@ -125,7 +127,11 @@ export default function ActorTable() {
         <ActorFormFields form={form} setForm={setForm} errors={errors} />
       </FormDialog>
 
-      <PageHeader title="Actors" onAdd={addDialog.open} addLabel="Add Actor" />
+      <PageHeader
+        title="Actors"
+        onAdd={user?.role !== "Customer" ? addDialog.open : undefined}
+        addLabel="Add Actor"
+      />
 
       <div style={{ marginBottom: "16px" }}>
         <SearchBar

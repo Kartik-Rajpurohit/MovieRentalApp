@@ -23,40 +23,31 @@ export function AuthProvider({ children }) {
     setToken(authResponse.token);
     setUser(authResponse);
     localStorage.setItem("token", authResponse.token);
-    localStorage.setItem("refreshToken", authResponse.refreshToken); // ADD
     localStorage.setItem("user", JSON.stringify(authResponse));
+    // Refresh token is now an HttpOnly cookie set by the backend — never stored in localStorage
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (refreshToken) {
-      try {
-        await api.post("/Auth/logout", { refreshToken });
-      } catch (e) {
-        console.error("Logout error:", e);
-      }
+    try {
+      // HttpOnly cookie is sent automatically; backend revokes it and clears the cookie
+      await api.post("/Auth/logout");
+    } catch (e) {
+      console.error("Logout error:", e);
     }
 
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
   };
 
-  // Access token expire hone par auto refresh karo
+  // Auto-refresh access token when it expires — cookie is sent automatically
   const refresh = useCallback(async () => {
-    const storedRefreshToken = localStorage.getItem("refreshToken");
-    if (!storedRefreshToken) {
-      logout();
-      return null;
-    }
     try {
-      const data = await refreshTokenApi(storedRefreshToken);
+      const data = await refreshTokenApi();
       setToken(data.token);
       setUser(data);
       localStorage.setItem("token", data.token);
-      localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data));
       return data.token;
     } catch {
