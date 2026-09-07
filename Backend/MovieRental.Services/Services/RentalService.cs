@@ -76,6 +76,11 @@ namespace MovieRental.Services.Services
                     ? query.Where(r => r.ReturnDate != null)
                     : query.Where(r => r.ReturnDate == null);
 
+            if (queryParams.HasPayment.HasValue)
+                query = queryParams.HasPayment.Value
+                    ? query.Where(r => r.Payments.Any())
+                    : query.Where(r => !r.Payments.Any());
+
             // Search — by film title or customer name
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
@@ -120,6 +125,11 @@ namespace MovieRental.Services.Services
                     StaffId = r.StaffId,
                     StaffName = r.Staff.User.FirstName + " " + r.Staff.User.LastName,
                     LastUpdate = r.LastUpdate,
+                    RentalRate = r.Inventory.Film.RentalRate,
+                    SuggestedAmount = r.ReturnDate.HasValue
+                        ? r.Inventory.Film.RentalRate *
+                          (decimal)Math.Max(1, (r.ReturnDate.Value - r.RentalDate).TotalDays)
+                        : r.Inventory.Film.RentalRate,
                 })
                 .ToListAsync();
 

@@ -2,8 +2,6 @@ import { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-// Checks if user is logged in — redirects to /login if not
-// Optionally checks role — redirects to /dashboard if role not allowed
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { token, user, loading } = useContext(AuthContext);
 
@@ -12,6 +10,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   // Not logged in — redirect to login
   if (!token) return <Navigate to="/login" replace />;
+
+  // No role assigned — redirect to home (waiting for admin approval)
+  const hasRole = user?.role && user.role !== "Unassigned";
+  if (!hasRole) return <Navigate to="/home" replace />;
 
   // Role check — if allowedRoles provided, check if user has one of them
   if (allowedRoles && allowedRoles.length > 0) {

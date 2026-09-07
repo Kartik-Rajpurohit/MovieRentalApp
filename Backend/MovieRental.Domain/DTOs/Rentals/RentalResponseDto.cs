@@ -18,4 +18,6 @@ public class RentalResponseDto
     public string StaffName { get; set; } = string.Empty;
 
     public DateTime LastUpdate { get; set; }
+    public decimal RentalRate { get; set; }
+    public decimal SuggestedAmount { get; set; }
 }

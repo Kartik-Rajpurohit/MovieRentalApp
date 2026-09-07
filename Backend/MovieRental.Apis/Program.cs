@@ -125,6 +125,9 @@ builder.Services.AddScoped<ICityService, CityService>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 
+// Dashboard
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 // ── JWT Authentication Configuration ──────────────────────────
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
 var jwtIssuer    = builder.Configuration["Jwt:Issuer"];

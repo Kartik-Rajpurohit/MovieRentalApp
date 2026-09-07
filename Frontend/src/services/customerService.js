@@ -1,4 +1,4 @@
-import api from "./api";
+﻿import api from "./api";
 const API = "/Customer";
 
 export const getCustomers = async (
@@ -6,6 +6,7 @@ export const getCustomers = async (
   pageSize = 10,
   search = "",
   isActive = null,
+  storeId = null,
 ) => {
   const params = { page, pageSize };
   if (search) params.search = search;

@@ -9,6 +9,10 @@ import SearchBar from "../common/SearchBar";
 import usePagination from "../../hooks/usePagination";
 import { getPayments } from "../../services/paymentService";
 import PaymentFilterDialog from "./PaymentFilterDialog";
+import useDialog from "../../hooks/useDialog";
+import FormDialog from "../common/FormDialog";
+import PaymentFormFields from "./PaymentFormFields";
+import { createPayment } from "../../services/paymentService";
 
 export default function PaymentTable() {
   const navigate = useNavigate();
@@ -28,6 +32,53 @@ export default function PaymentTable() {
   };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  const addDialog = useDialog();
+  const [form, setForm] = useState({
+    rentalId: null,
+    customerId: null,
+    customerName: "",
+    staffId: null,
+    staffName: "",
+    amount: null,
+  });
+  const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
+  const handleAdd = async () => {
+    const errs = {};
+    if (!form.rentalId) errs.rentalId = "Rental is required";
+    if (!form.amount || form.amount <= 0)
+      errs.amount = "Valid amount is required";
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createPayment({
+        rentalId: form.rentalId,
+        customerId: form.customerId,
+        staffId: form.staffId,
+        amount: form.amount,
+      });
+      addDialog.close();
+      setForm({
+        rentalId: null,
+        customerId: null,
+        customerName: "",
+        staffId: null,
+        staffName: "",
+        amount: null,
+      });
+      setFormErrors({});
+      loadPayments();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     loadPayments();
@@ -85,7 +136,32 @@ export default function PaymentTable() {
 
   return (
     <div>
-      <PageHeader title="Payments" />
+      <FormDialog
+        visible={addDialog.visible}
+        onHide={() => {
+          addDialog.close();
+          setForm({
+            rentalId: null,
+            customerId: null,
+            customerName: "",
+            staffId: null,
+            amount: null,
+          });
+          setFormErrors({});
+        }}
+        title="Add Payment"
+        onSubmit={handleAdd}
+        loading={saving}
+        submitLabel="Add Payment"
+      >
+        <PaymentFormFields form={form} setForm={setForm} errors={formErrors} />
+      </FormDialog>
+
+      <PageHeader
+        title="Payments"
+        onAdd={addDialog.open}
+        addLabel="Add Payment"
+      />
 
       <PaymentFilterDialog
         visible={filterVisible}

@@ -6,4 +6,5 @@ public class RentalQueryParametersDto : QueryParametersDto
     public int? StaffId { get; set; }
     public int? InventoryId { get; set; }
     public bool? IsReturned { get; set; }
+    public bool? HasPayment { get; set; }
 }
