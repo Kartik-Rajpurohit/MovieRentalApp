@@ -18,6 +18,9 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(i => i.Store)
                 .WithMany(s => s.Inventories)
                 .HasForeignKey(i => i.StoreId);
+
+            // Indexes
+            builder.HasIndex(i => new { i.FilmId, i.StoreId });
         }
     }
 }

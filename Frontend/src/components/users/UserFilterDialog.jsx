@@ -12,7 +12,7 @@ export default function UserFilterDialog({
   filters,
   onApply,
 }) {
-  const { filters: local, setFilter, setFilters: setLocal, reset: resetLocal } = useFilters(filters);
+  const { filters: local, setFilter, setFilters: setLocal } = useFilters(filters);
   const [roles, setRoles] = useState([]);
 
   useEffect(() => {

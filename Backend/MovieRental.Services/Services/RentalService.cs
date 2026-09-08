@@ -8,17 +8,27 @@ using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 using System.Security.Claims;
 
+using Microsoft.Extensions.Logging;
+
 namespace MovieRental.Services.Services
 {
     public class RentalService : IRentalService
     {
         private readonly IRentalRepository _rentalRepository;
+        private readonly IInventoryRepository _inventoryRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<RentalService> _logger;
 
-        public RentalService(IRentalRepository rentalRepository, IHttpContextAccessor httpContextAccessor)
+        public RentalService(
+            IRentalRepository rentalRepository,
+            IInventoryRepository inventoryRepository,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<RentalService> logger)
         {
             _rentalRepository = rentalRepository;
+            _inventoryRepository = inventoryRepository;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         private static RentalResponseDto MapToResponse(Rental r) => new()
@@ -205,6 +215,43 @@ namespace MovieRental.Services.Services
 
         public async Task<RentalResponseDto> CreateRentalAsync(CreateRentalDto dto)
         {
+            var inventory = await _inventoryRepository.GetInventoryByIdAsync(dto.InventoryId);
+            if (inventory == null)
+            {
+                _logger.LogWarning("Rental creation failed: Inventory copy #{InventoryId} does not exist", dto.InventoryId);
+                throw new InvalidOperationException($"Inventory item #{dto.InventoryId} does not exist.");
+            }
+
+            var isCurrentlyRented = await _rentalRepository.GetAllRentals()
+                .AnyAsync(r => r.InventoryId == dto.InventoryId && r.ReturnDate == null);
+
+            if (isCurrentlyRented)
+            {
+                _logger.LogWarning("Rental creation rejected: Inventory copy #{InventoryId} is currently rented out", dto.InventoryId);
+                throw new InvalidOperationException(
+                    $"Inventory item #{dto.InventoryId} is currently rented out and cannot be rented again until returned.");
+            }
+
+            var userPrincipal = _httpContextAccessor.HttpContext?.User;
+            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (role == "Staff")
+            {
+                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
+                if (int.TryParse(storeIdClaim, out var storeId) && inventory.StoreId != storeId)
+                {
+                    _logger.LogWarning("Rental creation rejected: Staff store mismatch. Staff StoreId {StoreId} != Inventory StoreId {InvStoreId}",
+                        storeId, inventory.StoreId);
+                    throw new InvalidOperationException("Staff can only create rentals for inventory belonging to their assigned store.");
+                }
+
+                var staffIdClaim = userPrincipal?.FindFirst("staffId")?.Value;
+                if (int.TryParse(staffIdClaim, out var callerStaffId))
+                {
+                    dto.StaffId = callerStaffId; // Enforce caller identity to prevent staff impersonation
+                }
+            }
+
             var rental = new Rental
             {
                 InventoryId = dto.InventoryId,
@@ -215,14 +262,48 @@ namespace MovieRental.Services.Services
             };
 
             var created = await _rentalRepository.CreateRentalAsync(rental);
+
+            _logger.LogInformation("Rental created successfully: RentalId #{RentalId}, InventoryId #{InventoryId}, CustomerId #{CustomerId}, StaffId #{StaffId}",
+                created.RentalId, created.InventoryId, created.CustomerId, created.StaffId);
+
             return MapToResponse(created);
         }
 
         public async Task<RentalResponseDto?> ReturnRentalAsync(int rentalId)
         {
-            var rental = await _rentalRepository.ReturnRentalAsync(rentalId);
+            var rental = await _rentalRepository.GetRentalByIdAsync(rentalId);
             if (rental == null) return null;
-            return MapToResponse(rental);
+
+            if (rental.ReturnDate != null)
+            {
+                _logger.LogWarning("Rental return rejected: Rental #{RentalId} was already returned on {ReturnDate}",
+                    rentalId, rental.ReturnDate);
+                throw new InvalidOperationException(
+                    $"Rental #{rentalId} has already been marked as returned on {rental.ReturnDate.Value:yyyy-MM-dd HH:mm} UTC.");
+            }
+
+            var userPrincipal = _httpContextAccessor.HttpContext?.User;
+            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (role == "Staff")
+            {
+                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
+                if (int.TryParse(storeIdClaim, out var storeId))
+                {
+                    if (rental.Inventory?.StoreId != storeId && rental.Staff?.StoreId != storeId)
+                    {
+                        _logger.LogWarning("Rental return rejected: Staff store {StoreId} does not match Rental #{RentalId}", storeId, rentalId);
+                        throw new InvalidOperationException("Staff can only process returns for rentals belonging to their assigned store.");
+                    }
+                }
+            }
+
+            var updated = await _rentalRepository.ReturnRentalAsync(rentalId);
+            if (updated == null) return null;
+
+            _logger.LogInformation("Rental returned successfully: RentalId #{RentalId}", rentalId);
+
+            return MapToResponse(updated);
         }
     }
 }

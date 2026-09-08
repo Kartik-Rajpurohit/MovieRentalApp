@@ -16,6 +16,7 @@ public class CityRepository : ICityRepository
 
     public IQueryable<City> GetAllCities()
         => _context.Cities
+            .AsNoTracking()
             .Include(c => c.Country)
             .Include(c => c.Addresses)
             .AsQueryable();

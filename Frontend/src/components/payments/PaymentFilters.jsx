@@ -1,4 +1,3 @@
-import { InputText } from "primereact/inputtext";
 import { Calendar } from "primereact/calendar";
 import { InputNumber } from "primereact/inputnumber";
 import { LABEL_STYLE } from "../../utils/constants";

@@ -16,6 +16,7 @@ namespace MovieRental.Repository.Repositories
 
         public IQueryable<Rental> GetAllRentals()
             => _context.Rentals
+                .AsNoTracking()
                 .Include(r => r.Inventory).ThenInclude(i => i.Film)
                 .Include(r => r.Customer).ThenInclude(c => c.User)
                 .Include(r => r.Staff).ThenInclude(s => s.User)
@@ -42,6 +43,12 @@ namespace MovieRental.Repository.Repositories
         {
             var rental = await _context.Rentals.FindAsync(rentalId);
             if (rental == null) return null;
+
+            // Idempotent guard: if already returned, do not overwrite the original ReturnDate
+            if (rental.ReturnDate != null)
+            {
+                return await GetRentalByIdAsync(rentalId);
+            }
 
             rental.ReturnDate = DateTime.UtcNow;
             rental.LastUpdate = DateTime.UtcNow;

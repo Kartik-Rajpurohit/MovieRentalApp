@@ -120,7 +120,7 @@ namespace MovieRental.Services.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
-                PasswordHash = dto.Password,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 RoleId = dto.RoleId.Value,
                 AddressId = dto.AddressId,
                 IsActive = true,

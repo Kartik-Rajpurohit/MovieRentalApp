@@ -29,6 +29,7 @@ builder.Services.AddControllers(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddProblemDetails();
 
 // ── Swagger with JWT support ──────────────────────────────────
 builder.Services.AddSwaggerGen(options =>
@@ -158,25 +159,28 @@ builder.Services.AddHttpContextAccessor();
 
 // ── JWT Authentication Configuration ──────────────────────────
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
-var jwtIssuer    = builder.Configuration["Jwt:Issuer"];
-var jwtAudience  = builder.Configuration["Jwt:Audience"];
+if (string.IsNullOrEmpty(jwtSecretKey))
+    throw new InvalidOperationException("Jwt:SecretKey is missing from configuration.");
 
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer           = true,
-            ValidateAudience         = true,
-            ValidateLifetime         = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer              = jwtIssuer,
-            ValidAudience            = jwtAudience,
-            IssuerSigningKey         = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSecretKey!)),
-            ClockSkew                = TimeSpan.Zero
-        };
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 builder.Services.AddAuthorization(options =>
 {
@@ -195,6 +199,52 @@ builder.Services.AddAuthorization(options =>
 
 // ── Build App ─────────────────────────────────────────────────
 var app = builder.Build();
+
+// ── Global RFC 7807 ProblemDetails Exception Handling ────────
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        var exception = exceptionHandlerPathFeature?.Error;
+
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(exception, "Unhandled exception occurred while processing request {Method} {Path}", context.Request.Method, context.Request.Path);
+
+        context.Response.ContentType = "application/problem+json";
+
+        var statusCode = exception switch
+        {
+            InvalidOperationException => StatusCodes.Status400BadRequest,
+            ArgumentException => StatusCodes.Status400BadRequest,
+            KeyNotFoundException => StatusCodes.Status404NotFound,
+            UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        context.Response.StatusCode = statusCode;
+
+        var problemDetails = new Microsoft.AspNetCore.Mvc.ProblemDetails
+        {
+            Status = statusCode,
+            Title = statusCode switch
+            {
+                StatusCodes.Status400BadRequest => "Bad Request",
+                StatusCodes.Status404NotFound => "Not Found",
+                StatusCodes.Status403Forbidden => "Forbidden",
+                _ => "Internal Server Error"
+            },
+            Detail = statusCode == StatusCodes.Status500InternalServerError && !app.Environment.IsDevelopment()
+                ? "An unexpected error occurred. Please try again later."
+                : exception?.Message,
+            Instance = context.Request.Path
+        };
+
+        problemDetails.Extensions["traceId"] = System.Diagnostics.Activity.Current?.Id ?? context.TraceIdentifier;
+
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    });
+});
 
 // ── Development Middleware ────────────────────────────────────
 if (app.Environment.IsDevelopment())

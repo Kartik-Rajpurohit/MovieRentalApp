@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.QueryParameters;
@@ -49,6 +49,7 @@ public class AddressController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _addressService.DeleteAddressAsync(id);

@@ -17,7 +17,7 @@ namespace MovieRental.Repository.Repositories
         // Returns IQueryable — service applies search, sort, pagination on top
         public IQueryable<Role> GetAllRoles()
         {
-            return _context.Roles.AsQueryable();
+            return _context.Roles.AsNoTracking().AsQueryable();
         }
 
         public async Task<bool> RoleExistsAsync(string roleName)

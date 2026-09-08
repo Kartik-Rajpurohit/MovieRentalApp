@@ -23,6 +23,10 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(p => p.Rental)
                 .WithMany(r => r.Payments)
                 .HasForeignKey(p => p.RentalId);
+
+            // Indexes
+            builder.HasIndex(p => p.RentalId);
+            builder.HasIndex(p => new { p.CustomerId, p.PaymentDate });
         }
     }
 }

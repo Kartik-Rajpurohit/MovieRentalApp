@@ -2,7 +2,6 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import PageHeader from "../common/PageHeader";
 import SearchBar from "../common/SearchBar";
 import FormDialog from "../common/FormDialog";
@@ -12,7 +11,6 @@ import usePagination from "../../hooks/usePagination";
 import {
   getActors,
   createActor,
-  deleteActor,
 } from "../../services/actorService";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -94,24 +92,8 @@ export default function ActorTable() {
     }
   };
 
-  const handleDelete = (actor, e) => {
-    e.stopPropagation();
-    confirmDialog({
-      message: `Delete actor "${actor.firstName} ${actor.lastName}"?`,
-      header: "Delete Actor",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        await deleteActor(actor.actorId);
-        loadActors();
-      },
-    });
-  };
-
   return (
     <div>
-      <ConfirmDialog />
-
       <FormDialog
         visible={addDialog.visible}
         onHide={() => {

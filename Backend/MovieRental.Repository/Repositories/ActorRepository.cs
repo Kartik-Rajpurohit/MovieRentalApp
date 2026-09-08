@@ -15,7 +15,7 @@ public class ActorRepository : IActorRepository
     }
 
     public IQueryable<Actor> GetAllActors()
-        => _context.Actors.Include(a => a.FilmActors).AsQueryable();
+        => _context.Actors.AsNoTracking().Include(a => a.FilmActors).AsQueryable();
 
     public async Task<Actor?> GetActorByIdAsync(int id)
         => await _context.Actors
@@ -51,6 +51,7 @@ public class ActorRepository : IActorRepository
     }
     public IQueryable<Film> GetFilmsByActorId(int actorId)
     => _context.FilmActors
+        .AsNoTracking()
         .Where(fa => fa.ActorId == actorId)
         .Select(fa => fa.Film)
         .AsQueryable();

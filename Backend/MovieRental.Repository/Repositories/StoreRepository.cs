@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Data;
 using MovieRental.Repository.Interfaces;
@@ -18,6 +18,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Store> GetAllStores()
         {
             return _context.Stores
+                .AsNoTracking()
                 .Include(s => s.ManagerStaff)
                     .ThenInclude(st => st!.User)
                 .Include(s => s.Address)

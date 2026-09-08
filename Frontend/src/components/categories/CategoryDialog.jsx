@@ -45,7 +45,7 @@ export default function CategoryDialog({
       }
       onSuccess();
       onHide();
-    } catch (err) {
+    } catch {
       setError("Something went wrong.");
     } finally {
       setLoading(false);

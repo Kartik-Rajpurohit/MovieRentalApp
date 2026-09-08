@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Button } from "primereact/button";
 import SearchBar from "../common/SearchBar";
 import PageHeader from "../common/PageHeader";
 import usePagination from "../../hooks/usePagination";

@@ -40,8 +40,15 @@ namespace MovieRental.Apis.Controllers
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDto dto)
         {
-            var result = await _paymentService.CreatePaymentAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _paymentService.CreatePaymentAsync(dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

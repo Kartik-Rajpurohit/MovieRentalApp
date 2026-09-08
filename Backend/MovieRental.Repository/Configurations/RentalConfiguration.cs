@@ -23,6 +23,16 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(r => r.Staff)
                 .WithMany(s => s.Rentals)
                 .HasForeignKey(r => r.StaffId);
+
+            // Indexes
+            // Composite index for fast inventory active rental checks (InventoryId + ReturnDate)
+            builder.HasIndex(r => new { r.InventoryId, r.ReturnDate });
+
+            // Composite index for customer rental history sorting & pagination
+            builder.HasIndex(r => new { r.CustomerId, r.RentalDate });
+
+            // Index on StaffId for staff filtering
+            builder.HasIndex(r => r.StaffId);
         }
     }
 }

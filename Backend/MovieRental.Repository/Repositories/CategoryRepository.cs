@@ -17,6 +17,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Category> GetAllCategories()
         {
             return _context.Categories
+                .AsNoTracking()
                 .Include(c => c.FilmCategories);
         }
 
@@ -54,6 +55,7 @@ namespace MovieRental.Repository.Repositories
         // Actor pattern jaisa — paginated films fetch karne ke liye
         public IQueryable<Film> GetFilmsByCategoryId(int categoryId)
             => _context.FilmCategories
+                .AsNoTracking()
                 .Where(fc => fc.CategoryId == categoryId)
                 .Select(fc => fc.Film)
                 .AsQueryable();

@@ -19,6 +19,10 @@ namespace MovieRental.Repository.Configurations
                 .WithOne(u => u.Customer)
                 .HasForeignKey<Customer>(c => c.UserId)
                 .IsRequired(false);
+
+            // Indexes
+            builder.HasIndex(c => c.StoreId);
+            builder.HasIndex(c => c.UserId);
         }
     }
 }

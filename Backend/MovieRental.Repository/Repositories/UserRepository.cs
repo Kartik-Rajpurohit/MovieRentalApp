@@ -3,6 +3,8 @@ using MovieRental.Domain.DTOs.Users;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Data;
 using MovieRental.Repository.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MovieRental.Repository.Repositories
 {
@@ -19,6 +21,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<User> GetAllUsers()
         {
             return _context.Users
+                .AsNoTracking()
                 .Include(u => u.Role)
                 .Include(u => u.Address)
                     .ThenInclude(a => a!.City)
@@ -146,29 +149,37 @@ namespace MovieRental.Repository.Repositories
                         .ThenInclude(c => c!.Country)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
+        private static string HashRefreshToken(string token)
+        {
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            return Convert.ToHexString(bytes);
+        }
+
         public async Task SaveRefreshTokenAsync(int userId, string refreshToken, DateTime expiry)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return;
-            user.RefreshToken = refreshToken;
+            user.RefreshToken = HashRefreshToken(refreshToken);
             user.RefreshTokenExpiry = expiry;
             await _context.SaveChangesAsync();
         }
 
         public async Task<User?> GetUserByRefreshTokenAsync(string refreshToken)
         {
+            var hashed = HashRefreshToken(refreshToken);
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
-                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+                .FirstOrDefaultAsync(u => u.RefreshToken == hashed || u.RefreshToken == refreshToken);
         }
 
         public async Task RevokeRefreshTokenAsync(string refreshToken, int userId)
         {
-            // Match both the token AND the userId — prevents revoking someone else's token
+            var hashed = HashRefreshToken(refreshToken);
+            // Match hashed token (or legacy plaintext) AND userId — prevents revoking someone else's token
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken && u.UserId == userId);
+                .FirstOrDefaultAsync(u => (u.RefreshToken == hashed || u.RefreshToken == refreshToken) && u.UserId == userId);
             if (user == null) return; // Token doesn't exist or doesn't belong to this user
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;

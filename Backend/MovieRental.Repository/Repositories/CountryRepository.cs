@@ -15,7 +15,7 @@ namespace MovieRental.Repository.Repositories
         }
 
         public IQueryable<Country> GetAllCountries()
-            => _context.Countries.AsQueryable();
+            => _context.Countries.AsNoTracking().AsQueryable();
 
         public async Task<Country?> GetCountryByIdAsync(int id)
             => await _context.Countries

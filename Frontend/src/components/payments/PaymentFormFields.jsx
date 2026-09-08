@@ -14,7 +14,6 @@ const labelStyle = {
 
 export default function PaymentFormFields({ form, setForm, errors }) {
   const [rentals, setRentals] = useState([]);
-  const [staffList, setStaffList] = useState([]);
   const [rentalsLoading, setRentalsLoading] = useState(false);
 
   useEffect(() => {

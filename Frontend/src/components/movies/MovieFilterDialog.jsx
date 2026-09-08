@@ -44,7 +44,6 @@ export default function MovieFilterDialog({
     filters: local,
     setFilter: set,
     setFilters: setLocal,
-    reset: resetLocal,
   } = useFilters(filters);
   const [languages, setLanguages] = useState([]);
   const [categories, setCategories] = useState([]);

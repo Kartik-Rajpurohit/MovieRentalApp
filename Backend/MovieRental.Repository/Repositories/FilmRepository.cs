@@ -18,6 +18,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Film> GetAllFilms()
         {
             return _context.Films
+                .AsNoTracking()
                 .Include(f => f.Language)
                 .Include(f => f.FilmCategories)
                     .ThenInclude(fc => fc.Category)
@@ -68,12 +69,12 @@ namespace MovieRental.Repository.Repositories
 
         // Raw IQueryable — service applies pagination and maps to DropdownDto
         public IQueryable<Language> GetAllLanguages()
-            => _context.Languages.AsQueryable();
+            => _context.Languages.AsNoTracking().AsQueryable();
 
         public IQueryable<Category> GetAllCategories()
-            => _context.Categories.AsQueryable();
+            => _context.Categories.AsNoTracking().AsQueryable();
 
         public IQueryable<Actor> GetAllActors()
-            => _context.Actors.AsQueryable();
+            => _context.Actors.AsNoTracking().AsQueryable();
     }
 }

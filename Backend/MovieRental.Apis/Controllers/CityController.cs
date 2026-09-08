@@ -55,6 +55,7 @@ public class CityController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateCityDto dto)
     {
         var result = await _cityService.CreateCityAsync(dto);
@@ -62,6 +63,7 @@ public class CityController : ControllerBase
     }
 
     [HttpPatch]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update([FromBody] UpdateCityDto dto)
     {
         var result = await _cityService.UpdateCityAsync(dto);
@@ -70,6 +72,7 @@ public class CityController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _cityService.DeleteCityAsync(id);

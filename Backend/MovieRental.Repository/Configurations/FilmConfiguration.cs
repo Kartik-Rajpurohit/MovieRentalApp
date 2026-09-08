@@ -18,6 +18,9 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(f => f.OriginalLanguage)
                 .WithMany(l => l.OriginalLanguageFilms)
                 .HasForeignKey(f => f.OriginalLanguageId);
+
+            // Indexes
+            builder.HasIndex(f => f.Title);
         }
     }
 }

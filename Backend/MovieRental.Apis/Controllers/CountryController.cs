@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Locations.Countries;
 using MovieRental.Services.Interfaces;
@@ -34,10 +34,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateCountryDto dto)
             => Ok(await _countryService.CreateCountryAsync(dto));
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromBody] UpdateCountryDto dto)
         {
             var result = await _countryService.UpdateCountryAsync(dto);
@@ -45,6 +47,7 @@ namespace MovieRental.Apis.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _countryService.DeleteCountryAsync(id);

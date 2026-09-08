@@ -1,8 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Badge } from "primereact/badge";
-import { Button } from "primereact/button";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../common/PageHeader";
 import SearchBar from "../common/SearchBar";

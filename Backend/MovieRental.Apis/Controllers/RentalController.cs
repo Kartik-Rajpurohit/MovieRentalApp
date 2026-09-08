@@ -40,8 +40,15 @@ namespace MovieRental.Apis.Controllers
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreateRentalDto dto)
         {
-            var result = await _rentalService.CreateRentalAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _rentalService.CreateRentalAsync(dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // PATCH api/rental/{id}/return — mark as returned (Admin and Staff only)
@@ -49,9 +56,16 @@ namespace MovieRental.Apis.Controllers
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Return(int id)
         {
-            var result = await _rentalService.ReturnRentalAsync(id);
-            if (result == null) return NotFound($"Rental {id} not found");
-            return Ok(result);
+            try
+            {
+                var result = await _rentalService.ReturnRentalAsync(id);
+                if (result == null) return NotFound($"Rental {id} not found");
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

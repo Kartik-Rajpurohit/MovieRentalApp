@@ -33,8 +33,9 @@ namespace MovieRental.Apis.Controllers
             var result = await _storeService.GetStoreByIdAsync(id);
             return result is null ? NotFound($"Store {id} not found") : Ok(result);
         }
-        // POST api/store — create new store
+        // POST api/store — create new store (Admin only)
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateStoreDto dto)
         {
             var result = await _storeService.CreateStoreAsync(dto);

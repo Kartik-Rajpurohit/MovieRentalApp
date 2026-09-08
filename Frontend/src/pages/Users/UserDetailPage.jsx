@@ -1,6 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Button } from "primereact/button";
 import { Tag } from "primereact/tag";
 import { Card } from "primereact/card";
 import AppLayout from "../../components/layout/AppLayout";
@@ -27,7 +26,6 @@ const fieldValueStyle = {
 
 export default function UserDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);

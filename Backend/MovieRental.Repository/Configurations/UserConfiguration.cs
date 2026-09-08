@@ -18,6 +18,10 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(u => u.Address)
                 .WithMany(a => a.Users)
                 .HasForeignKey(u => u.AddressId);
+
+            // Indexes
+            builder.HasIndex(u => u.Email).IsUnique();
+            builder.HasIndex(u => u.RefreshToken);
         }
     }
 }

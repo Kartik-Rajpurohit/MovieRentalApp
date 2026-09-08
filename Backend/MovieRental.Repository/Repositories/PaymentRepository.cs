@@ -16,6 +16,7 @@ namespace MovieRental.Repository.Repositories
 
         public IQueryable<Payment> GetAllPayments()
             => _context.Payments
+                .AsNoTracking()
                 .Include(p => p.Customer).ThenInclude(c => c.User)
                 .Include(p => p.Staff).ThenInclude(s => s.User)
                 .Include(p => p.Rental).ThenInclude(r => r.Inventory).ThenInclude(i => i.Film)

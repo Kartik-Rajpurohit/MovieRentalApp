@@ -8,7 +8,6 @@ export default function RoleDialog({
   visible,
   onHide,
   onSuccess,
-  mode = "add",
 }) {
   const [roleName, setRoleName] = useState("");
   const [error, setError] = useState("");

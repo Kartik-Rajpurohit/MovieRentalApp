@@ -15,7 +15,7 @@ public class LanguageRepository : ILanguageRepository
     }
 
     public IQueryable<Language> GetAllLanguages()
-        => _context.Languages.Include(l => l.Films).AsQueryable();
+        => _context.Languages.AsNoTracking().Include(l => l.Films).AsQueryable();
 
     public async Task<Language?> GetLanguageByIdAsync(int id)
         => await _context.Languages
@@ -50,6 +50,7 @@ public class LanguageRepository : ILanguageRepository
 
     public IQueryable<Film> GetFilmsByLanguageId(int languageId)
         => _context.Films
+            .AsNoTracking()
             .Where(f => f.LanguageId == languageId)
             .Include(f => f.Language)
             .Include(f => f.FilmCategories)

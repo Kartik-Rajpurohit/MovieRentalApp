@@ -14,6 +14,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Staff> GetAllStaff()
         {
             return _context.Staff
+                .AsNoTracking()
                 .Include(s => s.User)
                 .AsQueryable();
         }

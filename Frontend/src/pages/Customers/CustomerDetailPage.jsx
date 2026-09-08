@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
@@ -10,7 +10,6 @@ import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 

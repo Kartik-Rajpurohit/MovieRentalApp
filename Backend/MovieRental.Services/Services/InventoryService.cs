@@ -52,6 +52,14 @@ namespace MovieRental.Services.Services
             if (queryParams.StoreId.HasValue)
                 query = query.Where(i => i.StoreId == queryParams.StoreId.Value);
 
+            // Filter by availability in database query before pagination
+            if (queryParams.IsAvailable.HasValue)
+            {
+                query = queryParams.IsAvailable.Value
+                    ? query.Where(i => !i.Rentals.Any(r => r.ReturnDate == null))
+                    : query.Where(i => i.Rentals.Any(r => r.ReturnDate == null));
+            }
+
             // Global search — by film title or inventory ID
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
@@ -76,17 +84,10 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
-            // Fetch in memory — IsAvailable computed from Rentals collection
             var entities = await query
                 .Skip((queryParams.Page - 1) * queryParams.PageSize)
                 .Take(queryParams.PageSize)
                 .ToListAsync();
-
-            // Filter by availability after fetch (can't translate .Any on collection in EF)
-            if (queryParams.IsAvailable.HasValue)
-                entities = entities
-                    .Where(i => MapToResponse(i).IsAvailable == queryParams.IsAvailable.Value)
-                    .ToList();
 
             return new PaginatedResponseDto<InventoryResponseDto>
             {

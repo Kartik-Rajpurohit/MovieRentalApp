@@ -16,6 +16,7 @@ public class AddressRepository : IAddressRepository
 
     public IQueryable<Address> GetAllAddresses()
         => _context.Addresses
+            .AsNoTracking()
             .Include(a => a.City).ThenInclude(c => c.Country)
             .AsQueryable();
 

@@ -34,7 +34,7 @@ export default function LanguageDialog({ visible, onHide, onSuccess, mode = "add
       }
       onSuccess();
       onHide();
-    } catch (err) {
+    } catch {
       setError("Something went wrong.");
     } finally {
       setLoading(false);

@@ -14,6 +14,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Customer> GetAllCustomers()
         {
             return _context.Customers
+                .AsNoTracking()
                 .Include(c => c.User)
                 .AsQueryable();
         }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Card } from "primereact/card";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -27,7 +27,6 @@ const FIELD_VALUE = {
 
 export default function CityDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [city, setCity] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);

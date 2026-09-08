@@ -19,6 +19,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Inventory> GetAllInventory()
         {
             return _context.Inventories
+                .AsNoTracking()
                 .Include(i => i.Film)
                 .Include(i => i.Rentals);
         }
