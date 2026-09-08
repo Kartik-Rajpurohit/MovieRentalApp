@@ -27,10 +27,10 @@ export function AuthProvider({ children }) {
     // Refresh token is now an HttpOnly cookie set by the backend — never stored in localStorage
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // HttpOnly cookie is sent automatically; backend revokes it and clears the cookie
-      await api.post("/Auth/logout");
+      await api.post("/Auth/logout", {});
     } catch (e) {
       console.error("Logout error:", e);
     }
@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-  };
+  }, []);
 
   // Auto-refresh access token when it expires — cookie is sent automatically
   const refresh = useCallback(async () => {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
       logout();
       return null;
     }
-  }, []);
+  }, [logout]);
 
   return (
     <AuthContext.Provider

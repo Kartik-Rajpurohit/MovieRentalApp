@@ -20,6 +20,7 @@ public class SignUpDto
     [Required(ErrorMessage = "Password is required")]
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
     [MaxLength(100, ErrorMessage = "Password must not exceed 100 characters")]
+    [RegularExpression(@"^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$", ErrorMessage = "Password must contain at least one uppercase letter, one number, and one special character")]
     public string Password { get; set; } = string.Empty;
 
     // Address — user can select existing or provide new
@@ -27,9 +28,6 @@ public class SignUpDto
 
     [MaxLength(255, ErrorMessage = "Street must not exceed 255 characters")]
     public string? Street { get; set; }           // if user types new address
-
-    [MaxLength(100, ErrorMessage = "District must not exceed 100 characters")]
-    public string? District { get; set; }
 
     [MaxLength(20, ErrorMessage = "Postal code must not exceed 20 characters")]
     public string? PostalCode { get; set; }

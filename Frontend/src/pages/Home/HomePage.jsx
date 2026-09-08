@@ -1,4 +1,5 @@
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Message } from "primereact/message";
@@ -7,6 +8,7 @@ import { AuthContext } from "../../context/AuthContext";
 // Shown to logged-in users who have no role assigned yet
 // No sidebar — only logout option
 export default function HomePage() {
+  const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
 
   return (
@@ -39,7 +41,10 @@ export default function HomePage() {
           icon="pi pi-sign-out"
           severity="secondary"
           outlined
-          onClick={logout}
+          onClick={async () => {
+            await logout();
+            navigate("/login");
+          }}
         />
       </div>
 

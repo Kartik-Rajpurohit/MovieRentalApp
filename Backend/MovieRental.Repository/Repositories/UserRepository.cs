@@ -171,16 +171,29 @@ namespace MovieRental.Repository.Repositories
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
-                .FirstOrDefaultAsync(u => u.RefreshToken == hashed || u.RefreshToken == refreshToken);
+                .FirstOrDefaultAsync(u => u.RefreshToken == hashed);
         }
 
-        public async Task RevokeRefreshTokenAsync(string refreshToken, int userId)
+        public async Task RevokeRefreshTokenAsync(string refreshToken, int? userId = null)
         {
             var hashed = HashRefreshToken(refreshToken);
-            // Match hashed token (or legacy plaintext) AND userId — prevents revoking someone else's token
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => (u.RefreshToken == hashed || u.RefreshToken == refreshToken) && u.UserId == userId);
-            if (user == null) return; // Token doesn't exist or doesn't belong to this user
+            var query = _context.Users
+                .Where(u => u.RefreshToken == hashed);
+            if (userId.HasValue)
+            {
+                query = query.Where(u => u.UserId == userId.Value);
+            }
+            var user = await query.FirstOrDefaultAsync();
+            if (user == null) return;
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RevokeRefreshTokenByUserIdAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return;
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
             await _context.SaveChangesAsync();

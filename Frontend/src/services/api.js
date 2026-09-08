@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getErrorMessage } from "../utils/errorUtils";
 
 // Uses VITE_API_BASE_URL from .env — no hardcoded URLs (fixes Issue #11)
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7176/api";
@@ -92,16 +93,16 @@ api.interceptors.response.use(
     }
 
     // For any non-401 error, automatically show a global Toast notification if notifier is registered
-    if (error.response?.status !== 401 && toastNotifier) {
+    // Exclude /Auth/logout so the user is never bothered by toasts during logout
+    if (
+      error.response?.status !== 401 &&
+      toastNotifier &&
+      !error.config?.url?.includes("/Auth/logout")
+    ) {
       const data = error.response?.data;
       const status = error.response?.status;
       const summary = data?.title || (status ? `Error (${status})` : "Network Error");
-      const detail =
-        data?.detail ||
-        data?.message ||
-        (typeof data === "string" ? data : null) ||
-        error.message ||
-        "An unexpected error occurred.";
+      const detail = getErrorMessage(error);
 
       toastNotifier({
         severity: status >= 500 ? "error" : "warn",

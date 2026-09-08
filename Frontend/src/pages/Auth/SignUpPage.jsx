@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { Message } from "primereact/message";
 import { AuthContext } from "../../context/AuthContext";
 import { signUpUser } from "../../services/authService";
+import { getErrorMessage } from "../../utils/errorUtils";
 import {
   getCountries,
   getCitiesByCountry,
@@ -133,8 +134,22 @@ export default function SignUpPage() {
     const e = {};
     if (!firstName.trim()) e.firstName = "First name is required";
     if (!lastName.trim()) e.lastName = "Last name is required";
-    if (!email.trim()) e.email = "Email is required";
-    if (!password.trim()) e.password = "Password is required";
+    if (!email.trim()) {
+      e.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      e.email = "Invalid email format";
+    }
+    if (!password.trim()) {
+      e.password = "Password is required";
+    } else if (password.length < 8) {
+      e.password = "Password must be at least 8 characters";
+    } else if (!/[A-Z]/.test(password)) {
+      e.password = "Password must contain at least one uppercase letter";
+    } else if (!/[0-9]/.test(password)) {
+      e.password = "Password must contain at least one number";
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      e.password = "Password must contain at least one special character";
+    }
     if (!selectedCountryId) e.country = "Country is required";
     if (!selectedCityId) e.city = "City is required";
     if (!addressInput.trim()) e.address = "Address (street) is required";
@@ -173,9 +188,10 @@ export default function SignUpPage() {
 
       const response = await signUpUser(payload);
       login(response);
-      navigate("/dashboard");
+      const hasRole = response?.role && response.role !== "Unassigned";
+      navigate(hasRole ? "/dashboard" : "/home");
     } catch (err) {
-      setErrors({ submit: err.response?.data || "Sign up failed" });
+      setErrors({ submit: getErrorMessage(err, "Sign up failed") });
     } finally {
       setLoading(false);
     }
@@ -274,8 +290,12 @@ export default function SignUpPage() {
               inputStyle={{ width: "100%" }}
               className={errors.password ? "p-invalid" : ""}
             />
-            {errors.password && (
+            {errors.password ? (
               <small className="p-error">{errors.password}</small>
+            ) : (
+              <small style={{ color: "#6b7280" }}>
+                Min 8 characters, with at least 1 uppercase, 1 number, and 1 special character
+              </small>
             )}
           </div>
 

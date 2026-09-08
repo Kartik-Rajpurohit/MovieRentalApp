@@ -255,17 +255,28 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(bytes);
     }
 
-    public async Task LogoutAsync(string refreshToken, int userId)
+    public async Task LogoutAsync(string refreshToken, int? userId = null)
     {
-        // Verify the token actually belongs to this user before revoking
         var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
-        if (user == null || user.UserId != userId)
+        if (user == null)
         {
-            _logger.LogWarning("Logout rejected: token mismatch or not found for UserId {UserId}", userId);
-            throw new UnauthorizedAccessException("Invalid or mismatched refresh token");
+            _logger.LogInformation("Logout: refresh token not found in database or already revoked.");
+            return;
         }
 
-        await _userRepository.RevokeRefreshTokenAsync(refreshToken, userId);
-        _logger.LogInformation("User {UserId} logged out and refresh token revoked", userId);
+        if (userId.HasValue && user.UserId != userId.Value)
+        {
+            _logger.LogWarning("Logout rejected: token mismatch for UserId {UserId} vs Owner {OwnerId}", userId.Value, user.UserId);
+            return;
+        }
+
+        await _userRepository.RevokeRefreshTokenAsync(refreshToken, user.UserId);
+        _logger.LogInformation("User {UserId} logged out and refresh token revoked", user.UserId);
+    }
+
+    public async Task LogoutByUserIdAsync(int userId)
+    {
+        await _userRepository.RevokeRefreshTokenByUserIdAsync(userId);
+        _logger.LogInformation("User {UserId} logged out by UserId and refresh token revoked", userId);
     }
 }

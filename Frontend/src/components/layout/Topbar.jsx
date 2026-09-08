@@ -39,8 +39,8 @@ export default function Topbar() {
         {
           label: "Logout",
           icon: "pi pi-sign-out",
-          command: () => {
-            logout();
+          command: async () => {
+            await logout();
             navigate("/login");
           },
         },

@@ -8,6 +8,7 @@ import { Message } from "primereact/message";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,9 +26,10 @@ export default function LoginPage() {
     try {
       const response = await loginUser(email, password);
       login(response);
-      navigate("/dashboard");
+      const hasRole = response?.role && response.role !== "Unassigned";
+      navigate(hasRole ? "/dashboard" : "/home");
     } catch (err) {
-      setError(err.response?.data || "Login failed");
+      setError(getErrorMessage(err, "Login failed"));
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-﻿namespace MovieRental.Domain.DTOs.Users
+namespace MovieRental.Domain.DTOs.Users
 {
     public class UserResponseDto
     {
@@ -10,8 +10,7 @@
         public bool IsActive { get; set; }
         public int? RoleId { get; set; }
         public string RoleName { get; set; } = string.Empty;
-        public int AddressId { get; set; }
-        public string? District { get; set; }
+        public int? AddressId { get; set; }
         public string? PostalCode { get; set; }
         public string? Phone { get; set; }
         public string? Street { get; set; }

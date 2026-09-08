@@ -68,35 +68,46 @@ public class AuthController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            Response.Cookies.Delete("refreshToken");
+            ClearRefreshTokenCookie();
             return Unauthorized(ex.Message);
         }
     }
 
-    // Logout — reads token from HttpOnly cookie, clears it, requires valid JWT
-    // Uses "AuthenticatedOnly" so Unassigned users can also log out
+    // Logout — reads token from HttpOnly cookie (or JWT claim), clears it, revokes refresh token
+    // Uses [AllowAnonymous] to bypass the global RequireRole policy so Unassigned users can also log out
     [HttpPost("logout")]
-    [Authorize(Policy = "AuthenticatedOnly")]
+    [AllowAnonymous]
     public async Task<IActionResult> Logout()
     {
-        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!int.TryParse(userIdStr, out var userId))
-            return Unauthorized();
-
         var cookieToken = Request.Cookies["refreshToken"];
-        if (!string.IsNullOrEmpty(cookieToken))
+        int? userId = null;
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? User.FindFirst("sub")?.Value
+                     ?? User.FindFirst("nameid")?.Value;
+        if (int.TryParse(userIdStr, out var id))
         {
-            try
+            userId = id;
+        }
+
+        try
+        {
+            if (!string.IsNullOrEmpty(cookieToken))
             {
                 await _authService.LogoutAsync(cookieToken, userId);
             }
-            catch (UnauthorizedAccessException)
+            else if (userId.HasValue)
             {
-                // Token mismatch — still clear the cookie
+                // Fallback: If the browser omitted the cookie (e.g. cross-origin/cross-port restriction in dev),
+                // revoke the refresh token directly using the authenticated UserId from the JWT bearer token
+                await _authService.LogoutByUserIdAsync(userId.Value);
             }
         }
+        catch
+        {
+            // Silently proceed so cookie is always cleared
+        }
 
-        Response.Cookies.Delete("refreshToken");
+        ClearRefreshTokenCookie();
         return Ok();
     }
 
@@ -107,9 +118,21 @@ public class AuthController : ControllerBase
         {
             HttpOnly  = true,               // JavaScript cannot access this cookie
             Secure    = true,               // HTTPS only
-            SameSite  = SameSiteMode.Lax,  // Works for localhost cross-port (dev) + same-site prod
+            SameSite  = SameSiteMode.None,  // None allows cross-origin requests from frontend to backend
             Expires   = DateTimeOffset.UtcNow.AddDays(7),
             Path      = "/api/Auth"         // Cookie only sent to /api/Auth/* — minimal exposure
+        });
+    }
+
+    // Clears the refresh token cookie with matching path options so browser deletes it
+    private void ClearRefreshTokenCookie()
+    {
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly  = true,
+            Secure    = true,
+            SameSite  = SameSiteMode.None,
+            Path      = "/api/Auth"
         });
     }
 }

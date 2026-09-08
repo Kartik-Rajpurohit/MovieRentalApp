@@ -5,6 +5,7 @@ import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import HomeRoute from "./routes/HomeRoute";
 import LoadingSpinner from "./components/common/LoadingSpinner";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 // Lazy-loaded page components for route code-splitting
 const LoginPage = lazy(() => import("./pages/Auth/LoginPage"));
@@ -44,85 +45,87 @@ const AddressDetailPage = lazy(() => import("./pages/Locations/AddressDetailPage
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
+    <ErrorBoundary>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
 
-              {/* Home — logged in but no role assigned */}
-              <Route path="/home" element={<HomeRoute><HomePage /></HomeRoute>} />
+                {/* Home — logged in but no role assigned */}
+                <Route path="/home" element={<HomeRoute><HomePage /></HomeRoute>} />
 
-              {/* Dashboard — all roles */}
-              <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                {/* Dashboard — all roles */}
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
 
-              {/* Users — Admin only */}
-              <Route path="/users" element={<ProtectedRoute allowedRoles={["Admin"]}><UsersPage /></ProtectedRoute>} />
-              <Route path="/users/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><UserDetailPage /></ProtectedRoute>} />
+                {/* Users — Admin only */}
+                <Route path="/users" element={<ProtectedRoute allowedRoles={["Admin"]}><UsersPage /></ProtectedRoute>} />
+                <Route path="/users/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><UserDetailPage /></ProtectedRoute>} />
 
-              {/* Roles — Admin only */}
-              <Route path="/roles" element={<ProtectedRoute allowedRoles={["Admin"]}><RolesPage /></ProtectedRoute>} />
-              <Route path="/roles/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><RoleDetailPage /></ProtectedRoute>} />
+                {/* Roles — Admin only */}
+                <Route path="/roles" element={<ProtectedRoute allowedRoles={["Admin"]}><RolesPage /></ProtectedRoute>} />
+                <Route path="/roles/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><RoleDetailPage /></ProtectedRoute>} />
 
-              {/* Staff — Admin and Staff */}
-              <Route path="/staff" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StaffPage /></ProtectedRoute>} />
-              <Route path="/staff/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StaffDetailPage /></ProtectedRoute>} />
+                {/* Staff — Admin and Staff */}
+                <Route path="/staff" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StaffPage /></ProtectedRoute>} />
+                <Route path="/staff/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StaffDetailPage /></ProtectedRoute>} />
 
-              {/* Customers — Admin and Staff */}
-              <Route path="/customers" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CustomersPage /></ProtectedRoute>} />
-              <Route path="/customers/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CustomerDetailPage /></ProtectedRoute>} />
+                {/* Customers — Admin and Staff */}
+                <Route path="/customers" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CustomersPage /></ProtectedRoute>} />
+                <Route path="/customers/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CustomerDetailPage /></ProtectedRoute>} />
 
-              {/* Movies — Admin, Staff, Customer */}
-              <Route path="/movies" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><MoviesPage /></ProtectedRoute>} />
-              <Route path="/movies/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><MovieDetailPage /></ProtectedRoute>} />
+                {/* Movies — Admin, Staff, Customer */}
+                <Route path="/movies" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><MoviesPage /></ProtectedRoute>} />
+                <Route path="/movies/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><MovieDetailPage /></ProtectedRoute>} />
 
-              {/* Actors — Admin, Staff, Customer */}
-              <Route path="/actors" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><ActorsPage /></ProtectedRoute>} />
-              <Route path="/actors/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><ActorDetailPage /></ProtectedRoute>} />
+                {/* Actors — Admin, Staff, Customer */}
+                <Route path="/actors" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><ActorsPage /></ProtectedRoute>} />
+                <Route path="/actors/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><ActorDetailPage /></ProtectedRoute>} />
 
-              {/* Categories — Admin, Staff, Customer */}
-              <Route path="/categories" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CategoriesPage /></ProtectedRoute>} />
-              <Route path="/categories/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CategoryDetailPage /></ProtectedRoute>} />
+                {/* Categories — Admin, Staff, Customer */}
+                <Route path="/categories" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CategoriesPage /></ProtectedRoute>} />
+                <Route path="/categories/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><CategoryDetailPage /></ProtectedRoute>} />
 
-              {/* Languages — Admin, Staff, Customer */}
-              <Route path="/languages" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><LanguagesPage /></ProtectedRoute>} />
-              <Route path="/languages/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><LanguageDetailPage /></ProtectedRoute>} />
+                {/* Languages — Admin, Staff, Customer */}
+                <Route path="/languages" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><LanguagesPage /></ProtectedRoute>} />
+                <Route path="/languages/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><LanguageDetailPage /></ProtectedRoute>} />
 
-              {/* Inventory — Admin and Staff */}
-              <Route path="/inventory" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><InventoryPage /></ProtectedRoute>} />
-              <Route path="/inventory/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><InventoryDetailPage /></ProtectedRoute>} />
+                {/* Inventory — Admin and Staff */}
+                <Route path="/inventory" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><InventoryPage /></ProtectedRoute>} />
+                <Route path="/inventory/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><InventoryDetailPage /></ProtectedRoute>} />
 
-              {/* Rentals — Admin, Staff, Customer */}
-              <Route path="/rentals" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><RentalsPage /></ProtectedRoute>} />
-              <Route path="/rentals/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><RentalDetailPage /></ProtectedRoute>} />
+                {/* Rentals — Admin, Staff, Customer */}
+                <Route path="/rentals" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><RentalsPage /></ProtectedRoute>} />
+                <Route path="/rentals/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><RentalDetailPage /></ProtectedRoute>} />
 
-              {/* Payments — Admin, Staff, Customer */}
-              <Route path="/payments" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><PaymentsPage /></ProtectedRoute>} />
-              <Route path="/payments/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><PaymentDetailPage /></ProtectedRoute>} />
+                {/* Payments — Admin, Staff, Customer */}
+                <Route path="/payments" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><PaymentsPage /></ProtectedRoute>} />
+                <Route path="/payments/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff", "Customer"]}><PaymentDetailPage /></ProtectedRoute>} />
 
-              {/* Stores — Admin and Staff */}
-              <Route path="/stores" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoresPage /></ProtectedRoute>} />
-              <Route path="/stores/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoreDetailPage /></ProtectedRoute>} />
+                {/* Stores — Admin and Staff */}
+                <Route path="/stores" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoresPage /></ProtectedRoute>} />
+                <Route path="/stores/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoreDetailPage /></ProtectedRoute>} />
 
-              {/* Locations — Admin only */}
-              <Route path="/countries" element={<ProtectedRoute allowedRoles={["Admin"]}><CountriesPage /></ProtectedRoute>} />
-              <Route path="/countries/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CountryDetailPage /></ProtectedRoute>} />
-              <Route path="/cities" element={<ProtectedRoute allowedRoles={["Admin"]}><CitiesPage /></ProtectedRoute>} />
-              <Route path="/cities/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CityDetailPage /></ProtectedRoute>} />
-              <Route path="/addresses" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressesPage /></ProtectedRoute>} />
-              <Route path="/addresses/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressDetailPage /></ProtectedRoute>} />
+                {/* Locations — Admin only */}
+                <Route path="/countries" element={<ProtectedRoute allowedRoles={["Admin"]}><CountriesPage /></ProtectedRoute>} />
+                <Route path="/countries/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CountryDetailPage /></ProtectedRoute>} />
+                <Route path="/cities" element={<ProtectedRoute allowedRoles={["Admin"]}><CitiesPage /></ProtectedRoute>} />
+                <Route path="/cities/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CityDetailPage /></ProtectedRoute>} />
+                <Route path="/addresses" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressesPage /></ProtectedRoute>} />
+                <Route path="/addresses/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressDetailPage /></ProtectedRoute>} />
 
-              {/* Default redirects */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </AuthProvider>
-    </ToastProvider>
+                {/* Default redirects */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

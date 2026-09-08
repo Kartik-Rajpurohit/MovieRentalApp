@@ -80,12 +80,13 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
-            // Fetch only the current page
-            var data = await query
+            // Fetch only the current page entities first, then map to DTO in memory
+            var users = await query
                 .Skip((queryParams.Page - 1) * queryParams.PageSize)
                 .Take(queryParams.PageSize)
-                .Select(u => MapToDto(u))
                 .ToListAsync();
+
+            var data = users.Select(MapToDto).ToList();
 
             return new PaginatedResponseDto<UserResponseDto>
             {
@@ -135,7 +136,13 @@ namespace MovieRental.Services.Services
             // RoleId.Value is safe here — already validated above
             var roleName = await _userRepository.GetRoleNameAsync(dto.RoleId.Value);
 
-            return MapToDto(created);
+            if (roleName?.Equals("Staff", StringComparison.OrdinalIgnoreCase) == true && dto.StoreId.HasValue)
+                await _userRepository.CreateStaffAsync(created.UserId, dto.StoreId.Value);
+            else if (roleName?.Equals("Customer", StringComparison.OrdinalIgnoreCase) == true && dto.StoreId.HasValue)
+                await _userRepository.CreateCustomerAsync(created.UserId, dto.StoreId.Value);
+
+            var fullUser = await _userRepository.GetUserByIdAsync(created.UserId);
+            return MapToDto(fullUser ?? created);
         }
 
         public async Task<UserResponseDto?> UpdateUserAsync(UpdateUserDto dto)
@@ -253,7 +260,7 @@ namespace MovieRental.Services.Services
             IsActive = u.IsActive,
             RoleId = u.RoleId,
             RoleName = u.Role?.RoleName ?? "Unassigned",
-            AddressId = u.AddressId ?? 0,
+            AddressId = u.AddressId,
             Street = u.Address?.Street,   
             PostalCode = u.Address?.PostalCode,
             Phone = u.Address?.Phone,
