@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tag } from "primereact/tag";
 import { Card } from "primereact/card";
@@ -16,6 +16,7 @@ import {
   deleteCategory,
   getFilmsByCategory,
 } from "../../services/categoryService";
+import { AuthContext } from "../../context/AuthContext";
 
 const RATING_SEVERITY = {
   G: "success",
@@ -28,6 +29,7 @@ const RATING_SEVERITY = {
 export default function CategoryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,10 +117,10 @@ export default function CategoryDetailPage() {
         backLabel="Categories"
         title={category?.name}
         subtitle={`${totalRecords} movie${totalRecords !== 1 ? "s" : ""}`}
-        actions={[
+        actions={user?.role === "Admin" ? [
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
-        ]}
+        ] : []}
       />
 
       {/* Movies in this category */}

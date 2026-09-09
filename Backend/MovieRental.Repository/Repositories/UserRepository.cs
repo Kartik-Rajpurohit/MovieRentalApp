@@ -201,10 +201,21 @@ namespace MovieRental.Repository.Repositories
         public async Task DeleteStaffByUserIdAsync(int userId)
         {
             var staff = await _context.Staff
+                .Include(s => s.Rentals)
+                .Include(s => s.Payments)
                 .FirstOrDefaultAsync(s => s.UserId == userId);
+
             if (staff != null)
             {
-                _context.Staff.Remove(staff);
+                if (staff.Rentals.Any() || staff.Payments.Any())
+                {
+                    // Has historical transactions: unlink user account to preserve financial ledger
+                    staff.UserId = null;
+                }
+                else
+                {
+                    _context.Staff.Remove(staff);
+                }
                 await _context.SaveChangesAsync();
             }
         }
@@ -212,10 +223,22 @@ namespace MovieRental.Repository.Repositories
         public async Task DeleteCustomerByUserIdAsync(int userId)
         {
             var customer = await _context.Customers
+                .Include(c => c.Rentals)
+                .Include(c => c.Payments)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
+
             if (customer != null)
             {
-                _context.Customers.Remove(customer);
+                if (customer.Rentals.Any() || customer.Payments.Any())
+                {
+                    // Has historical transactions: unlink user account and deactivate to preserve ledger
+                    customer.UserId = null;
+                    customer.Active = 0;
+                }
+                else
+                {
+                    _context.Customers.Remove(customer);
+                }
                 await _context.SaveChangesAsync();
             }
         }

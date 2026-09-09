@@ -182,7 +182,7 @@ export default function PaymentTable() {
             setSearch(v);
             reset();
           }}
-          placeholder="Search by film, customer..."
+          placeholder="Search by movie, customer..."
         />
         <div style={{ position: "relative" }}>
           <Button
@@ -230,7 +230,7 @@ export default function PaymentTable() {
         />
         <Column
           field="filmTitle"
-          header="Film"
+          header="Movie"
           sortable
           style={{ minWidth: "180px" }}
         />

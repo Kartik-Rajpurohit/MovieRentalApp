@@ -42,7 +42,7 @@ export default function InventoryDialog({
 
   const validate = () => {
     const e = {};
-    if (!isEdit && !form.filmId) e.filmId = "Film ID is required";
+    if (!isEdit && !form.filmId) e.filmId = "Movie ID is required";
     if (!form.storeId) e.storeId = "Store ID is required";
     return e;
   };
@@ -105,14 +105,14 @@ export default function InventoryDialog({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px" }}>
 
-        {/* Film ID — only in add mode */}
+        {/* Movie ID — only in add mode */}
         {!isEdit && (
           <div>
-            <label style={labelStyle}>Film ID</label>
+            <label style={labelStyle}>Movie ID</label>
             <InputNumber
               value={form.filmId}
               onValueChange={(e) => setForm((prev) => ({ ...prev, filmId: e.value }))}
-              placeholder="Enter film ID"
+              placeholder="Enter movie ID"
               style={{ width: "100%" }}
               inputStyle={{ width: "100%" }}
               className={errors.filmId ? "p-invalid" : ""}

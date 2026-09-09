@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Actors;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
@@ -31,6 +31,9 @@ public class ActorService : IActorService
         // Sorting
         query = queryParams.SortField?.ToLower() switch
         {
+            "fullname" => queryParams.SortOrder == "desc"
+                ? query.OrderByDescending(a => a.FirstName).ThenByDescending(a => a.LastName)
+                : query.OrderBy(a => a.FirstName).ThenBy(a => a.LastName),
             "firstname" => queryParams.SortOrder == "desc"
                 ? query.OrderByDescending(a => a.FirstName)
                 : query.OrderBy(a => a.FirstName),

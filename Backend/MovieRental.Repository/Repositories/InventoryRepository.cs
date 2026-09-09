@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using MovieRental.Domain.DTOs.Inventory;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Data;
 using MovieRental.Repository.Interfaces;
@@ -32,15 +31,8 @@ namespace MovieRental.Repository.Repositories
                 .FirstOrDefaultAsync(i => i.InventoryId == id);
         }
 
-        public async Task<Inventory> CreateInventoryAsync(CreateInventoryDto dto)
+        public async Task<Inventory> CreateInventoryAsync(Inventory inventory)
         {
-            var inventory = new Inventory
-            {
-                FilmId = dto.FilmId,
-                StoreId = dto.StoreId,
-                LastUpdate = DateTime.UtcNow
-            };
-
             _context.Inventories.Add(inventory);
             await _context.SaveChangesAsync();
 
@@ -51,21 +43,21 @@ namespace MovieRental.Repository.Repositories
             return inventory;
         }
 
-        public async Task<Inventory?> UpdateInventoryAsync(UpdateInventoryDto dto)
+        public async Task<Inventory?> UpdateInventoryAsync(Inventory inventory)
         {
-            var inventory = await _context.Inventories
+            var existing = await _context.Inventories
                 .Include(i => i.Film)
                 .Include(i => i.Rentals)
-                .FirstOrDefaultAsync(i => i.InventoryId == dto.InventoryId);
+                .FirstOrDefaultAsync(i => i.InventoryId == inventory.InventoryId);
 
-            if (inventory == null) return null;
+            if (existing == null) return null;
 
-            // Only update StoreId if provided — PATCH behaviour
-            if (dto.StoreId.HasValue) inventory.StoreId = dto.StoreId.Value;
-            inventory.LastUpdate = DateTime.UtcNow;
+            existing.StoreId = inventory.StoreId;
+            if (inventory.FilmId != 0) existing.FilmId = inventory.FilmId;
+            existing.LastUpdate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return inventory;
+            return existing;
         }
 
         public async Task<bool> DeleteInventoryAsync(int id)

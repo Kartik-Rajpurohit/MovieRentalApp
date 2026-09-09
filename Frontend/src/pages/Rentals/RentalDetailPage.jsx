@@ -115,7 +115,7 @@ export default function RentalDetailPage() {
         {/* Info Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "24px" }}>
           <div><p style={FIELD_LABEL}>Rental ID</p><p style={FIELD_VALUE}>{rental.rentalId}</p></div>
-          <div><p style={FIELD_LABEL}>Film</p><p style={FIELD_VALUE}>{rental.filmTitle}</p></div>
+          <div><p style={FIELD_LABEL}>Movie</p><p style={FIELD_VALUE}>{rental.filmTitle}</p></div>
           <div><p style={FIELD_LABEL}>Inventory ID</p><p style={FIELD_VALUE}>{rental.inventoryId}</p></div>
           <div><p style={FIELD_LABEL}>Customer</p><p style={{ ...FIELD_VALUE, textTransform: "capitalize" }}>{rental.customerName?.toLowerCase()}</p></div>
           <div><p style={FIELD_LABEL}>Staff</p><p style={{ ...FIELD_VALUE, textTransform: "capitalize" }}>{rental.staffName?.toLowerCase()}</p></div>

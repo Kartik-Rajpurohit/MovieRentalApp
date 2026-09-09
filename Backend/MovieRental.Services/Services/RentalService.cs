@@ -133,7 +133,7 @@ namespace MovieRental.Services.Services
                 var s = queryParams.Search.ToLower();
                 query = query.Where(r =>
                     r.Inventory.Film.Title.ToLower().Contains(s) ||
-                    (r.Customer.User.FirstName + " " + r.Customer.User.LastName).ToLower().Contains(s) ||
+                    (r.Customer.User != null && (r.Customer.User.FirstName + " " + r.Customer.User.LastName).ToLower().Contains(s)) ||
                     r.RentalId.ToString().Contains(s));
             }
 
@@ -167,9 +167,13 @@ namespace MovieRental.Services.Services
                     FilmId = r.Inventory.FilmId,
                     FilmTitle = r.Inventory.Film.Title,
                     CustomerId = r.CustomerId,
-                    CustomerName = r.Customer.User.FirstName + " " + r.Customer.User.LastName,
+                    CustomerName = r.Customer.User != null
+                        ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
+                        : "Customer #" + r.CustomerId,
                     StaffId = r.StaffId,
-                    StaffName = r.Staff.User.FirstName + " " + r.Staff.User.LastName,
+                    StaffName = r.Staff.User != null
+                        ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
+                        : "Staff #" + r.StaffId,
                     LastUpdate = r.LastUpdate,
                     RentalRate = r.Inventory.Film.RentalRate,
                     SuggestedAmount = r.ReturnDate.HasValue

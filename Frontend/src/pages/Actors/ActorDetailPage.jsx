@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Card } from "primereact/card";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -17,6 +17,7 @@ import {
   updateActor,
   deleteActor,
 } from "../../services/actorService";
+import { AuthContext } from "../../context/AuthContext";
 
 const FIELD_LABEL = {
   margin: "0 0 4px 0",
@@ -34,6 +35,7 @@ const FIELD_VALUE = {
 export default function ActorDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const [actor, setActor] = useState(null);
   const [films, setFilms] = useState([]);
@@ -116,7 +118,7 @@ export default function ActorDetailPage() {
 
   const handleDelete = () => {
     confirmDialog({
-      message: `Delete actor "${actor?.firstName} ${actor?.lastName}"? This will remove them from all films.`,
+      message: `Delete actor "${actor?.firstName} ${actor?.lastName}"? This will remove them from all movies.`,
       header: "Delete Actor",
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
@@ -156,11 +158,11 @@ export default function ActorDetailPage() {
         backPath="/actors"
         backLabel="Actors"
         title={actor ? `${actor.firstName} ${actor.lastName}` : `Actor ${id}`}
-        subtitle={`${totalRecords} film${totalRecords !== 1 ? "s" : ""}`}
-        actions={[
+        subtitle={`${totalRecords} movie${totalRecords !== 1 ? "s" : ""}`}
+        actions={user?.role !== "Customer" ? [
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
-        ]}
+        ] : []}
       />
       <Card>
         {/* Info Grid */}
@@ -185,7 +187,7 @@ export default function ActorDetailPage() {
               <p style={FIELD_VALUE}>{actor.lastName}</p>
             </div>
             <div>
-              <p style={FIELD_LABEL}>Total Films</p>
+              <p style={FIELD_LABEL}>Total Movies</p>
               <p style={FIELD_VALUE}>{actor.filmCount}</p>
             </div>
             <div>
@@ -199,7 +201,7 @@ export default function ActorDetailPage() {
           </div>
         )}
 
-        {/* Films List */}
+        {/* Movies List */}
         <div
           style={{
             borderTop: "1px solid #e5e7eb",
@@ -219,7 +221,7 @@ export default function ActorDetailPage() {
               className="pi pi-video"
               style={{ marginRight: "8px", color: "#6366f1" }}
             />
-            Films
+            Movies
           </h3>
 
           <SearchBar
@@ -228,7 +230,7 @@ export default function ActorDetailPage() {
               setSearch(v);
               reset();
             }}
-            placeholder="Search films..."
+            placeholder="Search movies..."
           />
 
           <DataTable
@@ -243,7 +245,7 @@ export default function ActorDetailPage() {
             rowsPerPageOptions={[5, 10, 20]}
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-            emptyMessage="No films found."
+            emptyMessage="No movies found."
             onRowClick={(e) => navigate(`/movies/${e.data.filmId}`)}
             rowClassName={() => "cursor-pointer"}
             style={{ marginTop: "16px" }}

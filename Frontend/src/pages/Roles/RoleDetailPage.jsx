@@ -7,6 +7,7 @@ import AppLayout from "../../components/layout/AppLayout";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import StatusTag from "../../components/common/StatusTag";
 import { getUsers } from "../../services/userService";
+import { getRoles } from "../../services/roleService";
 import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 import SearchBar from "../../components/common/SearchBar";
 import usePagination from "../../hooks/usePagination";
@@ -16,14 +17,25 @@ export default function RoleDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // RoleTable se state pass hogi — role info ke liye
-  const roleInfo = location.state;
+  // RoleTable se state pass hogi — role info ke liye, fallback to API fetch
+  const [roleInfo, setRoleInfo] = useState(location.state || null);
 
   const [users, setUsers] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const { lazyState, onPage, reset } = usePagination(10);
+
+  useEffect(() => {
+    if (!roleInfo && id) {
+      getRoles(1, 100)
+        .then((res) => {
+          const found = (res.data ?? []).find((r) => r.roleId === Number(id));
+          if (found) setRoleInfo(found);
+        })
+        .catch(console.error);
+    }
+  }, [id, roleInfo]);
 
   useEffect(() => {
     fetchUsers();

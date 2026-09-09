@@ -158,7 +158,7 @@ export default function ActorTable() {
         />
         <Column
           field="filmCount"
-          header="Films"
+          header="Movies"
           sortable
           style={{ width: "100px" }}
         />

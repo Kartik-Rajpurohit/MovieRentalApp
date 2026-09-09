@@ -77,10 +77,10 @@ export default function MovieDetailPage() {
         backPath="/movies"
         backLabel="Movies"
         title={movie.title}
-        actions={user?.role === "Customer" ? [] : [
+        actions={user?.role === "Admin" ? [
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
-        ]}
+        ] : []}
       />
 
       {/* Main Info Card */}

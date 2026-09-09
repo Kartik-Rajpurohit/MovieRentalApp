@@ -122,7 +122,7 @@ export default function MovieTable() {
       <PageHeader
         title="Movies"
         addLabel="Add Movie"
-        onAdd={user?.role !== "Customer" ? () => setDialogVisible(true) : undefined}
+        onAdd={user?.role === "Admin" ? () => setDialogVisible(true) : undefined}
       />
 
       {/* Toolbar */}

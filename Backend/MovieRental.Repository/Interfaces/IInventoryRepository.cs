@@ -1,4 +1,3 @@
-using MovieRental.Domain.DTOs.Inventory;
 using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces
@@ -8,8 +7,8 @@ namespace MovieRental.Repository.Interfaces
     {
         IQueryable<Inventory> GetAllInventory();
         Task<Inventory?> GetInventoryByIdAsync(int id);
-        Task<Inventory> CreateInventoryAsync(CreateInventoryDto dto);
-        Task<Inventory?> UpdateInventoryAsync(UpdateInventoryDto dto);
+        Task<Inventory> CreateInventoryAsync(Inventory inventory);
+        Task<Inventory?> UpdateInventoryAsync(Inventory inventory);
         Task<bool> DeleteInventoryAsync(int id);
     }
 }

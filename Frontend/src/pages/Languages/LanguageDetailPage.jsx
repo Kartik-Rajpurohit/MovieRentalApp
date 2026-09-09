@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
 import { DataTable } from "primereact/datatable";
@@ -11,6 +11,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import LanguageDialog from "../../components/languages/LanguageDialog";
 import { getLanguageById, getFilmsByLanguage, deleteLanguage } from "../../services/languageService";
+import { AuthContext } from "../../context/AuthContext";
 
 const RATING_SEVERITY = {
   G: "success", PG: "info", "PG-13": "warning", R: "danger", "NC-17": "danger",
@@ -19,6 +20,7 @@ const RATING_SEVERITY = {
 export default function LanguageDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const [language, setLanguage] = useState(null);
   const [films, setFilms] = useState([]);
@@ -96,10 +98,10 @@ export default function LanguageDetailPage() {
         backLabel="Languages"
         title={language?.name}
         subtitle={`${language?.filmCount} movie${language?.filmCount !== 1 ? "s" : ""}`}
-        actions={[
+        actions={user?.role === "Admin" ? [
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
-        ]}
+        ] : []}
       />
 
       {/* Films in this language */}

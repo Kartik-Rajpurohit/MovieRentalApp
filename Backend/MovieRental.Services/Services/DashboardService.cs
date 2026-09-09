@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Dashboard;
 using MovieRental.Domain.DTOs.Rentals;
 using MovieRental.Domain.DTOs.Payments;
@@ -77,8 +77,12 @@ public class DashboardService : IDashboardService
                 RentalDate = r.RentalDate,
                 ReturnDate = r.ReturnDate,
                 FilmTitle = r.Inventory.Film.Title,
-                CustomerName = r.Customer.User.FirstName + " " + r.Customer.User.LastName,
-                StaffName = r.Staff.User.FirstName + " " + r.Staff.User.LastName,
+                CustomerName = r.Customer.User != null
+                    ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
+                    : "Customer #" + r.CustomerId,
+                StaffName = r.Staff.User != null
+                    ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
+                    : "Staff #" + r.StaffId,
                 RentalRate = r.Inventory.Film.RentalRate,
                 SuggestedAmount = r.ReturnDate.HasValue
                     ? r.Inventory.Film.RentalRate * (decimal)Math.Max(1, (r.ReturnDate.Value - r.RentalDate).TotalDays)
@@ -129,8 +133,12 @@ public class DashboardService : IDashboardService
                 RentalDate = r.RentalDate,
                 ReturnDate = r.ReturnDate,
                 FilmTitle = r.Inventory.Film.Title,
-                CustomerName = r.Customer.User.FirstName + " " + r.Customer.User.LastName,
-                StaffName = r.Staff.User.FirstName + " " + r.Staff.User.LastName,
+                CustomerName = r.Customer.User != null
+                    ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
+                    : "Customer #" + r.CustomerId,
+                StaffName = r.Staff.User != null
+                    ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
+                    : "Staff #" + r.StaffId,
                 RentalRate = r.Inventory.Film.RentalRate,
             })
             .ToListAsync();
@@ -144,7 +152,9 @@ public class DashboardService : IDashboardService
                 PaymentId = p.PaymentId,
                 Amount = p.Amount,
                 PaymentDate = p.PaymentDate,
-                CustomerName = p.Customer.User.FirstName + " " + p.Customer.User.LastName,
+                CustomerName = p.Customer.User != null
+                    ? (p.Customer.User.FirstName + " " + p.Customer.User.LastName).Trim()
+                    : "Customer #" + p.CustomerId,
                 FilmTitle = p.Rental.Inventory.Film.Title,
             })
             .ToListAsync();
@@ -185,8 +195,12 @@ public class DashboardService : IDashboardService
                 RentalDate = r.RentalDate,
                 ReturnDate = r.ReturnDate,
                 FilmTitle = r.Inventory.Film.Title,
-                CustomerName = r.Customer.User.FirstName + " " + r.Customer.User.LastName,
-                StaffName = r.Staff.User.FirstName + " " + r.Staff.User.LastName,
+                CustomerName = r.Customer.User != null
+                    ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
+                    : "Customer #" + r.CustomerId,
+                StaffName = r.Staff.User != null
+                    ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
+                    : "Staff #" + r.StaffId,
                 RentalRate = r.Inventory.Film.RentalRate,
                 SuggestedAmount = r.Inventory.Film.RentalRate,
             })

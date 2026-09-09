@@ -111,13 +111,32 @@ namespace MovieRental.Services.Services
             if (queryParams.RentalId.HasValue)
                 query = query.Where(p => p.RentalId == queryParams.RentalId.Value);
 
+            // Amount & Date Filters
+            if (queryParams.MinAmount.HasValue)
+                query = query.Where(p => p.Amount >= queryParams.MinAmount.Value);
+
+            if (queryParams.MaxAmount.HasValue)
+                query = query.Where(p => p.Amount <= queryParams.MaxAmount.Value);
+
+            if (queryParams.FromDate.HasValue)
+            {
+                var fromUtc = DateTime.SpecifyKind(queryParams.FromDate.Value.Date, DateTimeKind.Utc);
+                query = query.Where(p => p.PaymentDate >= fromUtc);
+            }
+
+            if (queryParams.ToDate.HasValue)
+            {
+                var toUtc = DateTime.SpecifyKind(queryParams.ToDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                query = query.Where(p => p.PaymentDate <= toUtc);
+            }
+
             // Search
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
                 var s = queryParams.Search.ToLower();
                 query = query.Where(p =>
                     p.Rental.Inventory.Film.Title.ToLower().Contains(s) ||
-                    (p.Customer.User.FirstName + " " + p.Customer.User.LastName).ToLower().Contains(s) ||
+                    (p.Customer.User != null && (p.Customer.User.FirstName + " " + p.Customer.User.LastName).ToLower().Contains(s)) ||
                     p.PaymentId.ToString().Contains(s));
             }
 
@@ -146,9 +165,13 @@ namespace MovieRental.Services.Services
                 {
                     PaymentId = p.PaymentId,
                     CustomerId = p.CustomerId,
-                    CustomerName = p.Customer.User.FirstName + " " + p.Customer.User.LastName,
+                    CustomerName = p.Customer.User != null
+                        ? (p.Customer.User.FirstName + " " + p.Customer.User.LastName).Trim()
+                        : "Customer #" + p.CustomerId,
                     StaffId = p.StaffId,
-                    StaffName = p.Staff.User.FirstName + " " + p.Staff.User.LastName,
+                    StaffName = p.Staff.User != null
+                        ? (p.Staff.User.FirstName + " " + p.Staff.User.LastName).Trim()
+                        : "Staff #" + p.StaffId,
                     RentalId = p.RentalId,
                     FilmTitle = p.Rental.Inventory.Film.Title,
                     Amount = p.Amount,

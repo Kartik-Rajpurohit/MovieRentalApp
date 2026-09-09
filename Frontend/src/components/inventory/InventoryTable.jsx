@@ -83,7 +83,7 @@ export default function InventoryTable() {
             setSearch(v);
             reset();
           }}
-          placeholder="Search by film title or ID..."
+          placeholder="Search by movie title or ID..."
         />
         <div style={{ position: "relative" }}>
           <Button
@@ -136,7 +136,7 @@ export default function InventoryTable() {
           sortable
           style={{ width: "80px" }}
         />
-        <Column field="filmTitle" header="Film" sortable />
+        <Column field="filmTitle" header="Movie" sortable />
         <Column
           field="storeId"
           header="Store"

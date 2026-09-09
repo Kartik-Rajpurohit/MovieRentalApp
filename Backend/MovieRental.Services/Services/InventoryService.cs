@@ -108,13 +108,25 @@ namespace MovieRental.Services.Services
 
         public async Task<InventoryResponseDto> CreateInventoryAsync(CreateInventoryDto dto)
         {
-            var inventory = await _inventoryRepository.CreateInventoryAsync(dto);
+            var entity = new Inventory
+            {
+                FilmId = dto.FilmId,
+                StoreId = dto.StoreId,
+                LastUpdate = DateTime.UtcNow
+            };
+            var inventory = await _inventoryRepository.CreateInventoryAsync(entity);
             return MapToResponse(inventory);
         }
 
         public async Task<InventoryResponseDto?> UpdateInventoryAsync(UpdateInventoryDto dto)
         {
-            var inventory = await _inventoryRepository.UpdateInventoryAsync(dto);
+            var entity = new Inventory
+            {
+                InventoryId = dto.InventoryId,
+                StoreId = dto.StoreId ?? 0,
+                LastUpdate = DateTime.UtcNow
+            };
+            var inventory = await _inventoryRepository.UpdateInventoryAsync(entity);
             if (inventory == null) return null;
             return MapToResponse(inventory);
         }

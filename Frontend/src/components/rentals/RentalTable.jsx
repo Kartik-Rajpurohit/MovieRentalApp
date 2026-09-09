@@ -147,7 +147,7 @@ export default function RentalTable() {
             setSearch(v);
             reset();
           }}
-          placeholder="Search by film, customer or ID..."
+          placeholder="Search by movie, customer or ID..."
         />
         <div style={{ position: "relative" }}>
           <Button
@@ -199,7 +199,7 @@ export default function RentalTable() {
           sortable
           style={{ width: "80px" }}
         />
-        <Column field="filmTitle" header="Film" sortable />
+        <Column field="filmTitle" header="Movie" sortable />
         {user?.role !== "Customer" && (
           <Column
             field="customerName"

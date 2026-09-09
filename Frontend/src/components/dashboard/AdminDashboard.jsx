@@ -25,7 +25,7 @@ export default function AdminDashboard({ stats }) {
         />
         <StatCard
           icon="pi-video"
-          label="Total Films"
+          label="Total Movies"
           value={stats.totalFilms}
           color="#3b82f6"
         />
@@ -80,10 +80,10 @@ export default function AdminDashboard({ stats }) {
           marginBottom: "24px",
         }}
       >
-        {/* Top 5 Films */}
-        <Card title="Top 5 Most Rented Films">
+        {/* Top 5 Movies */}
+        <Card title="Top 5 Most Rented Movies">
           <DataTable value={stats.topRentedFilms} emptyMessage="No data.">
-            <Column field="title" header="Film" />
+            <Column field="title" header="Movie" />
             <Column
               field="rentalCount"
               header="Rentals"
@@ -113,7 +113,7 @@ export default function AdminDashboard({ stats }) {
       <Card title="Recent Rentals">
         <DataTable value={stats.recentRentals} emptyMessage="No data.">
           <Column field="rentalId" header="ID" style={{ width: "70px" }} />
-          <Column field="filmTitle" header="Film" />
+          <Column field="filmTitle" header="Movie" />
           <Column field="customerName" header="Customer" />
           <Column
             field="rentalDate"

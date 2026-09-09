@@ -125,7 +125,7 @@ export default function InventoryDetailPage() {
             <p style={FIELD_VALUE}>{inventory.inventoryId}</p>
           </div>
           <div>
-            <p style={FIELD_LABEL}>Film</p>
+            <p style={FIELD_LABEL}>Movie</p>
             <p style={FIELD_VALUE}>{inventory.filmTitle}</p>
           </div>
           <div>

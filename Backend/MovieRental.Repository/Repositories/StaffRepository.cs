@@ -27,8 +27,8 @@ namespace MovieRental.Repository.Repositories
                     .ThenInclude(u => u!.Role)
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Address)
-                        .ThenInclude(a => a.City)
-                            .ThenInclude(c => c.Country)
+                        .ThenInclude(a => a!.City)
+                            .ThenInclude(c => c!.Country)
                 .FirstOrDefaultAsync(s => s.StaffId == id);
         }
     }
