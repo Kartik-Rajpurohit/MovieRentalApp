@@ -14,9 +14,12 @@ import FormDialog from "../../common/FormDialog";
 import AddressFormFields from "./AddressFormFields";
 import { createAddress } from "../../../services/addressService";
 
+// Displays the address directory in a DataTable with server-side pagination, sorting, search, filtering, and address creation
 export default function AddressTable() {
   const navigate = useNavigate();
+  // Server-side pagination hook
   const { lazyState, onPage, reset } = usePagination(10);
+  // Table state for address records
   const [addresses, setAddresses] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -26,6 +29,7 @@ export default function AddressTable() {
   const INIT_FILTERS = { city: null, postalCode: null };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  // Add dialog visibility and form state
   const addDialog = useDialog();
   const [form, setForm] = useState({
     cityId: null,
@@ -36,6 +40,7 @@ export default function AddressTable() {
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
+  // Validate and submit new address creation
   const handleAdd = async () => {
     const errs = {};
     if (!form.cityId) errs.cityId = "City is required";
@@ -69,10 +74,12 @@ export default function AddressTable() {
     }
   };
 
+  // Reload addresses whenever pagination, search, sorting, or filters change
   useEffect(() => {
     loadAddresses();
   }, [lazyState, search, sortField, sortOrder, filters]);
 
+  // Load paginated addresses from backend
   const loadAddresses = async () => {
     setLoading(true);
     try {

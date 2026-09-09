@@ -24,26 +24,36 @@ import { AuthContext } from "../../context/AuthContext";
 export default function RentalTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Table records and total records count from backend
   const [rentals, setRentals] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  // Loading indicator for table queries
   const [loading, setLoading] = useState(false);
+  // Search query text
   const [search, setSearch] = useState("");
+  // Sort parameters (defaults to newest rental date first)
   const [sortField, setSortField] = useState("rentaldate");
   const [sortOrder, setSortOrder] = useState(-1);
   const INIT_FILTERS = { isReturned: null, customerId: null, staffId: null };
+  // Active filters and filter dialog visibility
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  // Add rental dialog visibility
   const addDialog = useDialog();
+  // Form state for creating a new rental
   const [form, setForm] = useState({
     inventoryId: null,
     customerId: null,
     staffId: null,
   });
+  // Saving indicator and form validation errors
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
+  // Validate and submit a new rental to the backend
   const handleAdd = async () => {
     const errs = {};
     if (!form.inventoryId) errs.inventoryId = "Inventory item is required";
@@ -72,10 +82,12 @@ export default function RentalTable() {
     }
   };
 
+  // Reload rentals list when pagination, search, sort, or filters change
   useEffect(() => {
     loadRentals();
   }, [lazyState, search, sortField, sortOrder, filters]);
 
+  // Fetch paginated rentals from API with role-based restrictions
   const loadRentals = async () => {
     setLoading(true);
     try {
@@ -98,6 +110,7 @@ export default function RentalTable() {
     }
   };
 
+
   const onSort = (e) => {
     setSortField(e.sortField);
     setSortOrder(e.sortOrder);
@@ -115,6 +128,7 @@ export default function RentalTable() {
 
   return (
     <div>
+      {/* Modal dialog to create a new rental */}
       <FormDialog
         visible={addDialog.visible}
         onHide={() => {
@@ -130,12 +144,14 @@ export default function RentalTable() {
         <RentalFormFields form={form} setForm={setForm} errors={formErrors} />
       </FormDialog>
 
+      {/* Header with title and Add Rental button (for staff/admin) */}
       <PageHeader
         title={user?.role === "Customer" ? "My Rentals" : "Rentals"}
         onAdd={user?.role !== "Customer" ? addDialog.open : undefined}
         addLabel="Add Rental"
       />
 
+      {/* Filter dialog for return status, customer ID, and staff ID */}
       <RentalFilterDialog
         visible={filterVisible}
         onHide={() => setFilterVisible(false)}
@@ -145,6 +161,7 @@ export default function RentalTable() {
           reset();
         }}
       />
+      {/* Search bar and filter dialog trigger */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
@@ -179,11 +196,13 @@ export default function RentalTable() {
         </div>
       </div>
 
+      {/* Table displaying rentals with server-side pagination and sorting */}
       <DataTable
         value={rentals}
         paginator
         lazy
         loading={loading}
+
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}

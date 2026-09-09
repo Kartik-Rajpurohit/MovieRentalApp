@@ -5,11 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    /// <summary>
-    /// Data access repository for film categories and genres.
-    /// </summary>
+    // Handles database operations related to film categories and genres.
     public class CategoryRepository : ICategoryRepository
     {
+        // Receives the database context used to access category data.
         private readonly AppDbContext _context;
 
         public CategoryRepository(AppDbContext context)
@@ -17,6 +16,7 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
+        // Reads all categories without tracking, including film links for counting.
         public IQueryable<Category> GetAllCategories()
         {
             return _context.Categories
@@ -24,7 +24,7 @@ namespace MovieRental.Repository.Repositories
                 .Include(c => c.FilmCategories);
         }
 
-        // Sirf category info — films alag endpoint se aayenge
+        // Finds a category by its ID.
         public async Task<Category?> GetCategoryByIdAsync(int id)
         {
             return await _context.Categories
@@ -32,6 +32,7 @@ namespace MovieRental.Repository.Repositories
                 .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
+        // Adds a new category to the database and returns the created record.
         public async Task<Category> CreateCategoryAsync(Category category)
         {
             _context.Categories.Add(category);
@@ -39,6 +40,7 @@ namespace MovieRental.Repository.Repositories
             return await GetCategoryByIdAsync(category.CategoryId) ?? category;
         }
 
+        // Updates the category timestamp and saves changes.
         public async Task<Category?> UpdateCategoryAsync(Category category)
         {
             category.LastUpdate = DateTime.UtcNow;
@@ -46,6 +48,7 @@ namespace MovieRental.Repository.Repositories
             return await GetCategoryByIdAsync(category.CategoryId);
         }
 
+        // Removes the category from the database if found.
         public async Task<bool> DeleteCategoryAsync(int id)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -55,7 +58,7 @@ namespace MovieRental.Repository.Repositories
             return true;
         }
 
-        // Actor pattern jaisa — paginated films fetch karne ke liye
+        // Queries films belonging to this category through the FilmCategory join table.
         public IQueryable<Film> GetFilmsByCategoryId(int categoryId)
             => _context.FilmCategories
                 .AsNoTracking()

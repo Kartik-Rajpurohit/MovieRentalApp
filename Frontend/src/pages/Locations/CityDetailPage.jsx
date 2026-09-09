@@ -25,23 +25,33 @@ const FIELD_VALUE = {
   fontWeight: 600,
 };
 
+// Displays details for a single city and lists all addresses registered in that city
 export default function CityDetailPage() {
+  // Read city ID from route parameters
   const { id } = useParams();
+
+  // City profile state
   const [city, setCity] = useState(null);
+  // Paginated addresses within this city
   const [addresses, setAddresses] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(true);
   const [addressLoading, setAddressLoading] = useState(false);
   const [search, setSearch] = useState("");
+  // Reusable pagination hook for the addresses table
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Fetch city profile whenever the city ID changes
   useEffect(() => {
     fetchCity();
   }, [id]);
+
+  // Reload addresses whenever city ID, pagination, or search query change
   useEffect(() => {
     fetchAddresses();
   }, [id, lazyState, search]);
 
+  // Load city details from the backend service
   const fetchCity = async () => {
     try {
       const data = await getCityById(id);
@@ -53,6 +63,7 @@ export default function CityDetailPage() {
     }
   };
 
+  // Load addresses located in this city with pagination and search
   const fetchAddresses = async () => {
     setAddressLoading(true);
     try {
@@ -71,6 +82,7 @@ export default function CityDetailPage() {
     }
   };
 
+  // Show loading spinner while city details are loading
   if (loading) {
     return (
       <AppLayout>
@@ -78,6 +90,7 @@ export default function CityDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

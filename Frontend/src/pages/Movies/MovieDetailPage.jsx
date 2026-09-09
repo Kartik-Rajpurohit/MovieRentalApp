@@ -16,16 +16,23 @@ const fieldStyle = { display: "flex", flexDirection: "column", gap: "4px" };
 const labelStyle = { fontSize: "12px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" };
 const valueStyle = { fontSize: "15px", color: "#111827", fontWeight: 500 };
 
+// Displays detailed information for a single movie including rating, rental terms, cast, and categories
 export default function MovieDetailPage() {
   const { user } = useContext(AuthContext);
+  // Read movie ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // State holding detailed movie information
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Controls visibility of the edit movie dialog
   const [editVisible, setEditVisible] = useState(false);
 
+  // Fetch movie details whenever the movie ID changes
   useEffect(() => { loadMovie(); }, [id]);
 
+  // Load movie details, categories, actors, and inventory count from backend
   const loadMovie = async () => {
     setLoading(true);
     try {
@@ -38,6 +45,7 @@ export default function MovieDetailPage() {
     }
   };
 
+  // Prompt confirmation dialog before deleting this movie
   const handleDelete = () => {
     confirmDialog({
       message: `Are you sure you want to delete "${movie?.title}"?`,
@@ -51,6 +59,7 @@ export default function MovieDetailPage() {
     });
   };
 
+  // Show loading spinner while movie details are being fetched
   if (loading) {
     return (
       <AppLayout>
@@ -59,6 +68,7 @@ export default function MovieDetailPage() {
     );
   }
 
+  // Fallback if no movie is found for the given ID
   if (!movie) {
     return (
       <AppLayout>
@@ -67,6 +77,7 @@ export default function MovieDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

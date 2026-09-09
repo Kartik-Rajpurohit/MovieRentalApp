@@ -18,17 +18,19 @@ import {
 
 const labelStyle = { display: "block", marginBottom: "6px", fontWeight: 500 };
 
+// Provides user registration with personal info, country/city selection, and address autocomplete
 export default function SignUpPage() {
   const navigate = useNavigate();
+  // Access login function to immediately authenticate the user upon successful registration
   const { login } = useContext(AuthContext);
 
-  // Basic fields
+  // Basic user registration fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Location dropdowns
+  // Location dropdown states for cascading country-to-city selection
   const [countries, setCountries] = useState([]);
   const [countriesPage, setCountriesPage] = useState(1);
   const [countriesHasMore, setCountriesHasMore] = useState(true);
@@ -40,7 +42,7 @@ export default function SignUpPage() {
   const [citiesLoading, setCitiesLoading] = useState(false);
   const [selectedCityId, setSelectedCityId] = useState(null);
 
-  // Address — autocomplete from DB + free text
+  // Address states — supports selecting existing addresses or typing a new street address
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressInput, setAddressInput] = useState(""); // what user typed
   const [selectedAddressId, setSelectedAddressId] = useState(null); // if user picked existing
@@ -49,13 +51,14 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Load countries on mount
+  // Load initial countries list when the component mounts
   useEffect(() => {
     fetchCountries(1);
   }, []);
 
   // ─── Fetchers ──────────────────────────────────────────────────────────────
 
+  // Fetch paginated countries from the backend
   const fetchCountries = async (page = 1) => {
     const data = await getCountries(page, 10);
     const mapped = data.map((c) => ({ label: c.name, value: c.id }));
@@ -64,6 +67,7 @@ export default function SignUpPage() {
     setCountriesPage(page);
   };
 
+  // Fetch paginated cities for the currently selected country
   const fetchCities = async (countryId, page = 1) => {
     setCitiesLoading(true);
     try {
@@ -77,7 +81,7 @@ export default function SignUpPage() {
     }
   };
 
-  // AutoComplete — search existing addresses for selected city
+  // Search existing addresses in the selected city for autocomplete suggestions
   const searchAddresses = async (event) => {
     if (!selectedCityId) {
       setAddressSuggestions([]);
@@ -93,6 +97,7 @@ export default function SignUpPage() {
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
+  // Handle country selection and reset downstream city and address selections
   const handleCountryChange = (countryId) => {
     setSelectedCountryId(countryId);
     setSelectedCityId(null);
@@ -108,6 +113,7 @@ export default function SignUpPage() {
     if (countryId) fetchCities(countryId, 1);
   };
 
+  // Handle city selection and reset dependent address fields
   const handleCityChange = (cityId) => {
     setSelectedCityId(cityId);
     setAddressInput("");
@@ -115,12 +121,14 @@ export default function SignUpPage() {
     setErrors((prev) => ({ ...prev, city: undefined, address: undefined }));
   };
 
+  // Handle selection of an existing address suggestion
   const handleAddressSelect = (item) => {
     // User picked an existing address from suggestions
     setSelectedAddressId(item.value);
     setAddressInput(item.label);
   };
 
+  // Handle user manual input for a new street address
   const handleAddressChange = (val) => {
     // User is typing — clear existing selection
     setAddressInput(val);
@@ -130,6 +138,7 @@ export default function SignUpPage() {
 
   // ─── Validation ────────────────────────────────────────────────────────────
 
+  // Validates registration form fields and password complexity requirements
   const validate = () => {
     const e = {};
     if (!firstName.trim()) e.firstName = "First name is required";
@@ -159,6 +168,7 @@ export default function SignUpPage() {
 
   // ─── Submit ────────────────────────────────────────────────────────────────
 
+  // Submits the registration payload, logs in the new user, and navigates
   const handleSignUp = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -196,6 +206,7 @@ export default function SignUpPage() {
       setLoading(false);
     }
   };
+
 
   // ─── Render ────────────────────────────────────────────────────────────────
 

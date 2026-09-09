@@ -2,11 +2,14 @@ import { Calendar } from "primereact/calendar";
 import { InputNumber } from "primereact/inputnumber";
 import { LABEL_STYLE } from "../../utils/constants";
 
+// Form inputs for filtering payments by minimum amount, maximum amount, and date range.
 export default function PaymentFilters({ filters, setFilter }) {
   return (
     <>
+      {/* Minimum amount filter */}
       <div>
         <label style={LABEL_STYLE}>Min Amount ($)</label>
+
         <InputNumber
           value={filters.minAmount}
           onValueChange={(e) => setFilter("minAmount")(e.value)}

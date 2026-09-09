@@ -5,11 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    /// <summary>
-    /// Data access repository for rental store locations and manager staff.
-    /// </summary>
+    // Handles database operations related to store locations.
     public class StoreRepository : IStoreRepository
     {
+        // Receives the database context used to access store records.
         private readonly AppDbContext _context;
 
         public StoreRepository(AppDbContext context)
@@ -17,7 +16,7 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Used for both list and detail — counts computed via DB subquery in service
+        // Reads all stores without tracking, loading manager staff, address, city, and country details.
         public IQueryable<Store> GetAllStores()
         {
             return _context.Stores
@@ -29,6 +28,7 @@ namespace MovieRental.Repository.Repositories
                         .ThenInclude(c => c!.Country);
         }
 
+        // Adds a new store location to the database and reloads its relationships.
         public async Task<Store> CreateStoreAsync(Store store)
         {
             store.LastUpdate = DateTime.UtcNow;

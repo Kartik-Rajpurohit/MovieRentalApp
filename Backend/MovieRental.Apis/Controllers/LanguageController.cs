@@ -8,9 +8,10 @@ namespace MovieRental.Apis.Controllers;
 // Handles movie language options and language lookup data.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff,Customer")]
+[Authorize(Roles = "Admin,Staff,Customer")] // All users can read languages; Admin can modify
 public class LanguageController : ControllerBase
 {
+    // Injected service for language operations
     private readonly ILanguageService _languageService;
 
     public LanguageController(ILanguageService languageService)
@@ -18,7 +19,7 @@ public class LanguageController : ControllerBase
         _languageService = languageService;
     }
 
-    // GET api/language
+    // Gets all languages available for movie cataloging.
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -26,7 +27,8 @@ public class LanguageController : ControllerBase
         return Ok(result);
     }
 
-    // GET api/language/5
+    // Gets a language by LanguageId.
+    // Returns 404 NotFound if language does not exist.
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -35,7 +37,9 @@ public class LanguageController : ControllerBase
         return Ok(result);
     }
 
-    // POST api/language
+    // Creates a new language.
+    // Restricted to Admin role only.
+    // Returns 201 Created with the new language ID and location header.
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateLanguageDto dto)
@@ -44,7 +48,9 @@ public class LanguageController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.LanguageId }, result);
     }
 
-    // PATCH api/language
+    // Updates an existing language's name.
+    // Restricted to Admin role only.
+    // Returns 404 NotFound if language does not exist.
     [HttpPatch]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update([FromBody] UpdateLanguageDto dto)
@@ -54,7 +60,9 @@ public class LanguageController : ControllerBase
         return Ok(result);
     }
 
-    // DELETE api/language/5
+    // Deletes a language by ID.
+    // Restricted to Admin role only.
+    // Returns 204 NoContent on success, or 404 NotFound if language does not exist.
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
@@ -64,7 +72,7 @@ public class LanguageController : ControllerBase
         return NoContent();
     }
 
-    // GET api/language/5/detail
+    // Gets detailed language information including total films available in this language.
     [HttpGet("{id}/detail")]
     public async Task<IActionResult> GetDetail(int id)
     {
@@ -73,7 +81,8 @@ public class LanguageController : ControllerBase
         return Ok(result);
     }
 
-    // GET api/language/5/films?page=1&pageSize=10&search=matrix
+    // Gets a paginated list of films released in this language.
+    // Supports optional title search within the language.
     [HttpGet("{id}/films")]
     public async Task<IActionResult> GetFilms(
         int id,

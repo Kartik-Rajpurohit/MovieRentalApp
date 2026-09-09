@@ -1,9 +1,14 @@
 namespace MovieRental.Domain.QueryParameters;
 
-// Query params for inventory list — extends base with inventory-specific filters
+// Contains options used to filter, sort, and paginate physical inventory copies returned by the API
 public class InventoryQueryParametersDto : QueryParametersDto
 {
-    public int? FilmId { get; set; }    // filter by film
-    public int? StoreId { get; set; }   // filter by store
-    public bool? IsAvailable { get; set; }  // filter by availability
+    // Filters inventory copies of a specific film ID
+    public int? FilmId { get; set; }
+
+    // Filters inventory copies located at a specific store ID
+    public int? StoreId { get; set; }
+
+    // Filters inventory copies by availability (true = available to rent, false = currently rented out)
+    public bool? IsAvailable { get; set; }
 }

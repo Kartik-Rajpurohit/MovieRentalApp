@@ -1,3 +1,4 @@
+// Reusable centered spinning loader used when fetching data
 export default function LoadingSpinner() {
   return (
     <div

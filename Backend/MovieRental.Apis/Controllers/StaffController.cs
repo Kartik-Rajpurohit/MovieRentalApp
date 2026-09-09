@@ -7,13 +7,15 @@ namespace MovieRental.Apis.Controllers
     // Handles staff profile and store assignment queries.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Admin and Staff can access staff endpoints
+    [Authorize(Roles = "Admin,Staff")] // Admin and Staff can view staff records
     public class StaffController : ControllerBase
     {
+        // Injected service for staff lookups and store assignment info
         private readonly IStaffService _staffService;
         public StaffController(IStaffService staffService) => _staffService = staffService;
 
-        // GET api/staff — returns paginated, filtered list of staff
+        // Gets a paginated list of staff members with active status, store, and name search filters.
+        // Query parameters: page, pageSize, search, isActive, storeId.
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
@@ -23,7 +25,8 @@ namespace MovieRental.Apis.Controllers
             [FromQuery] int? storeId = null)
             => Ok(await _staffService.GetAllStaffAsync(page, pageSize, search, isActive, storeId));
 
-        // GET api/staff/{id} — returns single staff member by StaffId
+        // Gets a single staff member's details by StaffId (including store and user info).
+        // Returns 404 NotFound if staff member does not exist.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {

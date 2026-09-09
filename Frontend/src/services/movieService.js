@@ -1,9 +1,10 @@
-// Client service for movie/film catalogue APIs (CRUD, search, filtering, and dropdown options).
+// Handles API requests related to movies/films catalogue, filtering, and dropdown options
 import api from "./api";
 
+// Base route for Movie endpoints
 const MOVIE = "/Movie";
 
-// Get paginated, filtered, sorted list of movies
+// GET request to fetch a paginated, sorted, and filtered list of movies
 export const getMovies = (
   page = 1,
   pageSize = 10,
@@ -39,31 +40,33 @@ export const getMovies = (
     })
     .then((r) => r.data);
 
-// Get single movie detail by ID
+// GET request to fetch complete movie details by ID
 export const getMovieById = (id) =>
   api.get(`${MOVIE}/${id}`).then((r) => r.data);
 
-// Create a new movie
+// POST request to create a new movie record
 export const createMovie = (dto) => api.post(MOVIE, dto).then((r) => r.data);
 
-// Partial update a movie
+// PATCH request to partially update an existing movie record
 export const updateMovie = (dto) => api.patch(MOVIE, dto).then((r) => r.data);
 
-// Delete a movie
+// DELETE request to remove a movie by ID
 export const deleteMovie = (id) =>
   api.delete(`${MOVIE}/${id}`).then((r) => r.data);
 
-// Dropdowns for add/edit form
+// GET request to fetch languages for dropdown selection
 export const getLanguages = (page = 1, pageSize = 100) =>
   api
     .get(`${MOVIE}/languages`, { params: { page, pageSize } })
     .then((r) => r.data);
 
+// GET request to fetch categories for dropdown selection
 export const getCategories = (page = 1, pageSize = 100) =>
   api
     .get(`${MOVIE}/categories`, { params: { page, pageSize } })
     .then((r) => r.data);
 
+// GET request to fetch actors for dropdown selection
 export const getActors = (page = 1, pageSize = 100) =>
   api
     .get(`${MOVIE}/actors`, { params: { page, pageSize } })

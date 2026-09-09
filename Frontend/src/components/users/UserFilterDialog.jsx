@@ -4,23 +4,29 @@ import UserFilters from "./UserFilters";
 import useFilters from "../../hooks/useFilters";
 import { getRoles } from "../../services/userService";
 
+// Default filter values for users list
 const INIT_FILTERS = { name: "", email: "", role: null, isActive: null };
 
+// Modal filter dialog for users list, filtering by name, email, role, and active status.
 export default function UserFilterDialog({
   visible,
   onHide,
   filters,
   onApply,
 }) {
+  // Local state holding filter values before applying
   const { filters: local, setFilter, setFilters: setLocal } = useFilters(filters);
+  // Available system roles for the dropdown
   const [roles, setRoles] = useState([]);
 
+  // Fetch roles and sync local filters when dialog opens
   useEffect(() => {
     if (visible) {
       setLocal(filters);
       fetchRoles();
     }
   }, [visible]);
+
 
   const fetchRoles = async () => {
     const data = await getRoles(1, 100);

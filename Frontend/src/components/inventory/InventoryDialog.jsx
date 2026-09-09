@@ -14,6 +14,7 @@ const labelStyle = {
 
 const emptyForm = { filmId: null, storeId: null };
 
+// Modal dialog for adding a new movie inventory copy or editing store assignment of an existing copy
 export default function InventoryDialog({
   visible,
   onHide,
@@ -22,10 +23,12 @@ export default function InventoryDialog({
   inventory = null,
 }) {
   const isEdit = mode === "edit";
+  // Form input state (filmId and storeId)
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // Initialize or reset form values when dialog opens or record changes
   useEffect(() => {
     if (!visible) return;
     if (isEdit && inventory) {
@@ -40,6 +43,7 @@ export default function InventoryDialog({
     setErrors({});
   }, [visible]);
 
+  // Validate movie ID and store ID inputs
   const validate = () => {
     const e = {};
     if (!isEdit && !form.filmId) e.filmId = "Movie ID is required";
@@ -47,6 +51,7 @@ export default function InventoryDialog({
     return e;
   };
 
+  // Submit inventory copy data to backend create or update API
   const handleSubmit = async () => {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
@@ -68,6 +73,7 @@ export default function InventoryDialog({
       setLoading(false);
     }
   };
+
 
   const handleHide = () => {
     setForm(emptyForm);

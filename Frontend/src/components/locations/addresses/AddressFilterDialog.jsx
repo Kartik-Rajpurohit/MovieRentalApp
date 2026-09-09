@@ -5,6 +5,7 @@ import useFilters from "../../../hooks/useFilters";
 
 const INIT_FILTERS = { city: null, postalCode: null };
 
+// Modal dialog for filtering addresses by city and postal code
 export default function AddressFilterDialog({
   visible,
   onHide,

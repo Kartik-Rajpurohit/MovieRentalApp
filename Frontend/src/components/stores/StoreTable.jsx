@@ -17,12 +17,17 @@ import FormDialog from "../common/FormDialog";
 import StoreFormFields from "./StoreFormFields";
 import { createStore } from "../../services/storeService";
 
+// Initial filter values for store locations
 const INIT_FILTERS = { city: "", country: "" };
 
+// Displays the store branches table with city/country filtering, stats tags, and an Add Store modal.
 export default function StoreTable() {
   const navigate = useNavigate();
+  // Filter dialog visibility hook
   const filterDialog = useDialog();
+  // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
+  // Applied filters and local temporary filters for the modal
   const { filters, setFilters, reset: resetFilters } = useFilters(INIT_FILTERS);
   const {
     filters: localFilters,
@@ -30,17 +35,25 @@ export default function StoreTable() {
     setFilters: setLocalFilters,
   } = useFilters(INIT_FILTERS);
 
+  // Store records and total count from API
   const [stores, setStores] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  // Loading indicator for API queries
   const [loading, setLoading] = useState(false);
+  // Sorting parameters
   const [sortField, setSortField] = useState("storeid");
   const [sortOrder, setSortOrder] = useState(1);
+  // Search query text
   const [search, setSearch] = useState("");
+  // Add store dialog state
   const addDialog = useDialog();
+  // Form values for creating a new store
   const [form, setForm] = useState({ addressId: null, managerStaffId: null });
+  // Saving indicator and form errors
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
+  // Validate and submit a new store to the backend
   const handleAdd = async () => {
     const errs = {};
     if (!form.managerStaffId) errs.managerStaffId = "Manager is required";
@@ -66,11 +79,15 @@ export default function StoreTable() {
       setSaving(false);
     }
   };
+
+  // Reload store records when pagination, sorting, search, or filters change
   useEffect(() => {
     loadStores();
   }, [lazyState, sortField, sortOrder, search, filters]);
 
+  // Fetch paginated stores from the store API service
   const loadStores = async () => {
+
     setLoading(true);
     try {
       const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
@@ -128,6 +145,7 @@ export default function StoreTable() {
 
   return (
     <div>
+      {/* Filter dialog for city and country filtering */}
       <FilterDialog
         visible={filterDialog.visible}
         onHide={filterDialog.close}
@@ -137,6 +155,8 @@ export default function StoreTable() {
       >
         <StoreFilters filters={localFilters} setFilter={setLocalFilter} />
       </FilterDialog>
+
+      {/* Modal dialog to add a new store location */}
       <FormDialog
         visible={addDialog.visible}
         onHide={() => {
@@ -152,8 +172,10 @@ export default function StoreTable() {
         <StoreFormFields form={form} setForm={setForm} errors={formErrors} />
       </FormDialog>
 
+      {/* Header bar with title and Add Store button */}
       <PageHeader title="Stores" onAdd={addDialog.open} addLabel="Add Store" />
 
+      {/* Search and filter controls toolbar */}
       <div
         style={{
           display: "flex",
@@ -187,11 +209,13 @@ export default function StoreTable() {
         </div>
       </div>
 
+      {/* Table displaying store branches with server-side pagination and sorting */}
       <DataTable
         value={stores}
         paginator
         lazy
         loading={loading}
+
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}

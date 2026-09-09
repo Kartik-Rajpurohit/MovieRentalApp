@@ -2,24 +2,29 @@ import React from "react";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 
+// Catches unhandled JavaScript rendering errors anywhere in child components and displays a friendly fallback screen
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
+  // Updates state so the next render shows the fallback UI when an error is thrown
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
 
+  // Logs the caught error and component stack info
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
+  // Reloads the current browser window
   handleReload = () => {
     window.location.reload();
   };
 
+  // Redirects the user back to the application root
   handleHome = () => {
     window.location.href = "/";
   };

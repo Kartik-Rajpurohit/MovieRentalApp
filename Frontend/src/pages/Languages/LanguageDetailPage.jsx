@@ -17,24 +17,32 @@ const RATING_SEVERITY = {
   G: "success", PG: "info", "PG-13": "warning", R: "danger", "NC-17": "danger",
 };
 
+// Displays details for a specific language and lists all movies available in this language
 export default function LanguageDetailPage() {
+  // Read language ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
+  // State holding language profile information
   const [language, setLanguage] = useState(null);
+  // Paginated movies in this language
   const [films, setFilms] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [pageLoading, setPageLoading] = useState(true);
   const [filmsLoading, setFilmsLoading] = useState(false);
+  // Controls visibility of the edit language dialog
   const [editVisible, setEditVisible] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [rows] = useState(10);
 
+  // Fetch language details when the ID changes
   useEffect(() => { loadLanguage(); }, [id]);
+  // Fetch movies whenever ID, pagination page, or search query change
   useEffect(() => { loadFilms(); }, [id, page, search]);
 
+  // Load language details from the backend
   const loadLanguage = async () => {
     setPageLoading(true);
     try {
@@ -47,6 +55,7 @@ export default function LanguageDetailPage() {
     }
   };
 
+  // Load films associated with this language with pagination and search
   const loadFilms = async () => {
     setFilmsLoading(true);
     try {
@@ -60,6 +69,7 @@ export default function LanguageDetailPage() {
     }
   };
 
+  // Prompt confirmation dialog before deleting this language
   const handleDelete = () => {
     confirmDialog({
       message: `Delete language "${language?.name}"? Movies using this language will be affected.`,
@@ -73,6 +83,7 @@ export default function LanguageDetailPage() {
     });
   };
 
+  // Show loading spinner while language profile is loading
   if (pageLoading) {
     return (
       <AppLayout>
@@ -80,6 +91,7 @@ export default function LanguageDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

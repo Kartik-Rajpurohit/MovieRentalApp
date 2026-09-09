@@ -12,24 +12,33 @@ import { getCountries, createCountry } from "../../../services/countryService";
 
 const EMPTY_FORM = { name: "" };
 
+// Displays the paginated table of countries with search, sorting, and add dialog.
 export default function CountryTable() {
   const navigate = useNavigate();
+  // Dialog visibility state for adding a new country
   const addDialog = useDialog();
+  // Pagination state (first, rows, page) for server-side paging
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Table records and total count from the server
   const [countries, setCountries] = useState([]);
   const [totalRecords, setTotal] = useState(0);
+  // Loading indicators for table fetching and form submission
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Search keyword and sorting states
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState(1);
+  // Form state for creating a new country
   const [form, setForm] = useState(EMPTY_FORM);
 
+  // Reload country records whenever pagination, search, or sorting change
   useEffect(() => {
     loadCountries();
   }, [lazyState, search, sortField, sortOrder]);
 
+  // Fetch paginated countries list from the backend API
   const loadCountries = async () => {
     setLoading(true);
     try {
@@ -49,16 +58,19 @@ export default function CountryTable() {
     }
   };
 
+  // Handle column header click for sorting
   const onSort = (e) => {
     setSortField(e.sortField);
     setSortOrder(e.sortOrder);
     reset();
   };
+  // Handle search text changes and reset to first page
   const onSearchChange = (v) => {
     setSearch(v);
     reset();
   };
 
+  // Submit the new country form to the backend
   const handleAdd = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
@@ -74,8 +86,10 @@ export default function CountryTable() {
     }
   };
 
+
   return (
     <div>
+      {/* Modal dialog to add a new country */}
       <FormDialog
         visible={addDialog.visible}
         onHide={() => {
@@ -90,12 +104,14 @@ export default function CountryTable() {
         <CountryFormFields form={form} setForm={setForm} />
       </FormDialog>
 
+      {/* Header bar with title and Add button */}
       <PageHeader
         title="Countries"
         onAdd={addDialog.open}
         addLabel="Add Country"
       />
 
+      {/* Search input to filter countries by name */}
       <div style={{ marginBottom: "16px" }}>
         <SearchBar
           value={search}
@@ -104,11 +120,13 @@ export default function CountryTable() {
         />
       </div>
 
+      {/* PrimeReact DataTable with lazy loading, sorting, and pagination */}
       <DataTable
         value={countries}
         paginator
         lazy
         loading={loading}
+
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}

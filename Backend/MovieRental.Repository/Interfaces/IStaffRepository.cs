@@ -2,10 +2,13 @@ using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces
 {
-    // Repository contract — raw DB operations only
+    // Defines database operations for Staff entities linked to User and Store records.
     public interface IStaffRepository
     {
+        // Returns a queryable collection of staff members with linked user accounts.
         IQueryable<Staff> GetAllStaff();
-        Task<Staff?> GetStaffByIdAsync(int id); // Returns raw entity — service handles mapping
+
+        // Finds a staff member by their ID with full user, store, and address info.
+        Task<Staff?> GetStaffByIdAsync(int id);
     }
 }

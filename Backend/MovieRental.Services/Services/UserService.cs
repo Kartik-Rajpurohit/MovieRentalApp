@@ -8,11 +8,12 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for user management, role transitions, and status toggles.
+    // Handles business logic for user management, role transitions, and status toggles.
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
 
+        // Receives the user repository needed to perform user queries and state modifications.
         public UserService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
@@ -206,6 +207,7 @@ namespace MovieRental.Services.Services
             return MapToDto(user);
         }
 
+        // Retrieves countries formatted as dropdown options for user registration and address forms.
         public async Task<IEnumerable<DropdownDto>> GetAllCountriesAsync(int page, int pageSize)
         {
             return await _userRepository.GetAllCountries()
@@ -216,6 +218,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
         }
 
+        // Retrieves cities belonging to a selected country for cascading dropdowns.
         public async Task<IEnumerable<DropdownDto>> GetCitiesByCountryAsync(int countryId, int page, int pageSize)
         {
             return await _userRepository.GetCitiesByCountry(countryId)
@@ -226,6 +229,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
         }
 
+        // Retrieves all user roles formatted as dropdown options.
         public async Task<IEnumerable<DropdownDto>> GetAllRolesAsync(int page, int pageSize)
         {
             return await _userRepository.GetAllRoles()
@@ -236,6 +240,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
         }
 
+        // Retrieves all stores formatted as dropdown options.
         public async Task<IEnumerable<DropdownDto>> GetAllStoresAsync(int page, int pageSize)
         {
             return await _userRepository.GetAllStores()
@@ -246,6 +251,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
         }
 
+        // Retrieves addresses within a city for cascading address dropdowns.
         public async Task<IEnumerable<DropdownDto>> GetAddressesByCityAsync(int cityId, int page, int pageSize)
         {
             return await _userRepository.GetAddressesByCity(cityId)

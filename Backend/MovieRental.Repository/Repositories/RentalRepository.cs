@@ -5,9 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    // Handles database operations for rentals, including queries, insertions, and return timestamps.
+    // Handles database operations related to movie rentals.
     public class RentalRepository : IRentalRepository
     {
+        // Receives the database context used to access rental records.
         private readonly AppDbContext _context;
 
         public RentalRepository(AppDbContext context)
@@ -15,7 +16,7 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Returns raw IQueryable of rentals with eager-loaded relations without tracking.
+        // Reads all rentals without tracking, loading inventory, film, customer, and staff details.
         public IQueryable<Rental> GetAllRentals()
             => _context.Rentals
                 .AsNoTracking()
@@ -24,7 +25,7 @@ namespace MovieRental.Repository.Repositories
                 .Include(r => r.Staff).ThenInclude(s => s.User)
                 .AsQueryable();
 
-        // Gets a rental by ID with all relations.
+        // Finds a rental by ID, including film, customer, staff, and linked payment records.
         public async Task<Rental?> GetRentalByIdAsync(int id)
             => await _context.Rentals
                 .Include(r => r.Inventory).ThenInclude(i => i.Film)
@@ -33,7 +34,7 @@ namespace MovieRental.Repository.Repositories
                 .Include(r => r.Payments)
                 .FirstOrDefaultAsync(r => r.RentalId == id);
 
-        // Inserts a new rental into the database and reloads relations.
+        // Inserts a new rental record and reloads all its relations.
         public async Task<Rental> CreateRentalAsync(Rental rental)
         {
             _context.Rentals.Add(rental);

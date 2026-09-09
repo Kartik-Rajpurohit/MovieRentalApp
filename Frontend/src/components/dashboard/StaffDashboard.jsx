@@ -3,6 +3,7 @@ import { Column } from "primereact/column";
 import { Card } from "primereact/card";
 import StatCard from "../common/StatCard";
 
+// Displays store-level operational metrics for staff, including active rentals, store inventory, and recent transactions
 export default function StaffDashboard({ stats }) {
   if (!stats) return null;
 

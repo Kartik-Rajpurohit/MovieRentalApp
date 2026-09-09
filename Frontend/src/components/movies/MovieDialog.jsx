@@ -47,6 +47,7 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Dialog modal for creating a new movie or editing an existing movie's details.
 export default function MovieDialog({
   visible,
   onHide,
@@ -56,13 +57,18 @@ export default function MovieDialog({
 }) {
   const isEdit = mode === "edit";
 
+  // Form input values
   const [form, setForm] = useState(emptyForm);
+  // Field-level validation error messages
   const [errors, setErrors] = useState({});
+  // Submission loading state
   const [loading, setLoading] = useState(false);
+  // Dropdown options loaded from backend services
   const [languages, setLanguages] = useState([]);
   const [categories, setCategories] = useState([]);
   const [actors, setActors] = useState([]);
 
+  // Populate form fields if editing, or reset if adding new movie
   useEffect(() => {
     if (!visible) return;
 
@@ -92,6 +98,7 @@ export default function MovieDialog({
     setErrors({});
   }, [visible]);
 
+  // Load languages, categories, and actors for the form dropdowns/selects
   const fetchDropdowns = async () => {
     const [langs, cats, acts] = await Promise.all([
       getLanguages(),
@@ -103,12 +110,14 @@ export default function MovieDialog({
     setActors(acts.map((a) => ({ label: a.name, value: a.id })));
   };
 
+  // Generic input change handler that updates state and clears field errors
   const handleChange = (field) => (e) => {
     const value = e.target !== undefined ? e.target.value : e.value;
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  // Validate required form fields before submitting
   const validate = () => {
     const e = {};
     if (!form.title?.trim()) e.title = "Title is required";
@@ -120,7 +129,9 @@ export default function MovieDialog({
     return e;
   };
 
+  // Create or update the movie record via API
   const handleSubmit = async () => {
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);

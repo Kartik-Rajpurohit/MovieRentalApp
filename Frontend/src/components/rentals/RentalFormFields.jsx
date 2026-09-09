@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { getInventory } from "../../services/inventoryService";
 import { getCustomers } from "../../services/customerService";
@@ -12,10 +12,14 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Form fields for creating a new rental, cascading store inventory to customers and staff.
 export default function RentalFormFields({ form, setForm, errors }) {
+  // Available inventory copies
   const [inventory, setInventory] = useState([]);
   const [invLoading, setInvLoading] = useState(false);
+  // Store ID of the chosen inventory item used to filter customers and staff
   const [selectedStoreId, setSelectedStoreId] = useState(null);
+  // Customer and staff dropdown options filtered by the store
   const [customers, setCustomers] = useState([]);
   const [staffList, setStaffList] = useState([]);
 
@@ -56,6 +60,7 @@ export default function RentalFormFields({ form, setForm, errors }) {
       .catch(console.error);
   }, [selectedStoreId]);
 
+  // Handle selecting an inventory copy: extracts its store and resets dependent fields
   const handleInventoryChange = (inventoryId) => {
     const selected = inventory.find((i) => i.value === inventoryId);
     const storeId = selected?.storeId ?? null;
@@ -65,6 +70,7 @@ export default function RentalFormFields({ form, setForm, errors }) {
     setStaffList([]);
     setForm((p) => ({ ...p, inventoryId, customerId: null, staffId: null }));
   };
+
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

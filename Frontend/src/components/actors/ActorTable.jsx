@@ -16,12 +16,16 @@ import { AuthContext } from "../../context/AuthContext";
 
 const EMPTY_FORM = { firstName: "", lastName: "" };
 
+// Displays the list of actors in a data table with search, server-side pagination, sorting, and actor creation
 export default function ActorTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  // Dialog visibility hook for the Add Actor dialog
   const addDialog = useDialog();
+  // Server-side pagination hook
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Table records and total count
   const [actors, setActors] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -29,13 +33,16 @@ export default function ActorTable() {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("actorId");
   const [sortOrder, setSortOrder] = useState(1);
+  // Form state for creating a new actor
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
 
+  // Reload actors when pagination, search, or sorting change
   useEffect(() => {
     loadActors();
   }, [lazyState, search, sortField, sortOrder]);
 
+  // Load paginated and sorted actor records from the backend API
   const loadActors = async () => {
     setLoading(true);
     try {
@@ -55,16 +62,20 @@ export default function ActorTable() {
     }
   };
 
+  // Handle search query change and reset pagination to page 1
   const onSearchChange = (val) => {
     setSearch(val);
     reset();
   };
+
+  // Handle column sorting and reload data
   const onSort = (e) => {
     setSortField(e.sortField);
     setSortOrder(e.sortOrder);
     reset();
   };
 
+  // Validate form before submitting new actor
   const validate = () => {
     const e = {};
     if (!form.firstName?.trim()) e.firstName = "First name is required";
@@ -72,6 +83,7 @@ export default function ActorTable() {
     return e;
   };
 
+  // Submit new actor to the backend API and refresh list
   const handleAdd = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -91,6 +103,7 @@ export default function ActorTable() {
       setSaving(false);
     }
   };
+
 
   return (
     <div>

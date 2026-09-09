@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for rental creation, returns, inventory availability checks, and role scoping.
+    // Handles business logic for rental creation, returns, inventory availability checks, and role scoping.
     public class RentalService : IRentalService
     {
         private readonly IRentalRepository _rentalRepository;
@@ -20,6 +20,7 @@ namespace MovieRental.Services.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<RentalService> _logger;
 
+        // Receives repositories for rentals and inventory, HTTP context for user claims, and audit logger.
         public RentalService(
             IRentalRepository rentalRepository,
             IInventoryRepository inventoryRepository,
@@ -32,6 +33,7 @@ namespace MovieRental.Services.Services
             _logger = logger;
         }
 
+        // Converts raw Rental entity into standard response DTO with formatted customer and staff names.
         private static RentalResponseDto MapToResponse(Rental r) => new()
         {
             RentalId = r.RentalId,
@@ -49,8 +51,11 @@ namespace MovieRental.Services.Services
                 ? $"{r.Staff.User.FirstName} {r.Staff.User.LastName}".Trim()
                 : $"Staff {r.StaffId}",
             LastUpdate = r.LastUpdate,
+            RentalRate = r.Inventory?.Film?.RentalRate ?? 0,
+            SuggestedAmount = r.Inventory?.Film?.RentalRate ?? 0,
         };
 
+        // Converts raw Rental entity into detailed response DTO including payment aggregation.
         private static RentalDetailDto MapToDetail(Rental r) => new()
         {
             RentalId = r.RentalId,
@@ -77,10 +82,11 @@ namespace MovieRental.Services.Services
         {
             var query = _rentalRepository.GetAllRentals();
 
+            // Extract caller identity and role from current user JWT claims.
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
-            // Automatic server-side role scoping
+            // Enforce automatic server-side role scoping: Customers only see their own rentals.
             if (role == "Customer")
             {
                 var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
@@ -100,6 +106,7 @@ namespace MovieRental.Services.Services
                     };
                 }
             }
+            // Staff members only see rentals from their assigned store.
             else if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
@@ -119,17 +126,19 @@ namespace MovieRental.Services.Services
             if (queryParams.InventoryId.HasValue)
                 query = query.Where(r => r.InventoryId == queryParams.InventoryId.Value);
 
+            // Filter by return status (active vs returned rentals).
             if (queryParams.IsReturned.HasValue)
                 query = queryParams.IsReturned.Value
                     ? query.Where(r => r.ReturnDate != null)
                     : query.Where(r => r.ReturnDate == null);
 
+            // Filter by payment status (whether a payment record exists).
             if (queryParams.HasPayment.HasValue)
                 query = queryParams.HasPayment.Value
                     ? query.Where(r => r.Payments.Any())
                     : query.Where(r => !r.Payments.Any());
 
-            // Search — by film title or customer name
+            // Search by movie title, customer name, or rental ID.
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
                 var s = queryParams.Search.ToLower();
@@ -139,7 +148,7 @@ namespace MovieRental.Services.Services
                     r.RentalId.ToString().Contains(s));
             }
 
-            // Sorting
+            // Apply dynamic sorting.
             query = queryParams.SortField?.ToLower() switch
             {
                 "rentaldate" => queryParams.SortOrder?.ToLower() == "desc"
@@ -157,6 +166,7 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
+            // Fetch page results and project to response DTOs with calculated suggested amounts.
             var data = await query
                 .Skip((queryParams.Page - 1) * queryParams.PageSize)
                 .Take(queryParams.PageSize)
@@ -204,17 +214,19 @@ namespace MovieRental.Services.Services
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
+            // Prevent customers from viewing rentals belonging to others.
             if (role == "Customer")
             {
                 var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
                 if (!int.TryParse(customerIdClaim, out var customerId) || rental.CustomerId != customerId)
-                    return null; // IDOR protection: Customer cannot view another's rental
+                    return null;
             }
+            // Prevent staff from viewing rentals from other stores.
             else if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
                 if (int.TryParse(storeIdClaim, out var storeId) && rental.Staff?.StoreId != storeId)
-                    return null; // Staff can only view their store's rental
+                    return null;
             }
 
             return MapToDetail(rental);
@@ -223,6 +235,7 @@ namespace MovieRental.Services.Services
         // Validates copy availability and staff store assignment, then creates the rental.
         public async Task<RentalResponseDto> CreateRentalAsync(CreateRentalDto dto)
         {
+            // Business rule: The requested inventory item must exist in the database.
             var inventory = await _inventoryRepository.GetInventoryByIdAsync(dto.InventoryId);
             if (inventory == null)
             {
@@ -230,6 +243,7 @@ namespace MovieRental.Services.Services
                 throw new InvalidOperationException($"Inventory item #{dto.InventoryId} does not exist.");
             }
 
+            // Business rule: The inventory copy must NOT already have an active unreturned rental.
             var isCurrentlyRented = await _rentalRepository.GetAllRentals()
                 .AnyAsync(r => r.InventoryId == dto.InventoryId && r.ReturnDate == null);
 
@@ -243,6 +257,7 @@ namespace MovieRental.Services.Services
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
+            // Security check: Staff can only rent out inventory belonging to their assigned store.
             if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
@@ -253,13 +268,15 @@ namespace MovieRental.Services.Services
                     throw new InvalidOperationException("Staff can only create rentals for inventory belonging to their assigned store.");
                 }
 
+                // Enforce caller identity to prevent staff impersonation.
                 var staffIdClaim = userPrincipal?.FindFirst("staffId")?.Value;
                 if (int.TryParse(staffIdClaim, out var callerStaffId))
                 {
-                    dto.StaffId = callerStaffId; // Enforce caller identity to prevent staff impersonation
+                    dto.StaffId = callerStaffId;
                 }
             }
 
+            // Map request DTO to database entity with current UTC timestamp.
             var rental = new Rental
             {
                 InventoryId = dto.InventoryId,
@@ -269,6 +286,7 @@ namespace MovieRental.Services.Services
                 LastUpdate = DateTime.UtcNow,
             };
 
+            // Persist the rental record in the database.
             var created = await _rentalRepository.CreateRentalAsync(rental);
 
             _logger.LogInformation("Rental created successfully: RentalId #{RentalId}, InventoryId #{InventoryId}, CustomerId #{CustomerId}, StaffId #{StaffId}",
@@ -283,6 +301,7 @@ namespace MovieRental.Services.Services
             var rental = await _rentalRepository.GetRentalByIdAsync(rentalId);
             if (rental == null) return null;
 
+            // Business rule: Prevent returning an already returned rental.
             if (rental.ReturnDate != null)
             {
                 _logger.LogWarning("Rental return rejected: Rental #{RentalId} was already returned on {ReturnDate}",
@@ -294,6 +313,7 @@ namespace MovieRental.Services.Services
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
+            // Security check: Staff can only process returns for rentals belonging to their assigned store.
             if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
@@ -307,6 +327,7 @@ namespace MovieRental.Services.Services
                 }
             }
 
+            // Update rental in repository to set return date and free up inventory.
             var updated = await _rentalRepository.ReturnRentalAsync(rentalId);
             if (updated == null) return null;
 

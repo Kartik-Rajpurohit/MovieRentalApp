@@ -5,6 +5,7 @@ import useFilters from "../../hooks/useFilters";
 
 const INIT_FILTERS = { storeId: null, isAvailable: null };
 
+// Modal dialog allowing users to apply or clear store and availability filters for inventory
 export default function InventoryFilterDialog({
   visible,
   onHide,

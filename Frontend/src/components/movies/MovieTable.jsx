@@ -42,22 +42,31 @@ const RATING_SEVERITY = {
 export default function MovieTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
+  // Filtering state hook holding movie filter criteria
   const { filters, setFilters } = useFilters(INIT_FILTERS);
 
+  // Movie records and total count from API
   const [movies, setMovies] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  // Loading indicator for table data fetch
   const [loading, setLoading] = useState(false);
+  // Sorting fields and direction
   const [sortField, setSortField] = useState("title");
   const [sortOrder, setSortOrder] = useState(1);
+  // Search query text
   const [search, setSearch] = useState("");
+  // Dialog visibility states for filters and create movie
   const [filterVisible, setFilterVisible] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
 
+  // Reload movies list when pagination, sort, search, or filters change
   useEffect(() => {
     loadMovies();
   }, [lazyState, sortField, sortOrder, search, filters]);
 
+  // Fetch paginated movie records with applied filters and sorting
   const loadMovies = async () => {
     setLoading(true);
     try {
@@ -86,13 +95,16 @@ export default function MovieTable() {
     }
   };
 
+  // Handle column sort click
   const onSort = (e) => {
     setSortField(e.sortField);
     setSortOrder(e.sortOrder);
     reset();
   };
 
+  // Count active filter criteria to display badge count
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
+
 
   // Rating badge column — fixed width tag
   const ratingBody = (row) =>
@@ -124,13 +136,14 @@ export default function MovieTable() {
 
   return (
     <div>
+      {/* Header bar with Add Movie button (visible for Admin only) */}
       <PageHeader
         title="Movies"
         addLabel="Add Movie"
         onAdd={user?.role === "Admin" ? () => setDialogVisible(true) : undefined}
       />
 
-      {/* Toolbar */}
+      {/* Toolbar with live search and filter dialog toggle button */}
       <div
         style={{
           display: "flex",
@@ -164,7 +177,7 @@ export default function MovieTable() {
         </div>
       </div>
 
-      {/* Filter Dialog */}
+      {/* Multi-criteria filter dialog */}
       <MovieFilterDialog
         visible={filterVisible}
         onHide={() => setFilterVisible(false)}
@@ -175,7 +188,7 @@ export default function MovieTable() {
         }}
       />
 
-      {/* Add Dialog */}
+      {/* Modal dialog to create a new movie */}
       <MovieDialog
         visible={dialogVisible}
         onHide={() => setDialogVisible(false)}
@@ -183,12 +196,13 @@ export default function MovieTable() {
         mode="add"
       />
 
-      {/* Table — row click navigates to detail page */}
+      {/* Table displaying movie catalogue with server pagination and sorting */}
       <DataTable
         value={movies}
         paginator
         lazy
         loading={loading}
+
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}

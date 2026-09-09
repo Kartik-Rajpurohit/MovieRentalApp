@@ -5,15 +5,14 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    /// <summary>
-    /// Data access repository for Staff members linked to User and Store records.
-    /// </summary>
+    // Handles database operations related to staff members.
     public class StaffRepository : IStaffRepository
     {
+        // Receives the database context used to access staff data.
         private readonly AppDbContext _context;
         public StaffRepository(AppDbContext context) => _context = context;
 
-        // Returns IQueryable with User relation loaded — service applies filters on top
+        // Reads all staff members without tracking, loading their linked User account.
         public IQueryable<Staff> GetAllStaff()
         {
             return _context.Staff
@@ -22,9 +21,9 @@ namespace MovieRental.Repository.Repositories
                 .AsQueryable();
         }
 
+        // Finds a staff member by ID, loading full User, Role, Address, City, and Country trees.
         public async Task<Staff?> GetStaffByIdAsync(int id)
         {
-            // Load all relations needed for DTO mapping in service
             return await _context.Staff
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Role)

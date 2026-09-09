@@ -23,6 +23,7 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Default/initial filter values for movies
 const INIT_FILTERS = {
   languageId: null,
   categoryId: null,
@@ -34,26 +35,31 @@ const INIT_FILTERS = {
   maxLength: null,
 };
 
+// Modal dialog providing multi-criteria filters for movies (language, category, rating, year, rental rate, length).
 export default function MovieFilterDialog({
   visible,
   onHide,
   filters,
   onApply,
 }) {
+  // Local state copy of active filters
   const {
     filters: local,
     setFilter: set,
     setFilters: setLocal,
   } = useFilters(filters);
+  // Dropdown options for languages and categories loaded from backend
   const [languages, setLanguages] = useState([]);
   const [categories, setCategories] = useState([]);
 
+  // Fetch dropdown lists whenever the dialog opens
   useEffect(() => {
     if (!visible) return;
     setLocal(filters);
     fetchDropdowns();
   }, [visible]);
 
+  // Load available languages and categories from movieService
   const fetchDropdowns = async () => {
     const [langs, cats] = await Promise.all([getLanguages(), getCategories()]);
     setLanguages([
@@ -66,10 +72,12 @@ export default function MovieFilterDialog({
     ]);
   };
 
+  // Apply the selected filter criteria and close dialog
   const handleApply = () => {
     onApply(local);
     onHide();
   };
+  // Reset all movie filters to defaults and close dialog
   const handleClear = () => {
     onApply(INIT_FILTERS);
     onHide();
@@ -83,6 +91,7 @@ export default function MovieFilterDialog({
       onApply={handleApply}
       onClear={handleClear}
     >
+
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         {/* Language */}
         <div>

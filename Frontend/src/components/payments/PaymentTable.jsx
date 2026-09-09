@@ -23,13 +23,18 @@ import { AuthContext } from "../../context/AuthContext";
 export default function PaymentTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Table records and total records count from backend
   const [payments, setPayments] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  // Loading state during API fetch
   const [loading, setLoading] = useState(false);
+  // Sort parameters (defaults to latest payment first)
   const [sortField, setSortField] = useState("paymentdate");
   const [sortOrder, setSortOrder] = useState(-1);
+  // Search query state
   const [search, setSearch] = useState("");
   const INIT_FILTERS = {
     minAmount: null,
@@ -37,9 +42,12 @@ export default function PaymentTable() {
     fromDate: null,
     toDate: null,
   };
+  // Filter state and filter dialog visibility
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  // Add payment dialog state
   const addDialog = useDialog();
+  // Form state for creating a new payment
   const [form, setForm] = useState({
     rentalId: null,
     customerId: null,
@@ -48,9 +56,11 @@ export default function PaymentTable() {
     staffName: "",
     amount: null,
   });
+  // Saving indicator and form validation errors
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
+  // Validate and submit a new payment to the backend
   const handleAdd = async () => {
     const errs = {};
     if (!form.rentalId) errs.rentalId = "Rental is required";
@@ -87,11 +97,14 @@ export default function PaymentTable() {
     }
   };
 
+  // Reload payment records whenever pagination, sorting, search, or filters change
   useEffect(() => {
     loadPayments();
   }, [lazyState, sortField, sortOrder, search, filters]);
 
+  // Fetch paginated payments list from API with current filters and user role restrictions
   const loadPayments = async () => {
+
     setLoading(true);
     try {
       const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
@@ -144,6 +157,7 @@ export default function PaymentTable() {
 
   return (
     <div>
+      {/* Modal dialog to record a new payment */}
       <FormDialog
         visible={addDialog.visible}
         onHide={() => {
@@ -165,12 +179,14 @@ export default function PaymentTable() {
         <PaymentFormFields form={form} setForm={setForm} errors={formErrors} />
       </FormDialog>
 
+      {/* Header bar with title and Add Payment button (for staff/admin) */}
       <PageHeader
         title={user?.role === "Customer" ? "My Payments" : "Payments"}
         onAdd={user?.role !== "Customer" ? addDialog.open : undefined}
         addLabel="Add Payment"
       />
 
+      {/* Filter dialog for amount and date range */}
       <PaymentFilterDialog
         visible={filterVisible}
         onHide={() => setFilterVisible(false)}
@@ -180,6 +196,8 @@ export default function PaymentTable() {
           reset();
         }}
       />
+
+      {/* Toolbar with live search and filter dialog button */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
@@ -206,12 +224,13 @@ export default function PaymentTable() {
         </div>
       </div>
 
-      {/* Table — row click navigates to detail */}
+      {/* Table displaying payments with server pagination and sorting */}
       <DataTable
         value={payments}
         paginator
         lazy
         loading={loading}
+
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}

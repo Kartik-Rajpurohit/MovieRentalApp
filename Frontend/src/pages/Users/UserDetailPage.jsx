@@ -24,18 +24,24 @@ const fieldValueStyle = {
   fontWeight: "400",
 };
 
+// Displays complete profile information for a system user, role details, and status toggle action
 export default function UserDetailPage() {
+  // Read user ID from route parameters
   const { id } = useParams();
 
+  // State holding detailed user information
   const [user, setUser] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
+  // Controls visibility of the edit user dialog
   const [editVisible, setEditVisible] = useState(false);
 
+  // Fetch user profile whenever user ID changes
   useEffect(() => {
     fetchUser();
   }, [id]);
 
+  // Load user profile and assigned address data from backend
   const fetchUser = async () => {
     setPageLoading(true);
     try {
@@ -48,6 +54,7 @@ export default function UserDetailPage() {
     }
   };
 
+  // Toggle user active/inactive status
   const handleToggle = async () => {
     setToggleLoading(true);
     try {
@@ -60,6 +67,7 @@ export default function UserDetailPage() {
     }
   };
 
+  // Show loading spinner while user profile is being fetched
   if (pageLoading) {
     return (
       <AppLayout>
@@ -67,6 +75,7 @@ export default function UserDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

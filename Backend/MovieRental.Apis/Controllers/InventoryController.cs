@@ -9,9 +9,10 @@ namespace MovieRental.Apis.Controllers
     // Handles inventory copy tracking, availability queries, and store assignments.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")]  // Only Admin and Staff can access inventory
+    [Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can manage physical copies
     public class InventoryController : ControllerBase
     {
+        // Injected service for inventory business logic
         private readonly IInventoryService _inventoryService;
 
         public InventoryController(IInventoryService inventoryService)
@@ -19,7 +20,8 @@ namespace MovieRental.Apis.Controllers
             _inventoryService = inventoryService;
         }
 
-        // Gets a paginated list of inventory copies with store and availability filters.
+        // Gets a paginated list of inventory copies with film title, store, and dynamic availability filters.
+        // Query parameters: page, pageSize, search, storeId, isAvailable.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] InventoryQueryParametersDto queryParams)
         {
@@ -27,7 +29,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // GET api/inventory/{id} — detail with rental count
+        // Gets single inventory copy details by InventoryId including its rental history count.
+        // Returns 404 NotFound if inventory copy does not exist.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -36,7 +39,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // POST api/inventory — add a new copy of a film to a store
+        // Adds a new physical copy of a film to a specific store.
+        // Receives FilmId and StoreId in request body.
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateInventoryDto dto)
         {
@@ -44,7 +48,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // PATCH api/inventory — update store assignment
+        // Updates an inventory item's store assignment.
+        // Returns 404 NotFound if inventory copy does not exist.
         [HttpPatch]
         public async Task<IActionResult> Update([FromBody] UpdateInventoryDto dto)
         {
@@ -53,7 +58,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // DELETE api/inventory/{id}
+        // Deletes an inventory copy by ID.
+        // Returns 204 NoContent on success, or 404 NotFound if copy does not exist.
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

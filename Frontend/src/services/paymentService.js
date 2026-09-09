@@ -1,9 +1,10 @@
-// Client service for fetching rental payments, filtering transactions, and recording new payments.
+// Handles API requests related to rental payments and financial transactions
 import api from "./api";
 
+// Base route for Payment endpoints
 const PAYMENT = "/Payment";
 
-// Get paginated, filtered, sorted list of payments
+// GET request to fetch a paginated list of payments with sorting and filters (customer, staff, dates, amount)
 export const getPayments = ({
   page = 1,
   pageSize = 10,
@@ -37,10 +38,10 @@ export const getPayments = ({
     })
     .then((r) => r.data);
 
-// Get single payment detail by ID
+// GET request to fetch payment details by ID
 export const getPaymentById = (id) =>
   api.get(`${PAYMENT}/${id}`).then((r) => r.data);
 
-// Create a new payment
+// POST request to record a new payment for a rental
 export const createPayment = (dto) =>
   api.post(PAYMENT, dto).then((r) => r.data);

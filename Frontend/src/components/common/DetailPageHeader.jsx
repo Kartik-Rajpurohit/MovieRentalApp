@@ -1,8 +1,8 @@
 import { Button } from "primereact/button";
 import { useNavigate } from "react-router-dom";
 
-// Reusable header for all detail pages
-// Shows: back button, breadcrumb, title, subtitle, action buttons (edit/delete etc.)
+// Reusable page header for all detail views
+// Displays a back button, breadcrumb trail, entity title, subtitle, and action buttons (e.g., Edit, Delete)
 export default function DetailPageHeader({
   backPath,           // e.g. "/categories"
   backLabel,          // e.g. "Categories"

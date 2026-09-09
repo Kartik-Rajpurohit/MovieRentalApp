@@ -1,6 +1,7 @@
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 
+// Reusable modal dialog for configuring and applying table filters
 export default function FilterDialog({
   visible,
   onHide,
@@ -9,6 +10,7 @@ export default function FilterDialog({
   onClear,
   children,
 }) {
+  // Footer actions: Clear (resets filters) and Apply (submits selected filters)
   const footer = (
     <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
       <Button

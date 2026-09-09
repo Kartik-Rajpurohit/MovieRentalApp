@@ -1,6 +1,7 @@
 import { Button } from "primereact/button";
 import { useNavigate } from "react-router-dom";
 
+// Reusable header component for list pages displaying a title, dashboard breadcrumb, and optional Add button
 export default function PageHeader({ title, addLabel, onAdd }) {
   const navigate = useNavigate();
 

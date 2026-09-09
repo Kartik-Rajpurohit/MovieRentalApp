@@ -12,6 +12,7 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Modal dialog used to create a new category or edit an existing category
 export default function CategoryDialog({
   visible,
   onHide,
@@ -20,16 +21,19 @@ export default function CategoryDialog({
   category = null,
 }) {
   const isEdit = mode === "edit";
+  // Form input state for category name
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Initialize or reset form fields when dialog opens or category changes
   useEffect(() => {
     if (!visible) return;
     setName(isEdit && category ? category.name : "");
     setError("");
   }, [visible]);
 
+  // Validates category name and calls create or update category API
   const handleSubmit = async () => {
     if (!name.trim()) {
       setError("Name is required");
@@ -43,6 +47,7 @@ export default function CategoryDialog({
       } else {
         await createCategory({ name });
       }
+      // Notify parent table to reload and close dialog
       onSuccess();
       onHide();
     } catch {
@@ -51,6 +56,7 @@ export default function CategoryDialog({
       setLoading(false);
     }
   };
+
 
   const footer = (
     <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>

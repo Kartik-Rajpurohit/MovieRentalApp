@@ -1,16 +1,17 @@
-// Configures the centralized Axios instance, bearer token injection, and 401 silent token refresh queue.
+// Creates and configures the centralized Axios HTTP client used for all API requests
 import axios from "axios";
 import { getErrorMessage } from "../utils/errorUtils";
 
-// Uses VITE_API_BASE_URL from .env — no hardcoded URLs (fixes Issue #11)
+// Base URL of the backend API, loaded from environment variables or fallback to localhost
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7176/api";
 
+// Create the Axios client instance with cookie support for refresh tokens
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // Sends HttpOnly refresh token cookie automatically on every request
+  withCredentials: true, // Automatically sends HttpOnly cookies (like refresh token) with requests
 });
 
-// Attach access token to every request
+// Request Interceptor: Automatically attaches the JWT access token to every outgoing request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -21,6 +22,7 @@ let isRefreshing = false;
 let failedQueue = [];
 let toastNotifier = null;
 
+// Registers a UI toast notification callback function for displaying API error alerts
 export const registerToastNotifier = (notifier) => {
   toastNotifier = notifier;
   return () => {
@@ -28,6 +30,7 @@ export const registerToastNotifier = (notifier) => {
   };
 };
 
+// Resolves or rejects queued requests once the token refresh finishes
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -39,7 +42,7 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// On 401 — silently refresh the access token using the HttpOnly cookie
+// Response Interceptor: Handles automatic token refresh on 401 Unauthorized errors and displays global error alerts
 api.interceptors.response.use(
   (response) => response,
   async (error) => {

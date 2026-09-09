@@ -5,11 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    /// <summary>
-    /// Data access repository for user roles (Admin, Staff, Customer).
-    /// </summary>
+    // Handles database operations related to user roles.
     public class RoleRepository : IRoleRepository
     {
+        // Receives the database context used to access role tables.
         private readonly AppDbContext _context;
 
         public RoleRepository(AppDbContext context)
@@ -17,18 +16,20 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Returns IQueryable — service applies search, sort, pagination on top
+        // Reads all roles from the database without tracking.
         public IQueryable<Role> GetAllRoles()
         {
             return _context.Roles.AsNoTracking().AsQueryable();
         }
 
+        // Checks whether a role with the same name already exists (case-insensitive).
         public async Task<bool> RoleExistsAsync(string roleName)
         {
             return await _context.Roles
                 .AnyAsync(r => r.RoleName.ToLower() == roleName.ToLower());
         }
 
+        // Adds a new role to the database and saves changes.
         public async Task<Role> CreateRoleAsync(Role role)
         {
             _context.Roles.Add(role);

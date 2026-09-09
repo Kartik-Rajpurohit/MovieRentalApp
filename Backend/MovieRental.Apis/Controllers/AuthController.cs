@@ -13,6 +13,7 @@ namespace MovieRental.Apis.Controllers;
 [EnableRateLimiting("AuthRateLimit")] // Max 10 requests/min per IP on all auth endpoints
 public class AuthController : ControllerBase
 {
+    // Injected service for hashing, JWT issuance, and user verification
     private readonly IAuthService _authService;
 
     public AuthController(IAuthService authService)
@@ -20,9 +21,13 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    // Authenticates user and sets HttpOnly refresh token cookie.
+    // Authenticates a user with email and password.
+    // Public endpoint: [AllowAnonymous] bypasses the global [Authorize] filter.
+    // Receives LoginDto with Email and Password in request body.
+    // On success: Sets secure HttpOnly refresh token cookie and returns 200 OK with accessToken.
+    // On failure: Returns 401 Unauthorized if credentials are wrong or account is inactive.
     [HttpPost("login")]
-    [AllowAnonymous] // Public — no token needed
+    [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
         try
@@ -37,9 +42,13 @@ public class AuthController : ControllerBase
         }
     }
 
-    // Registers a new user account.
+    // Registers a new user account with default customer access and address.
+    // Public endpoint: [AllowAnonymous] allows anyone to sign up.
+    // Receives SignUpDto in request body with name, email, password, and address details.
+    // On success: Creates user and customer record, sets refresh cookie, and returns 200 OK.
+    // On failure: Returns 409 Conflict if the email address is already registered.
     [HttpPost("signup")]
-    [AllowAnonymous] // Public — no token needed
+    [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpDto dto)
     {
         try
@@ -54,7 +63,9 @@ public class AuthController : ControllerBase
         }
     }
 
-    // Refresh — reads token from HttpOnly cookie, no body required
+    // Generates a new JWT access token using the stored refresh token.
+    // Reads refresh token directly from the incoming HttpOnly cookie (no body required).
+    // Returns 200 OK with new access token, or 401 Unauthorized if expired or invalid.
     [HttpPost("refresh")]
     [AllowAnonymous]
     public async Task<IActionResult> Refresh()

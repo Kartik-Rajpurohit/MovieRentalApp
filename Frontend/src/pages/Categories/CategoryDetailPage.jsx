@@ -26,29 +26,38 @@ const RATING_SEVERITY = {
   "NC-17": "danger",
 };
 
+// Displays details for a single movie category and lists all movies belonging to it
 export default function CategoryDetailPage() {
+  // Read category ID from route params
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
+  // Category profile details state
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Controls visibility of the edit category dialog
   const [editVisible, setEditVisible] = useState(false);
 
+  // Paginated movies belonging to this category
   const [films, setFilms] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [filmsLoading, setFilmsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  // Reusable pagination hook for movies list
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Load category details when the category ID changes
   useEffect(() => {
     loadCategory();
   }, [id]);
 
+  // Reload movies whenever category ID, pagination, or search query change
   useEffect(() => {
     loadFilms();
   }, [id, lazyState, search]);
 
+  // Load category details from the backend
   const loadCategory = async () => {
     setLoading(true);
     try {
@@ -61,6 +70,7 @@ export default function CategoryDetailPage() {
     }
   };
 
+  // Load movies in this category with pagination and search
   const loadFilms = async () => {
     setFilmsLoading(true);
     try {
@@ -74,11 +84,13 @@ export default function CategoryDetailPage() {
     }
   };
 
+  // Update search query and reset pagination to the first page
   const onSearchChange = (val) => {
     setSearch(val);
     reset();
   };
 
+  // Prompt confirmation before deleting the category
   const handleDelete = () => {
     confirmDialog({
       message: `Delete category "${category?.name}"? This will not delete associated movies.`,
@@ -92,6 +104,7 @@ export default function CategoryDetailPage() {
     });
   };
 
+  // Show loading spinner while category details are being fetched
   if (loading) {
     return (
       <AppLayout>
@@ -99,6 +112,7 @@ export default function CategoryDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

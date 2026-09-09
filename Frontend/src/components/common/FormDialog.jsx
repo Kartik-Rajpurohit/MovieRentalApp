@@ -1,6 +1,7 @@
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 
+// Reusable modal dialog wrapper for create and edit forms
 export default function FormDialog({
   visible,
   onHide,
@@ -10,6 +11,7 @@ export default function FormDialog({
   submitLabel = "Save",
   children,
 }) {
+  // Footer actions: Cancel and Submit button with loading state
   const footer = (
     <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
       <Button

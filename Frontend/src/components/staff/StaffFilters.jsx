@@ -2,11 +2,14 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE, STATUS_OPTIONS } from "../../utils/constants";
 
+// Form inputs for filtering staff members by name and active status.
 export default function StaffFilters({ filters, setFilter }) {
   return (
     <>
+      {/* Name filter input */}
       <div>
         <label style={LABEL_STYLE}>Name</label>
+
         <InputText
           value={filters.name}
           onChange={(e) => setFilter("name")(e.target.value)}

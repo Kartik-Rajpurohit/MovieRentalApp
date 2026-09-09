@@ -19,13 +19,17 @@ const labelStyle = {
 
 const valueStyle = { fontSize: "15px", color: "#111827", fontWeight: 500 };
 
+// Displays receipt and details for an individual rental payment transaction
 export default function PaymentDetailPage() {
   const { user } = useContext(AuthContext);
+  // Read payment ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
+  // State holding payment receipt information
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch payment details when the payment ID changes
   useEffect(() => {
     getPaymentById(id)
       .then(setPayment)
@@ -33,6 +37,7 @@ export default function PaymentDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Show loading spinner while payment details are being loaded
   if (loading) {
     return (
       <AppLayout>
@@ -41,6 +46,7 @@ export default function PaymentDetailPage() {
     );
   }
 
+  // Fallback when payment record does not exist
   if (!payment) {
     return (
       <AppLayout>
@@ -49,6 +55,7 @@ export default function PaymentDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

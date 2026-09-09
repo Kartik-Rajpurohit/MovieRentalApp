@@ -7,22 +7,25 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for role queries and role detail retrieval.
+    // Handles business logic for user roles and permission management.
     public class RoleService : IRoleService
     {
         private readonly IRoleRepository _roleRepository;
 
+        // Receives the role repository needed to perform role queries and creation.
         public RoleService(IRoleRepository roleRepository)
         {
             _roleRepository = roleRepository;
         }
 
+        // Retrieves a paginated and searchable list of system roles.
         public async Task<PaginatedResponseDto<RoleResponseDto>> GetAllRolesAsync(
             int page, int pageSize, string? search)
         {
+            // Get the base query from the repository.
             var query = _roleRepository.GetAllRoles();
 
-            // Filter by search term
+            // Filter roles by name when search keyword is supplied.
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var lower = search.ToLower();
@@ -31,6 +34,7 @@ namespace MovieRental.Services.Services
 
             var totalRecords = await query.CountAsync();
 
+            // Paginate and project role entities into response DTOs.
             var data = await query
                 .OrderBy(r => r.RoleId)
                 .Skip((page - 1) * pageSize)
@@ -52,12 +56,15 @@ namespace MovieRental.Services.Services
                 Data = data
             };
         }
+
+        // Validates role uniqueness and saves a new system role.
         public async Task<RoleResponseDto> CreateRoleAsync(CreateRoleDto dto)
         {
-            // Business logic — duplicate role check
+            // Business rule: Prevent creating duplicate roles with the same name.
             if (await _roleRepository.RoleExistsAsync(dto.RoleName))
                 throw new InvalidOperationException("Role already exists");
 
+            // Map request DTO to database entity with UTC creation timestamps.
             var role = new Role
             {
                 RoleName = dto.RoleName,
@@ -65,8 +72,10 @@ namespace MovieRental.Services.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
+            // Save the new role via the repository.
             var created = await _roleRepository.CreateRoleAsync(role);
 
+            // Convert created entity to response DTO.
             return new RoleResponseDto
             {
                 RoleId = created.RoleId,

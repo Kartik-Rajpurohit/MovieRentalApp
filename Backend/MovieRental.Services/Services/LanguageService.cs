@@ -8,16 +8,18 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
-// Provides business logic for movie language options and film counts.
+// Handles business logic for movie language options and film associations.
 public class LanguageService : ILanguageService
 {
     private readonly ILanguageRepository _languageRepository;
 
+    // Receives the language repository needed for language operations.
     public LanguageService(ILanguageRepository languageRepository)
     {
         _languageRepository = languageRepository;
     }
 
+    // Retrieves all available languages with associated film counts.
     public async Task<IEnumerable<LanguageResponseDto>> GetAllLanguagesAsync()
     {
         // Fetch entities first, then map in memory — avoids EF Core translation issues
@@ -34,6 +36,7 @@ public class LanguageService : ILanguageService
         }).ToList();
     }
 
+    // Retrieves a single language by ID.
     public async Task<LanguageResponseDto?> GetLanguageByIdAsync(int id)
     {
         var language = await _languageRepository.GetLanguageByIdAsync(id);
@@ -48,6 +51,7 @@ public class LanguageService : ILanguageService
         };
     }
 
+    // Creates a new language entry in the database.
     public async Task<LanguageResponseDto> CreateLanguageAsync(CreateLanguageDto dto)
     {
         var language = new Language
@@ -66,6 +70,7 @@ public class LanguageService : ILanguageService
         };
     }
 
+    // Updates an existing language name.
     public async Task<LanguageResponseDto?> UpdateLanguageAsync(UpdateLanguageDto dto)
     {
         var language = new Language
@@ -86,9 +91,11 @@ public class LanguageService : ILanguageService
         };
     }
 
+    // Deletes a language by ID through repository.
     public async Task<bool> DeleteLanguageAsync(int id)
         => await _languageRepository.DeleteLanguageAsync(id);
 
+    // Retrieves detailed language information including movie count.
     public async Task<LanguageDetailDto?> GetLanguageDetailAsync(int id)
     {
         var language = await _languageRepository.GetLanguageByIdAsync(id);
@@ -103,16 +110,19 @@ public class LanguageService : ILanguageService
         };
     }
 
+    // Retrieves a paginated list of movies associated with a specific language.
     public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByLanguageAsync(
         int languageId, int page, int pageSize, string? search)
     {
         var query = _languageRepository.GetFilmsByLanguageId(languageId);
 
+        // Filter movies by title if search query is provided.
         if (!string.IsNullOrEmpty(search))
             query = query.Where(f => f.Title.ToLower().Contains(search.ToLower()));
 
         var totalRecords = await query.CountAsync();
 
+        // Paginate and project movie entities to response DTOs.
         var data = await query
             .OrderBy(f => f.Title)
             .Skip((page - 1) * pageSize)

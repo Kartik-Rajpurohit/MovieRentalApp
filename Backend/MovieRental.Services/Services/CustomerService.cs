@@ -7,18 +7,22 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for customer profile querying, store assignments, and rental history.
+    // Handles business logic for customer profile querying, store assignments, and rental history.
     public class CustomerService : ICustomerService
     {
         private readonly ICustomerRepository _customerRepository;
+
+        // Receives the customer repository needed to query customer data.
         public CustomerService(ICustomerRepository customerRepository) => _customerRepository = customerRepository;
 
+        // Retrieves a paginated and filtered list of customers with search and store filters.
         public async Task<PaginatedResponseDto<CustomerResponseDto>> GetAllCustomersAsync(
             int page, int pageSize, string? search, bool? isActive, int? storeId = null)
         {
+            // Get the base query from the repository.
             var query = _customerRepository.GetAllCustomers();
 
-            // Filter by search — matches full name, email, or customer ID
+            // Filter by search text matching customer full name, email, or numeric ID.
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var lower = search.ToLower();
@@ -30,15 +34,17 @@ namespace MovieRental.Services.Services
                 );
             }
 
-            // Filter by active status
+            // Filter by active account status if specified.
             if (isActive.HasValue)
                 query = query.Where(c => c.User != null && c.User.IsActive == isActive.Value);
 
+            // Filter by assigned store location.
             if (storeId.HasValue)
                 query = query.Where(c => c.StoreId == storeId.Value);
 
             var totalRecords = await query.CountAsync();
 
+            // Paginate and project customer entities to response DTOs.
             var data = await query
                 .OrderBy(c => c.CustomerId)
                 .Skip((page - 1) * pageSize)
@@ -64,12 +70,13 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Retrieves detailed customer profile by ID including address and location information.
         public async Task<CustomerDetailDto?> GetCustomerByIdAsync(int id)
         {
             var c = await _customerRepository.GetCustomerByIdAsync(id);
             if (c == null) return null;
 
-            // Map raw entity to DTO — service layer responsibility
+            // Map database entity and nested user/address navigation properties to DTO.
             return new CustomerDetailDto
             {
                 CustomerId = c.CustomerId,

@@ -2,10 +2,13 @@ using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces
 {
-    // Repository contract — raw DB operations only
+    // Defines database operations for Customer entities linked to User, Address, and Rentals.
     public interface ICustomerRepository
     {
+        // Returns a queryable collection of customers with linked user profiles.
         IQueryable<Customer> GetAllCustomers();
-        Task<Customer?> GetCustomerByIdAsync(int id); // Returns raw entity — service handles mapping
+
+        // Finds a customer by their ID, loading full profile, address, and rental records.
+        Task<Customer?> GetCustomerByIdAsync(int id);
     }
 }

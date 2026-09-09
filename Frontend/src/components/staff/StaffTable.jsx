@@ -14,24 +14,34 @@ import usePagination from "../../hooks/usePagination";
 import useFilters from "../../hooks/useFilters";
 import { getStaff } from "../../services/staffService";
 
+// Initial filter state for staff list
 const INIT_FILTERS = { name: "", isActive: null };
 
+// Displays the staff directory table with live search, active status filtering, and pagination.
 export default function StaffTable() {
   const navigate = useNavigate();
+  // Filter dialog visibility hook
   const filterDialog = useDialog();
+  // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
+  // Applied filters and local temporary filters for the modal dialog
   const { filters, setFilters, reset: resetFilters } = useFilters(INIT_FILTERS);
   const { filters: localFilters, setFilter: setLocalFilter, setFilters: setLocalFilters } = useFilters(INIT_FILTERS);
 
+  // Staff records and total count from API
   const [staff, setStaff] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  // Loading indicator for table queries
   const [loading, setLoading] = useState(false);
+  // Search query state
   const [search, setSearch] = useState("");
 
+  // Reload staff data whenever pagination, search, or filters change
   useEffect(() => {
     loadStaff();
   }, [lazyState, search, filters]);
 
+  // Fetch paginated staff members from the staff API service
   const loadStaff = async () => {
     setLoading(true);
     try {
@@ -50,16 +60,19 @@ export default function StaffTable() {
     }
   };
 
+  // Update search text and reset pagination to page 1
   const onSearchChange = (val) => {
     setSearch(val);
     reset();
   };
 
+  // Apply selected filter options and close dialog
   const handleApply = () => {
     setFilters(localFilters);
     reset();
     filterDialog.close();
   };
+  // Reset all filters to initial state and close dialog
   const handleClear = () => {
     resetFilters();
     setLocalFilters(INIT_FILTERS);
@@ -67,18 +80,22 @@ export default function StaffTable() {
     filterDialog.close();
   };
 
+  // Open the filter modal dialog with the current filter values
   const openFilter = () => {
     setLocalFilters(filters);
     filterDialog.open();
   };
 
+  // Count active filter criteria to display badge count
   const activeCount = [
     filters.name,
     filters.isActive !== null ? "x" : "",
   ].filter(Boolean).length;
 
+
   return (
     <div>
+      {/* Modal dialog for staff name and active status filters */}
       <FilterDialog
         visible={filterDialog.visible}
         onHide={filterDialog.close}
@@ -89,8 +106,10 @@ export default function StaffTable() {
         <StaffFilters filters={localFilters} setFilter={setLocalFilter} />
       </FilterDialog>
 
+      {/* Header bar for staff section */}
       <PageHeader title="Staff" onAdd={null} />
 
+      {/* Search and filter controls toolbar */}
       <div
         style={{
           display: "flex",
@@ -121,11 +140,13 @@ export default function StaffTable() {
         </div>
       </div>
 
+      {/* Table displaying staff members with server-side pagination */}
       <DataTable
         value={staff}
         paginator
         lazy
         loading={loading}
+
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}

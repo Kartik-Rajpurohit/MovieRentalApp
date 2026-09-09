@@ -20,16 +20,22 @@ const labelStyle = {
 // Roles that require a store assignment
 const STORE_ROLES = ["Staff", "Customer"];
 
+// Modal dialog for editing user details (names, role, and conditional store assignment).
 export default function UserDialog({ visible, onHide, onSuccess, user = null }) {
+  // Form input state holding user fields
   const [form, setForm] = useState({});
+  // Field-level validation error messages
   const [errors, setErrors] = useState({});
+  // Submission loading indicator
   const [loading, setLoading] = useState(false);
 
+  // Available roles and stores loaded from userService
   const [roles, setRoles] = useState([]);
   const [stores, setStores] = useState([]);
+  // Track selected role name to conditionally show store dropdown
   const [selectedRoleName, setSelectedRoleName] = useState(null);
 
-  // ─── Dialog open hone par init ─────────────────────────────────────────────
+  // Initialize form state and fetch dropdown options when dialog opens
   useEffect(() => {
     if (!visible) return;
 
@@ -47,6 +53,7 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
     fetchRoles();
     fetchStores();
   }, [visible]);
+
 
   // ─── Fetchers ──────────────────────────────────────────────────────────────
 
@@ -69,6 +76,7 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
+  // Handle role dropdown selection; resets store if role changes
   const handleRoleChange = (roleId) => {
     const selected = roles.find((r) => r.value === roleId);
     setSelectedRoleName(selected?.name ?? null);
@@ -76,13 +84,14 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
     setErrors((prev) => ({ ...prev, roleId: undefined, storeId: undefined }));
   };
 
+  // Update form fields and clear existing validation errors
   const handleChange = (field) => (e) => {
     const value = e.target !== undefined ? e.target.value : e.value;
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // ─── Validation ────────────────────────────────────────────────────────────
+  // Validate required user fields and conditional store requirement for Staff/Customer
   const validate = () => {
     const e = {};
     if (!form.firstName?.trim()) e.firstName = "First name is required";
@@ -93,8 +102,9 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
     return e;
   };
 
-  // ─── Submit ────────────────────────────────────────────────────────────────
+  // Submit updated user profile to the backend API
   const handleSubmit = async () => {
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);

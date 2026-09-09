@@ -3,6 +3,7 @@ import { Column } from "primereact/column";
 import { Card } from "primereact/card";
 import StatCard from "../common/StatCard";
 
+// Displays customer-specific dashboard with active rental counts, total spend, and ongoing rentals table
 export default function CustomerDashboard({ stats }) {
   if (!stats) return null;
 

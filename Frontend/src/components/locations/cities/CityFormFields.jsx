@@ -11,9 +11,12 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Reusable form fields for city creation and editing (city name and country dropdown)
 export default function CityFormFields({ form, setForm, errors }) {
+  // Available countries dropdown options
   const [countries, setCountries] = useState([]);
 
+  // Load countries list for the dropdown
   useEffect(() => {
     getCountries(1, 300)
       .then((res) =>
@@ -23,6 +26,7 @@ export default function CityFormFields({ form, setForm, errors }) {
       )
       .catch(console.error);
   }, []);
+
 
   return (
     <>

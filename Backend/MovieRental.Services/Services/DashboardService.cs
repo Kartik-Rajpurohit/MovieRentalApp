@@ -7,7 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
-// Aggregates business KPIs, revenue calculations, and recent activity for dashboards.
+// Handles business logic for calculating dashboard KPIs, revenue metrics, and recent activities.
 public class DashboardService : IDashboardService
 {
     private readonly IUserRepository _userRepository;
@@ -18,6 +18,7 @@ public class DashboardService : IDashboardService
     private readonly ICustomerRepository _customerRepository;
     private readonly IStaffRepository _staffRepository;
 
+    // Receives all required domain repositories to aggregate system-wide statistics.
     public DashboardService(
         IUserRepository userRepository,
         IFilmRepository filmRepository,
@@ -39,7 +40,7 @@ public class DashboardService : IDashboardService
     // Computes system-wide administrative KPIs, revenue by store, and top rented movies.
     public async Task<AdminDashboardDto> GetAdminDashboardAsync()
     {
-        // Sequential awaits — EF Core DbContext is not thread-safe
+        // Query counts and totals sequentially from each repository.
         var totalUsers = await _userRepository.GetAllUsers().CountAsync();
         var totalFilms = await _filmRepository.GetAllFilms().CountAsync();
         var totalRentals = await _rentalRepository.GetAllRentals().CountAsync();
@@ -49,6 +50,7 @@ public class DashboardService : IDashboardService
         var totalCustomers = await _customerRepository.GetAllCustomers().CountAsync();
         var totalStaff = await _staffRepository.GetAllStaff().CountAsync();
 
+        // Calculate top 5 most frequently rented movies across all inventory items.
         var topFilms = await _filmRepository.GetAllFilms()
             .Select(f => new TopFilmDto
             {
@@ -60,6 +62,7 @@ public class DashboardService : IDashboardService
             .Take(5)
             .ToListAsync();
 
+        // Group total payment amounts by store.
         var revenueByStore = await _paymentRepository.GetAllPayments()
             .GroupBy(p => p.Staff.StoreId)
             .Select(g => new StoreRevenueDto
@@ -70,6 +73,7 @@ public class DashboardService : IDashboardService
             })
             .ToListAsync();
 
+        // Fetch the 5 most recent rental transactions with customer and staff names.
         var recentRentals = await _rentalRepository.GetAllRentals()
             .OrderByDescending(r => r.RentalId)
             .Take(5)
@@ -108,14 +112,16 @@ public class DashboardService : IDashboardService
         };
     }
 
-    // Computes store-scoped metrics and inventory status for staff.
+    // Computes store-scoped operational metrics and today's collections for staff members.
     public async Task<StaffDashboardDto> GetStaffDashboardAsync(int userId)
     {
+        // Identify the staff member and their assigned store.
         var staff = await _staffRepository.GetAllStaff()
             .FirstOrDefaultAsync(s => s.UserId == userId);
         var storeId = staff?.StoreId ?? 0;
         var today = DateTime.UtcNow.Date;
 
+        // Calculate store-specific active rentals, available items, customer base, and today's revenue.
         var activeRentals = await _rentalRepository.GetAllRentals()
             .CountAsync(r => r.Staff.StoreId == storeId && r.ReturnDate == null);
         var availableInventory = await _inventoryRepository.GetAllInventory()
@@ -126,6 +132,7 @@ public class DashboardService : IDashboardService
             .Where(p => p.Staff.StoreId == storeId && p.PaymentDate.Date == today)
             .SumAsync(p => p.Amount);
 
+        // Fetch recent store rentals.
         var recentRentals = await _rentalRepository.GetAllRentals()
             .Where(r => r.Staff.StoreId == storeId)
             .OrderByDescending(r => r.RentalId)
@@ -146,6 +153,7 @@ public class DashboardService : IDashboardService
             })
             .ToListAsync();
 
+        // Fetch recent payments processed at the store.
         var recentPayments = await _paymentRepository.GetAllPayments()
             .Where(p => p.Staff.StoreId == storeId)
             .OrderByDescending(p => p.PaymentId)
@@ -174,13 +182,15 @@ public class DashboardService : IDashboardService
         };
     }
 
-    // Computes customer-specific rental summary and spend totals.
+    // Computes customer-specific rental summary, lifetime spend, and active rentals.
     public async Task<CustomerDashboardDto> GetCustomerDashboardAsync(int userId)
     {
+        // Identify customer ID from user identity.
         var customer = await _customerRepository.GetAllCustomers()
             .FirstOrDefaultAsync(c => c.UserId == userId);
         var customerId = customer?.CustomerId ?? 0;
 
+        // Calculate rental counts and lifetime payments for this customer.
         var activeRentals = await _rentalRepository.GetAllRentals()
             .CountAsync(r => r.CustomerId == customerId && r.ReturnDate == null);
         var totalRentals = await _rentalRepository.GetAllRentals()
@@ -189,6 +199,7 @@ public class DashboardService : IDashboardService
             .Where(p => p.CustomerId == customerId)
             .SumAsync(p => p.Amount);
 
+        // Fetch active rentals currently held by this customer.
         var myActiveRentals = await _rentalRepository.GetAllRentals()
             .Where(r => r.CustomerId == customerId && r.ReturnDate == null)
             .OrderByDescending(r => r.RentalId)

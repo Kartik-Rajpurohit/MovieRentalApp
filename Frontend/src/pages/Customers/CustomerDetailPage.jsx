@@ -8,13 +8,18 @@ import DetailPageHeader from "../../components/common/DetailPageHeader";
 import { getCustomerById } from "../../services/customerService";
 import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 
+// Displays full profile and address details for a specific customer
 export default function CustomerDetailPage() {
+  // Read customer ID from the route parameters
   const { id } = useParams();
+  // State for holding customer profile data
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch customer information whenever customer ID changes
   useEffect(() => { fetchCustomer(); }, [id]);
 
+  // Load customer profile and associated address data from the backend
   const fetchCustomer = async () => {
     setLoading(true);
     try {
@@ -27,6 +32,7 @@ export default function CustomerDetailPage() {
     }
   };
 
+  // Show loading spinner while customer details are loading
   if (loading) {
     return (
       <AppLayout>
@@ -34,6 +40,7 @@ export default function CustomerDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

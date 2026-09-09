@@ -1,9 +1,11 @@
 import { InputText } from "primereact/inputtext";
 import { LABEL_STYLE } from "../../utils/constants";
 
+// Reusable input fields for actor first name and last name used in create/edit dialogs
 export default function ActorFormFields({ form, setForm, errors = {} }) {
   return (
     <>
+      {/* First Name input */}
       <div>
         <label style={LABEL_STYLE}>First Name</label>
         <InputText
@@ -16,6 +18,7 @@ export default function ActorFormFields({ form, setForm, errors = {} }) {
         {errors.firstName && <small className="p-error">{errors.firstName}</small>}
       </div>
 
+      {/* Last Name input */}
       <div>
         <label style={LABEL_STYLE}>Last Name</label>
         <InputText
@@ -30,3 +33,4 @@ export default function ActorFormFields({ form, setForm, errors = {} }) {
     </>
   );
 }
+

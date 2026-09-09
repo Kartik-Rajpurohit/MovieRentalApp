@@ -3,28 +3,32 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRental.Domain.Entities
 {
-    // Represents a city — middle level of location hierarchy (Country → City → Address)
+    // Represents a city within a country, used for address classification.
     [Table("city")]
     public class City
     {
+        // Primary key uniquely identifying the city.
         [Key]
         [Column("city_id")]
         public int CityId { get; set; }
 
-        // Column name in DB is "city" not "name"
+        // Name of the city (mapped to column "city" in the database).
         [Column("city")]
         public string Name { get; set; } = string.Empty;
 
-        // FK → Country
+        // Foreign key linking this city to its parent country.
         [Column("country_id")]
         [ForeignKey("Country")]
         public int CountryId { get; set; }
+
+        // Navigation property for the parent country.
         public Country Country { get; set; } = null!;
 
+        // Timestamp of when this record was last modified.
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
-        // One City → Many Addresses
+        // Collection of physical addresses located in this city.
         public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 }

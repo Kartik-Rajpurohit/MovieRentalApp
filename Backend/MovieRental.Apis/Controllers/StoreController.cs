@@ -9,9 +9,10 @@ namespace MovieRental.Apis.Controllers
     // Handles physical store locations, managers, and store-level metrics.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Admin and Staff can access store endpoints
+    [Authorize(Roles = "Admin,Staff")] // Admin and Staff can view stores; only Admin can create
     public class StoreController : ControllerBase
     {
+        // Injected service for store operations and metrics
         private readonly IStoreService _storeService;
 
         public StoreController(IStoreService storeService)
@@ -19,7 +20,8 @@ namespace MovieRental.Apis.Controllers
             _storeService = storeService;
         }
 
-        // GET api/store — paginated, filtered, sorted list of stores
+        // Gets a paginated list of stores with manager, address, and copy count summaries.
+        // Query parameters: page, pageSize, search.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] StoreQueryParametersDto queryParams)
         {
@@ -27,14 +29,17 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // GET api/store/{id} — full store detail
+        // Gets complete store details by StoreId (address, manager, inventory count, customer count).
+        // Returns 404 NotFound if store does not exist.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _storeService.GetStoreByIdAsync(id);
             return result is null ? NotFound($"Store {id} not found") : Ok(result);
         }
-        // POST api/store — create new store (Admin only)
+
+        // Creates a new store branch with manager and address.
+        // Restricted to Admin role only.
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateStoreDto dto)

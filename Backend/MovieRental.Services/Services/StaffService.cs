@@ -7,18 +7,22 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for staff lookups and store affiliation queries.
+    // Handles business logic for staff lookups and store affiliation queries.
     public class StaffService : IStaffService
     {
         private readonly IStaffRepository _staffRepository;
+
+        // Receives the staff repository needed to access staff records.
         public StaffService(IStaffRepository staffRepository) => _staffRepository = staffRepository;
 
+        // Retrieves a paginated and filtered list of staff members with search and store filters.
         public async Task<PaginatedResponseDto<StaffResponseDto>> GetAllStaffAsync(
             int page, int pageSize, string? search, bool? isActive, int? storeId = null)
         {
+            // Get the base query from the repository.
             var query = _staffRepository.GetAllStaff();
 
-            // Filter by search — matches full name, email, or staff ID
+            // Filter by search matching staff full name, email, or numeric staff ID.
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var lower = search.ToLower();
@@ -30,15 +34,17 @@ namespace MovieRental.Services.Services
                 );
             }
 
-            // Filter by active status
+            // Filter by account active status if specified.
             if (isActive.HasValue)
                 query = query.Where(s => s.User != null && s.User.IsActive == isActive.Value);
 
+            // Filter by assigned store ID if specified.
             if (storeId.HasValue)
                 query = query.Where(s => s.StoreId == storeId.Value);
 
             var totalRecords = await query.CountAsync();
 
+            // Paginate and project staff entities to response DTOs.
             var data = await query
                 .OrderBy(s => s.StaffId)
                 .Skip((page - 1) * pageSize)
@@ -63,12 +69,13 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Retrieves detailed staff profile by ID including address and assigned store.
         public async Task<StaffDetailDto?> GetStaffByIdAsync(int id)
         {
             var s = await _staffRepository.GetStaffByIdAsync(id);
             if (s == null) return null;
 
-            // Map raw entity to DTO — service layer responsibility
+            // Map database entity and nested user/address navigation properties to DTO.
             return new StaffDetailDto
             {
                 StaffId = s.StaffId,

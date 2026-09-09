@@ -41,11 +41,14 @@ const sections = [
   },
 ];
 
+// Main navigation sidebar providing role-restricted links organized by application domain sections
 export default function Sidebar() {
   const { user } = useContext(AuthContext);
   const userRole = user?.role ?? "";
+  // Check if current user role matches allowed roles for a menu item
   const canAccess = (roles) => !roles || roles.includes(userRole);
 
+  // Customize labels for Customers (e.g. "My Rentals" and "My Payments")
   const getItemLabel = (item) => {
     if (userRole === "Customer") {
       if (item.to === "/rentals") return "My Rentals";
@@ -53,6 +56,7 @@ export default function Sidebar() {
     }
     return item.label;
   };
+
 
   return (
     <div className="sidebar">

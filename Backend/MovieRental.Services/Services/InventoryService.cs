@@ -8,17 +8,18 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for inventory copy queries, availability evaluation, and store updates.
+    // Handles business logic for inventory copy queries, availability evaluation, and store updates.
     public class InventoryService : IInventoryService
     {
         private readonly IInventoryRepository _inventoryRepository;
 
+        // Receives the inventory repository needed to access inventory records.
         public InventoryService(IInventoryRepository inventoryRepository)
         {
             _inventoryRepository = inventoryRepository;
         }
 
-        // Maps raw entity to response DTO — availability is true if no active unreturned rental exists.
+        // Maps raw entity to response DTO — item is marked available if it has no active unreturned rentals.
         private static InventoryResponseDto MapToResponse(Inventory i) => new()
         {
             InventoryId = i.InventoryId,
@@ -29,6 +30,7 @@ namespace MovieRental.Services.Services
             LastUpdate = i.LastUpdate,
         };
 
+        // Maps raw entity to detail DTO with lifetime rental count and availability status.
         private static InventoryDetailDto MapToDetail(Inventory i) => new()
         {
             InventoryId = i.InventoryId,
@@ -136,7 +138,7 @@ namespace MovieRental.Services.Services
             return MapToResponse(inventory);
         }
 
-        // Deletes an inventory copy record.
+        // Deletes an inventory copy record by ID through repository.
         public async Task<bool> DeleteInventoryAsync(int id)
             => await _inventoryRepository.DeleteInventoryAsync(id);
     }

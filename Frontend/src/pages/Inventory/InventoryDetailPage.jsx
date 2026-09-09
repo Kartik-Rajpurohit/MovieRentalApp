@@ -26,18 +26,24 @@ const FIELD_VALUE = {
   fontWeight: 600,
 };
 
+// Displays details for a single inventory record including film title, store, and rental status
 export default function InventoryDetailPage() {
+  // Read inventory ID from the route parameters
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // State holding detailed inventory information
   const [inventory, setInventory] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Controls visibility of the edit inventory dialog
   const [editVisible, setEditVisible] = useState(false);
 
+  // Fetch inventory details whenever the inventory ID changes
   useEffect(() => {
     loadInventory();
   }, [id]);
 
+  // Load inventory item details from the backend service
   const loadInventory = async () => {
     setLoading(true);
     try {
@@ -50,6 +56,7 @@ export default function InventoryDetailPage() {
     }
   };
 
+  // Prompt confirmation dialog before deleting this inventory item
   const handleDelete = () => {
     confirmDialog({
       message: `Are you sure you want to delete Inventory #${id}?`,
@@ -63,6 +70,7 @@ export default function InventoryDetailPage() {
     });
   };
 
+  // Show loading spinner while inventory item data is loading
   if (loading) {
     return (
       <AppLayout>
@@ -70,6 +78,7 @@ export default function InventoryDetailPage() {
       </AppLayout>
     );
   }
+
 
   if (!inventory) {
     return (

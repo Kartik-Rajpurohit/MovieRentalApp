@@ -9,9 +9,10 @@ namespace MovieRental.Apis.Controllers
     // Handles rental payment records and ledger queries.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")] // Customer can view their own payments
+    [Authorize(Roles = "Admin,Staff,Customer")] // Customers can view payment records; only Admin/Staff can record payments
     public class PaymentController : ControllerBase
     {
+        // Injected service for payment ledger logic
         private readonly IPaymentService _paymentService;
 
         public PaymentController(IPaymentService paymentService)
@@ -19,7 +20,8 @@ namespace MovieRental.Apis.Controllers
             _paymentService = paymentService;
         }
 
-        // Gets a paginated list of payments with amount and date filters.
+        // Gets a paginated list of payments with amount, customer, staff, and date filters.
+        // Query parameters: page, pageSize, search, customerId, staffId, rentalId, minAmount, maxAmount, fromDate, toDate.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PaymentQueryParametersDto queryParams)
         {
@@ -27,7 +29,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // Gets payment details by ID.
+        // Gets a single payment detail by PaymentId.
+        // Returns 404 NotFound if payment does not exist.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -36,7 +39,9 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // Creates a new payment for a rental (Admin and Staff only).
+        // Records a new payment transaction against a returned rental.
+        // Restricted to Admin and Staff roles.
+        // Returns 400 BadRequest if payment amount is invalid or rental is not eligible.
         [HttpPost]
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDto dto)

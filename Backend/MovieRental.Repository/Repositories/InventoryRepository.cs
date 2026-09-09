@@ -5,9 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    // Handles database operations for movie inventory copies.
+    // Handles database operations related to inventory copies of films.
     public class InventoryRepository : IInventoryRepository
     {
+        // Receives the database context used to access inventory data.
         private readonly AppDbContext _context;
 
         public InventoryRepository(AppDbContext context)
@@ -15,7 +16,7 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Returns raw IQueryable of inventory copies with eager-loaded Film and Rentals.
+        // Reads all inventory copies without tracking, loading related Film and Rentals for availability checks.
         public IQueryable<Inventory> GetAllInventory()
         {
             return _context.Inventories
@@ -24,6 +25,7 @@ namespace MovieRental.Repository.Repositories
                 .Include(i => i.Rentals);
         }
 
+        // Finds a specific inventory copy by ID along with its film and rental records.
         public async Task<Inventory?> GetInventoryByIdAsync(int id)
         {
             return await _context.Inventories
@@ -32,6 +34,7 @@ namespace MovieRental.Repository.Repositories
                 .FirstOrDefaultAsync(i => i.InventoryId == id);
         }
 
+        // Adds a new inventory item to the database and explicitly loads its film and rentals.
         public async Task<Inventory> CreateInventoryAsync(Inventory inventory)
         {
             _context.Inventories.Add(inventory);
@@ -44,6 +47,7 @@ namespace MovieRental.Repository.Repositories
             return inventory;
         }
 
+        // Updates an inventory item's store assignment and last update timestamp.
         public async Task<Inventory?> UpdateInventoryAsync(Inventory inventory)
         {
             var existing = await _context.Inventories
@@ -61,6 +65,7 @@ namespace MovieRental.Repository.Repositories
             return existing;
         }
 
+        // Removes an inventory copy from the database if found.
         public async Task<bool> DeleteInventoryAsync(int id)
         {
             var inventory = await _context.Inventories.FindAsync(id);

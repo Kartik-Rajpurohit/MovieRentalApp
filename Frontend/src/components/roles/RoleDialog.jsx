@@ -4,15 +4,20 @@ import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { createRole } from "../../services/roleService";
 
+// Modal dialog for creating a new user role.
 export default function RoleDialog({
   visible,
   onHide,
   onSuccess,
 }) {
+  // Role name input state
   const [roleName, setRoleName] = useState("");
+  // Error message state for validation or API errors
   const [error, setError] = useState("");
+  // Submission loading indicator
   const [loading, setLoading] = useState(false);
 
+  // Reset input and error when dialog opens
   useEffect(() => {
     if (visible) {
       setRoleName("");
@@ -20,6 +25,7 @@ export default function RoleDialog({
     }
   }, [visible]);
 
+  // Validate and submit the new role to the backend
   const handleSubmit = async () => {
     if (!roleName.trim()) {
       setError("Role name is required");
@@ -36,6 +42,7 @@ export default function RoleDialog({
       setLoading(false);
     }
   };
+
 
   const footer = (
     <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>

@@ -9,19 +9,22 @@ const labelStyle = {
   fontWeight: "500", fontSize: "14px", color: "#374151",
 };
 
+// Modal dialog used to add a new movie language or edit an existing language
 export default function LanguageDialog({ visible, onHide, onSuccess, mode = "add", language = null }) {
   const isEdit = mode === "edit";
+  // Form input state for language name
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Sync form when dialog opens
+  // Sync form state when dialog visibility changes or language is selected
   useEffect(() => {
     if (!visible) return;
     setName(isEdit && language ? language.name : "");
     setError("");
   }, [visible]);
 
+  // Validates language name and calls create or update language API
   const handleSubmit = async () => {
     if (!name.trim()) { setError("Name is required"); return; }
 
@@ -40,6 +43,7 @@ export default function LanguageDialog({ visible, onHide, onSuccess, mode = "add
       setLoading(false);
     }
   };
+
 
   const footer = (
     <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>

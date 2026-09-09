@@ -16,12 +16,16 @@ const labelStyle = {
 };
 const valueStyle = { fontSize: "15px", color: "#111827", fontWeight: 500 };
 
+// Displays details for a single store location including store statistics, manager, and address
 export default function StoreDetailPage() {
+  // Read store ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
+  // State holding store profile and stats
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch store details when the store ID changes
   useEffect(() => {
     getStoreById(id)
       .then(setStore)
@@ -29,6 +33,7 @@ export default function StoreDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Show loading spinner while store details are loading
   if (loading) {
     return (
       <AppLayout>
@@ -37,6 +42,7 @@ export default function StoreDetailPage() {
     );
   }
 
+  // Fallback when store record is not found
   if (!store) {
     return (
       <AppLayout>
@@ -45,6 +51,7 @@ export default function StoreDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

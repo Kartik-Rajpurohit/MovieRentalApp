@@ -1,8 +1,10 @@
+/* Stylesheet for main application layout, sidebar navigation, and topbar */
 .app-layout {
   display: flex;
   min-height: 100vh;
   background: #f5f6fa;
 }
+
 
 /* ── Sidebar ── */
 .sidebar {

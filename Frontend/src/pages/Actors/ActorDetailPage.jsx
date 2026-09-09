@@ -32,30 +32,41 @@ const FIELD_VALUE = {
   fontWeight: 600,
 };
 
+// Displays detailed information about a single actor and their associated movies
 export default function ActorDetailPage() {
+  // Read the actor ID from the route URL parameter
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
+  // State for holding actor profile details
   const [actor, setActor] = useState(null);
+  // State for holding the paginated list of movies this actor appeared in
   const [films, setFilms] = useState([]);
   const [totalRecords, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filmsLoading, setFilmsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  // Controls visibility of the edit actor dialog
   const [editVisible, setEditVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Form state for editing the actor's first and last name
   const [form, setForm] = useState({ firstName: "", lastName: "" });
   const [errors, setErrors] = useState({});
+  // Reusable pagination hook for the movies table
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Fetch actor details whenever the actor ID changes
   useEffect(() => {
     fetchActorDetail();
   }, [id]);
+
+  // Fetch movies whenever actor ID, pagination settings, or search query change
   useEffect(() => {
     fetchFilms();
   }, [id, lazyState, search]);
 
+  // Load actor profile information from the backend API
   const fetchActorDetail = async () => {
     try {
       const data = await getActorDetail(id);
@@ -68,6 +79,7 @@ export default function ActorDetailPage() {
     }
   };
 
+  // Load films associated with this actor with pagination and search
   const fetchFilms = async () => {
     setFilmsLoading(true);
     try {
@@ -86,6 +98,7 @@ export default function ActorDetailPage() {
     }
   };
 
+  // Validate form fields before updating the actor
   const validate = () => {
     const e = {};
     if (!form.firstName?.trim()) e.firstName = "First name is required";
@@ -93,6 +106,7 @@ export default function ActorDetailPage() {
     return e;
   };
 
+  // Submit the updated actor information to the backend
   const handleUpdate = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -116,6 +130,7 @@ export default function ActorDetailPage() {
     }
   };
 
+  // Prompt confirmation before deleting the actor
   const handleDelete = () => {
     confirmDialog({
       message: `Delete actor "${actor?.firstName} ${actor?.lastName}"? This will remove them from all movies.`,
@@ -129,6 +144,7 @@ export default function ActorDetailPage() {
     });
   };
 
+  // Show loading spinner while initial actor data is loading
   if (loading)
     return (
       <AppLayout>

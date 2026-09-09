@@ -12,10 +12,13 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Form fields for recording a payment against a returned unpaid rental.
 export default function PaymentFormFields({ form, setForm, errors }) {
+  // List of returned rentals that have not yet been paid
   const [rentals, setRentals] = useState([]);
   const [rentalsLoading, setRentalsLoading] = useState(false);
 
+  // Load returned unpaid rentals on mount so user can pick one to pay
   useEffect(() => {
     setRentalsLoading(true);
     getReturnedUnpaidRentals()
@@ -47,6 +50,7 @@ export default function PaymentFormFields({ form, setForm, errors }) {
       .catch(console.error);
   }, []);
 
+  // When a rental is selected, auto-populate customer, staff, and suggested amount
   const handleRentalChange = (rentalId) => {
     const selected = rentals.find((r) => r.value === rentalId);
     setForm((prev) => ({
@@ -59,6 +63,7 @@ export default function PaymentFormFields({ form, setForm, errors }) {
       amount: selected?.suggestedAmount ?? null,
     }));
   };
+
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

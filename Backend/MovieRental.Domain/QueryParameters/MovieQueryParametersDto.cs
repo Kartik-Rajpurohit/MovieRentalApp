@@ -2,7 +2,7 @@ using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Domain.QueryParameters;
 
-// Film-specific query parameters — extends base pagination/sort/search
+// Contains options used to filter, sort, and paginate movies/films returned by the API
 public class MovieQueryParametersDto : QueryParametersDto
 {
     // Filter by language ID

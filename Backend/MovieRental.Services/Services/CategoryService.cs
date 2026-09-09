@@ -9,27 +9,32 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for movie categories/genres and film associations.
+    // Handles business logic for movie categories/genres and film associations.
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
 
+        // Receives the category repository needed for database operations.
         public CategoryService(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
         }
 
+        // Retrieves a paginated and filtered list of movie categories.
         public async Task<PaginatedResponseDto<CategoryResponseDto>> GetAllCategoriesAsync(
             CategoryQueryParametersDto queryParams)
         {
+            // Get the base query from the repository.
             var query = _categoryRepository.GetAllCategories();
 
+            // Apply case-insensitive name filter if search term is provided.
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
                 var s = queryParams.Search.ToLower();
                 query = query.Where(c => c.Name.ToLower().Contains(s));
             }
 
+            // Apply sorting by name in ascending or descending order.
             query = queryParams.SortField?.ToLower() switch
             {
                 "name" => queryParams.SortOrder?.ToLower() == "desc"
@@ -41,11 +46,13 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
+            // Fetch the current page of category entities.
             var entities = await query
                 .Skip((queryParams.Page - 1) * queryParams.PageSize)
                 .Take(queryParams.PageSize)
                 .ToListAsync();
 
+            // Map each category entity to its response DTO with film count.
             var data = entities.Select(c => new CategoryResponseDto
             {
                 CategoryId = c.CategoryId,
@@ -64,12 +71,13 @@ namespace MovieRental.Services.Services
             };
         }
 
-        // Sirf category info — films alag call se aayenge
+        // Retrieves category details by ID, including total assigned films count.
         public async Task<CategoryDetailDto?> GetCategoryByIdAsync(int id)
         {
             var category = await _categoryRepository.GetCategoryByIdAsync(id);
             if (category == null) return null;
 
+            // Convert entity into detailed response DTO.
             return new CategoryDetailDto
             {
                 CategoryId = category.CategoryId,
@@ -79,14 +87,20 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Validates and saves a new movie category record.
         public async Task<CategoryResponseDto> CreateCategoryAsync(CreateCategoryDto dto)
         {
+            // Map request DTO to database entity.
             var category = new Category
             {
                 Name = dto.Name,
                 LastUpdate = DateTime.UtcNow
             };
+
+            // Persist the new category via the repository.
             var created = await _categoryRepository.CreateCategoryAsync(category);
+
+            // Return the created category response DTO.
             return new CategoryResponseDto
             {
                 CategoryId = created.CategoryId,
@@ -96,8 +110,10 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Updates an existing category's name.
         public async Task<CategoryResponseDto?> UpdateCategoryAsync(UpdateCategoryDto dto)
         {
+            // Verify that the category exists before attempting update.
             var category = await _categoryRepository.GetCategoryByIdAsync(dto.CategoryId);
             if (category == null) return null;
 
@@ -114,20 +130,23 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Removes a category by its ID through the repository.
         public async Task<bool> DeleteCategoryAsync(int id)
             => await _categoryRepository.DeleteCategoryAsync(id);
 
-        // Actor pattern jaisa — paginated films
+        // Retrieves a paginated list of movies belonging to the specified category.
         public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByCategoryAsync(
             int categoryId, int page, int pageSize, string? search)
         {
             var query = _categoryRepository.GetFilmsByCategoryId(categoryId);
 
+            // Filter movies by title when search is specified.
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(f => f.Title.ToLower().Contains(search.ToLower()));
 
             var totalRecords = await query.CountAsync();
 
+            // Paginate and project movie entities to movie response DTOs.
             var data = await query
                 .OrderBy(f => f.Title)
                 .Skip((page - 1) * pageSize)

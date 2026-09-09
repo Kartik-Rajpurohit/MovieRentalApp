@@ -4,6 +4,7 @@ import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import StatCard from "../common/StatCard";
 
+// Displays administrative metrics, revenue summaries, top rented movies, and recent rental activity
 export default function AdminDashboard({ stats }) {
   if (!stats) return null;
 

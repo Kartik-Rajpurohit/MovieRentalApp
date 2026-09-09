@@ -5,9 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    // Handles database operations for movies, categories, actors, and language relations.
+    // Handles database operations related to films, including genres, actors, and languages.
     public class FilmRepository : IFilmRepository
     {
+        // Receives the database context used to access film and media tables.
         private readonly AppDbContext _context;
 
         public FilmRepository(AppDbContext context)
@@ -15,7 +16,8 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Returns IQueryable with all relations loaded — service applies filters on top
+        // Reads all films without tracking, loading related language, categories, and actors.
+        // Returns IQueryable so filtering, sorting, and pagination can be applied in the service.
         public IQueryable<Film> GetAllFilms()
         {
             return _context.Films
@@ -27,6 +29,7 @@ namespace MovieRental.Repository.Repositories
                     .ThenInclude(fa => fa.Actor);
         }
 
+        // Finds a film by ID with all related categories, actors, languages, and inventory items.
         public async Task<Film?> GetFilmByIdAsync(int id)
         {
             return await _context.Films
@@ -40,6 +43,7 @@ namespace MovieRental.Repository.Repositories
                 .FirstOrDefaultAsync(f => f.FilmId == id);
         }
 
+        // Adds a new film to the database and re-fetches it with full relationships.
         public async Task<Film> CreateFilmAsync(Film film)
         {
             _context.Films.Add(film);
@@ -49,6 +53,7 @@ namespace MovieRental.Repository.Repositories
             return await GetFilmByIdAsync(film.FilmId) ?? film;
         }
 
+        // Updates film details, sets last-updated timestamp, and saves changes.
         public async Task<Film?> UpdateFilmAsync(Film film)
         {
             film.LastUpdate = DateTime.UtcNow;
@@ -58,6 +63,7 @@ namespace MovieRental.Repository.Repositories
             return await GetFilmByIdAsync(film.FilmId);
         }
 
+        // Removes a film from the database if it exists.
         public async Task<bool> DeleteFilmAsync(int id)
         {
             var film = await _context.Films.FindAsync(id);
@@ -68,13 +74,15 @@ namespace MovieRental.Repository.Repositories
             return true;
         }
 
-        // Raw IQueryable — service applies pagination and maps to DropdownDto
+        // Returns all languages without tracking for film form dropdowns.
         public IQueryable<Language> GetAllLanguages()
             => _context.Languages.AsNoTracking().AsQueryable();
 
+        // Returns all categories without tracking for film genre selection.
         public IQueryable<Category> GetAllCategories()
             => _context.Categories.AsNoTracking().AsQueryable();
 
+        // Returns all actors without tracking for film cast selection.
         public IQueryable<Actor> GetAllActors()
             => _context.Actors.AsNoTracking().AsQueryable();
     }

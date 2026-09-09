@@ -26,16 +26,21 @@ const FIELD_VALUE = {
   fontWeight: 600,
 };
 
+// Displays complete details of a movie rental transaction and provides a return movie action
 export default function RentalDetailPage() {
   const { user } = useContext(AuthContext);
+  // Read rental ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
+  // State holding rental details
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
   const [returning, setReturning] = useState(false);
 
+  // Fetch rental details whenever the rental ID changes
   useEffect(() => { loadRental(); }, [id]);
 
+  // Load rental record, customer, staff, and return status from backend
   const loadRental = async () => {
     setLoading(true);
     try {
@@ -48,6 +53,7 @@ export default function RentalDetailPage() {
     }
   };
 
+  // Mark the rented film as returned after confirmation
   const handleReturn = () => {
     confirmDialog({
       message: `Mark rental #${id} as returned?`,
@@ -65,6 +71,7 @@ export default function RentalDetailPage() {
     });
   };
 
+  // Show loading spinner while rental details are being fetched
   if (loading) {
     return (
       <AppLayout>
@@ -73,6 +80,7 @@ export default function RentalDetailPage() {
     );
   }
 
+  // Fallback if rental record does not exist
   if (!rental) {
     return (
       <AppLayout>
@@ -81,6 +89,7 @@ export default function RentalDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

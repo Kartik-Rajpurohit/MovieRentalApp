@@ -9,9 +9,10 @@ namespace MovieRental.Apis.Controllers
     // Handles movie genres/categories and their film counts.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")]
+    [Authorize(Roles = "Admin,Staff,Customer")] // All users can browse categories; only Admin and Staff can modify
     public class CategoryController : ControllerBase
     {
+        // Injected service for category business logic
         private readonly ICategoryService _categoryService;
 
         public CategoryController(ICategoryService categoryService)
@@ -19,7 +20,8 @@ namespace MovieRental.Apis.Controllers
             _categoryService = categoryService;
         }
 
-        // GET api/category — paginated list with film count
+        // Gets a paginated list of categories with film counts.
+        // Query parameters: page, pageSize, search.
         [HttpGet]
         public async Task<IActionResult> GetAllCategories(
             [FromQuery] CategoryQueryParametersDto queryParams)
@@ -28,7 +30,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // GET api/category/{id} — detail with list of movies
+        // Gets category details and associated movies by CategoryId.
+        // Returns 404 NotFound if category does not exist.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCategoryById(int id)
         {
@@ -37,18 +40,20 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // POST api/category — create new category
+        // Creates a new film category/genre.
+        // Restricted to Admin and Staff roles.
         [HttpPost]
-        [Authorize(Roles = "Admin,Staff")] // Customers can only read categories
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
         {
             var result = await _categoryService.CreateCategoryAsync(dto);
             return Ok(result);
         }
 
-        // PATCH api/category — partial update
+        // Updates an existing category's name.
+        // Returns 404 NotFound if the category is not found.
         [HttpPatch]
-        [Authorize(Roles = "Admin,Staff")] // Customers can only read categories
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryDto dto)
         {
             var result = await _categoryService.UpdateCategoryAsync(dto);
@@ -56,16 +61,19 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // DELETE api/category/{id}
+        // Deletes a category by ID.
+        // Returns 204 NoContent on success, or 404 NotFound if category does not exist.
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Staff")] // Customers can only read categories
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var result = await _categoryService.DeleteCategoryAsync(id);
             if (!result) return NotFound($"Category with id {id} not found");
             return NoContent();
         }
-        // GET api/category/{id}/films — paginated films
+
+        // Gets a paginated list of films belonging to this category.
+        // Supports optional title search within the genre.
         [HttpGet("{id}/films")]
         public async Task<IActionResult> GetFilms(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {

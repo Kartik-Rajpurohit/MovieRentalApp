@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for payment records, customer/staff role scoping, and transaction validation.
+    // Handles business logic for payment records, customer/staff role scoping, and transaction validation.
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
@@ -20,6 +20,7 @@ namespace MovieRental.Services.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<PaymentService> _logger;
 
+        // Receives payment and rental repositories, HTTP context accessor for user claims, and audit logger.
         public PaymentService(
             IPaymentRepository paymentRepository,
             IRentalRepository rentalRepository,
@@ -32,6 +33,7 @@ namespace MovieRental.Services.Services
             _logger = logger;
         }
 
+        // Converts raw Payment entity into standard response DTO with formatted names.
         private static PaymentResponseDto MapToResponse(Payment p) => new()
         {
             PaymentId = p.PaymentId,
@@ -49,6 +51,7 @@ namespace MovieRental.Services.Services
             PaymentDate = p.PaymentDate,
         };
 
+        // Converts raw Payment entity into detailed response DTO.
         private static PaymentDetailDto MapToDetail(Payment p) => new()
         {
             PaymentId = p.PaymentId,
@@ -66,15 +69,16 @@ namespace MovieRental.Services.Services
             PaymentDate = p.PaymentDate,
         };
 
-        // Gets a paginated list of payments with amount and date filters and role scoping.
+        // Gets a paginated list of payments with amount, date filters, and role-based data scoping.
         public async Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(PaymentQueryParametersDto queryParams)
         {
             var query = _paymentRepository.GetAllPayments();
 
+            // Extract caller identity and role from current user JWT claims.
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
-            // Automatic server-side role scoping
+            // Enforce automatic server-side role scoping: Customers only see their own payments.
             if (role == "Customer")
             {
                 var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
@@ -94,6 +98,7 @@ namespace MovieRental.Services.Services
                     };
                 }
             }
+            // Staff members only see payments processed at their assigned store.
             else if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
@@ -113,13 +118,14 @@ namespace MovieRental.Services.Services
             if (queryParams.RentalId.HasValue)
                 query = query.Where(p => p.RentalId == queryParams.RentalId.Value);
 
-            // Amount & Date Filters
+            // Amount range filters.
             if (queryParams.MinAmount.HasValue)
                 query = query.Where(p => p.Amount >= queryParams.MinAmount.Value);
 
             if (queryParams.MaxAmount.HasValue)
                 query = query.Where(p => p.Amount <= queryParams.MaxAmount.Value);
 
+            // Date range filters in UTC.
             if (queryParams.FromDate.HasValue)
             {
                 var fromUtc = DateTime.SpecifyKind(queryParams.FromDate.Value.Date, DateTimeKind.Utc);
@@ -132,7 +138,7 @@ namespace MovieRental.Services.Services
                 query = query.Where(p => p.PaymentDate <= toUtc);
             }
 
-            // Search
+            // Text search across movie title, customer full name, or payment ID.
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
                 var s = queryParams.Search.ToLower();
@@ -142,7 +148,7 @@ namespace MovieRental.Services.Services
                     p.PaymentId.ToString().Contains(s));
             }
 
-            // Sorting
+            // Apply dynamic sorting.
             query = queryParams.SortField?.ToLower() switch
             {
                 "amount" => queryParams.SortOrder?.ToLower() == "desc"
@@ -160,6 +166,7 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
+            // Fetch page results and project to response DTOs.
             var data = await query
                 .Skip((queryParams.Page - 1) * queryParams.PageSize)
                 .Take(queryParams.PageSize)
@@ -191,7 +198,7 @@ namespace MovieRental.Services.Services
             };
         }
 
-        // Gets payment details by ID, enforcing customer and staff store IDOR checks.
+        // Gets payment details by ID, enforcing IDOR ownership checks for customers and staff.
         public async Task<PaymentDetailDto?> GetPaymentByIdAsync(int id)
         {
             var payment = await _paymentRepository.GetPaymentByIdAsync(id);
@@ -200,31 +207,35 @@ namespace MovieRental.Services.Services
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
+            // Prevent customers from inspecting other users' payments.
             if (role == "Customer")
             {
                 var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
                 if (!int.TryParse(customerIdClaim, out var customerId) || payment.CustomerId != customerId)
-                    return null; // IDOR protection: Customer cannot view another's payment
+                    return null;
             }
+            // Prevent staff from viewing payments outside their assigned store.
             else if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
                 if (int.TryParse(storeIdClaim, out var storeId) && payment.Staff?.StoreId != storeId)
-                    return null; // Staff can only view their store's payment
+                    return null;
             }
 
             return MapToDetail(payment);
         }
 
-        // Validates amount and customer match, then creates the payment.
+        // Validates payment amount, rental existence, and customer match before creating record.
         public async Task<PaymentResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
+            // Business rule: Payment amount must be strictly greater than zero.
             if (dto.Amount <= 0)
             {
                 _logger.LogWarning("Payment creation rejected: non-positive amount {Amount}", dto.Amount);
                 throw new InvalidOperationException("Payment amount must be greater than zero.");
             }
 
+            // Business rule: Rental must exist in the database.
             var rental = await _rentalRepository.GetRentalByIdAsync(dto.RentalId);
             if (rental == null)
             {
@@ -232,6 +243,7 @@ namespace MovieRental.Services.Services
                 throw new InvalidOperationException($"Rental #{dto.RentalId} does not exist.");
             }
 
+            // Business rule: Customer paying must match the customer who rented the movie.
             if (rental.CustomerId != dto.CustomerId)
             {
                 _logger.LogWarning("Payment creation rejected: Customer #{CustomerId} does not match Rental #{RentalId} customer #{RentalCustomerId}",
@@ -243,6 +255,7 @@ namespace MovieRental.Services.Services
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 
+            // Security check: Staff can only collect payments for rentals associated with their store.
             if (role == "Staff")
             {
                 var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
@@ -256,13 +269,15 @@ namespace MovieRental.Services.Services
                     }
                 }
 
+                // Enforce caller identity to prevent staff impersonation.
                 var staffIdClaim = userPrincipal?.FindFirst("staffId")?.Value;
                 if (int.TryParse(staffIdClaim, out var callerStaffId))
                 {
-                    dto.StaffId = callerStaffId; // Enforce caller identity to prevent staff impersonation
+                    dto.StaffId = callerStaffId;
                 }
             }
 
+            // Map request DTO to database entity with current UTC timestamp.
             var payment = new Payment
             {
                 CustomerId = dto.CustomerId,
@@ -272,6 +287,7 @@ namespace MovieRental.Services.Services
                 PaymentDate = DateTime.UtcNow,
             };
 
+            // Persist the payment record in the database.
             var created = await _paymentRepository.CreatePaymentAsync(payment);
 
             _logger.LogInformation("Payment created successfully: PaymentId #{PaymentId}, Amount: {Amount}, RentalId #{RentalId}, CustomerId #{CustomerId}, StaffId #{StaffId}",

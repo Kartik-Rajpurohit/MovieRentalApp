@@ -10,10 +10,12 @@ namespace MovieRental.Apis.Controllers;
 // Handles city records linked to countries.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff")]
+[Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can manage cities
 public class CityController : ControllerBase
 {
+    // Injected service for city operations
     private readonly ICityService _cityService;
+    // Injected service for retrieving addresses in a city
     private readonly IAddressService _addressService;
 
     public CityController(ICityService cityService, IAddressService addressService)
@@ -22,6 +24,8 @@ public class CityController : ControllerBase
         _addressService = addressService;
     }
 
+    // Gets a paginated list of cities with country information.
+    // Query parameters: page, pageSize, search, countryId.
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] CityQueryParametersDto queryParams)
     {
@@ -29,6 +33,8 @@ public class CityController : ControllerBase
         return Ok(result);
     }
 
+    // Gets a single city by CityId.
+    // Returns 404 NotFound if city does not exist.
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -37,7 +43,8 @@ public class CityController : ControllerBase
         return Ok(result);
     }
 
-    // Addresses for this city — delegates to AddressService with CityId filter
+    // Gets all addresses located in this city.
+    // Delegates to AddressService with CityId filter and pagination.
     [HttpGet("{id}/addresses")]
     public async Task<IActionResult> GetAddresses(
         int id,
@@ -55,6 +62,8 @@ public class CityController : ControllerBase
         return Ok(result);
     }
 
+    // Creates a new city under a country.
+    // Restricted to Admin role.
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateCityDto dto)
@@ -63,6 +72,9 @@ public class CityController : ControllerBase
         return Ok(result);
     }
 
+    // Updates an existing city's name or country.
+    // Restricted to Admin role.
+    // Returns 404 NotFound if city does not exist.
     [HttpPatch]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update([FromBody] UpdateCityDto dto)
@@ -72,6 +84,9 @@ public class CityController : ControllerBase
         return Ok(result);
     }
 
+    // Deletes a city by ID.
+    // Restricted to Admin role.
+    // Returns 204 NoContent on success, or 404 NotFound if city does not exist.
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)

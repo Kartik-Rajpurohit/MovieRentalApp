@@ -4,20 +4,24 @@ import { Badge } from "primereact/badge";
 import SearchBar from "../common/SearchBar";
 import UserFilterDialog from "./UserFilterDialog";
 
+// Toolbar providing live search, filter modal toggle, and active filter count badge for users.
 export default function UserToolbar({
   search,
   onSearchChange,
   filters,
   onFiltersChange,
 }) {
+  // Controls visibility of the UserFilterDialog modal
   const [filterVisible, setFilterVisible] = useState(false);
 
+  // Count active filter criteria to display badge count
   const activeCount = [
     filters.name,
     filters.email,
     filters.role,
     filters.isActive !== null && filters.isActive !== undefined ? "x" : "",
   ].filter(Boolean).length;
+
 
   return (
     <>

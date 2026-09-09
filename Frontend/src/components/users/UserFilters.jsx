@@ -2,11 +2,14 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE, STATUS_OPTIONS } from "../../utils/constants";
 
+// Form inputs for filtering users by name, email, role, and active status.
 export default function UserFilters({ filters, setFilter, roles }) {
   return (
     <>
+      {/* Name search input */}
       <div>
         <label style={LABEL_STYLE}>Name</label>
+
         <InputText
           value={filters.name}
           onChange={(e) => setFilter("name")(e.target.value)}

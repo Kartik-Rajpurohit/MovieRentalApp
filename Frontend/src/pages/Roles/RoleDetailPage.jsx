@@ -12,20 +12,25 @@ import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 import SearchBar from "../../components/common/SearchBar";
 import usePagination from "../../hooks/usePagination";
 
+// Displays details for a single role and lists all user accounts assigned to that role
 export default function RoleDetailPage() {
+  // Read role ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // RoleTable se state pass hogi — role info ke liye, fallback to API fetch
+  // Role info passed from RoleTable navigation state or fetched from the API as fallback
   const [roleInfo, setRoleInfo] = useState(location.state || null);
 
+  // Paginated users assigned to this role
   const [users, setUsers] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  // Reusable pagination hook for users table
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Fetch role information if not already supplied via navigation state
   useEffect(() => {
     if (!roleInfo && id) {
       getRoles(1, 100)
@@ -37,10 +42,12 @@ export default function RoleDetailPage() {
     }
   }, [id, roleInfo]);
 
+  // Reload assigned users whenever role ID, pagination, or search query change
   useEffect(() => {
     fetchUsers();
   }, [id, lazyState, search]);
 
+  // Load users belonging to this role from the backend
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -70,10 +77,12 @@ export default function RoleDetailPage() {
     }
   };
 
+  // Update search query and reset pagination to the first page
   const onSearchChange = (val) => {
     setSearch(val);
     reset();
   };
+
 
   return (
     <AppLayout>

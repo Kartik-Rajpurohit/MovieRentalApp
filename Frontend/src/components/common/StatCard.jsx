@@ -1,5 +1,6 @@
 import { Card } from "primereact/card";
 
+// Reusable card component for displaying metric statistics (icon, label, and value) on dashboards
 export default function StatCard({ icon, label, value, color = "#6366f1" }) {
   return (
     <Card>

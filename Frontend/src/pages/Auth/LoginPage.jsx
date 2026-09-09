@@ -10,25 +10,34 @@ import { AuthContext } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
 import { getErrorMessage } from "../../utils/errorUtils";
 
+// Provides the login page and handles user sign-in and redirection
 export default function LoginPage() {
   const navigate = useNavigate();
+  // Access global login function from AuthContext to store user session
   const { login } = useContext(AuthContext);
 
+  // Form input states for user credentials
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // UI states for loading indicator and error display
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Submits credentials to the backend API, updates auth state, and redirects
   const handleLogin = async () => {
     setError("");
     setLoading(true);
 
     try {
+      // Call auth service to authenticate user credentials
       const response = await loginUser(email, password);
+      // Save authenticated user and token in global context and localStorage
       login(response);
+      // Check if user has an assigned role; send unassigned users to /home
       const hasRole = response?.role && response.role !== "Unassigned";
       navigate(hasRole ? "/dashboard" : "/home");
     } catch (err) {
+      // Extract user-friendly error message on failure
       setError(getErrorMessage(err, "Login failed"));
     } finally {
       setLoading(false);

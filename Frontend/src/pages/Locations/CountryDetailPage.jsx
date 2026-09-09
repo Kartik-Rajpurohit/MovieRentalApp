@@ -19,29 +19,39 @@ import {
   deleteCountry,
 } from "../../services/countryService";
 
+// Displays details for a single country, provides editing/deletion, and lists its associated cities
 export default function CountryDetailPage() {
+  // Read country ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // State holding country profile data
   const [country, setCountry] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Controls visibility of the edit country dialog
   const [editVisible, setEditVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Form state for updating country name
   const [form, setForm] = useState({ name: "" });
+  // Paginated cities located in this country
   const [cities, setCities] = useState([]);
   const [totalCities, setTotalCities] = useState(0);
   const [citiesLoading, setCitiesLoading] = useState(false);
   const [citySearch, setCitySearch] = useState("");
+  // Reusable pagination hook for the cities table
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Load country details when the country ID changes
   useEffect(() => {
     loadCountry();
   }, [id]);
 
+  // Reload cities whenever country ID, pagination, or search query change
   useEffect(() => {
     if (id) loadCities();
   }, [id, lazyState, citySearch]);
 
+  // Load cities located in this country with pagination and search
   const loadCities = async () => {
     setCitiesLoading(true);
     try {
@@ -60,6 +70,7 @@ export default function CountryDetailPage() {
     }
   };
 
+  // Load country details from the backend service
   const loadCountry = async () => {
     setLoading(true);
     try {
@@ -73,6 +84,7 @@ export default function CountryDetailPage() {
     }
   };
 
+  // Submit updated country name to the backend
   const handleUpdate = async () => {
     setSaving(true);
     try {
@@ -89,6 +101,7 @@ export default function CountryDetailPage() {
     }
   };
 
+  // Prompt confirmation before deleting the country
   const handleDelete = () => {
     confirmDialog({
       message: `Delete country "${country?.name}"? All associated cities will also be affected.`,
@@ -102,6 +115,7 @@ export default function CountryDetailPage() {
     });
   };
 
+  // Show loading spinner while country details are loading
   if (loading) {
     return (
       <AppLayout>
@@ -109,6 +123,7 @@ export default function CountryDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

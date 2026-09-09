@@ -23,12 +23,14 @@ const PAGE_TITLES = {
   "/addresses": "Addresses",
 };
 
+// Top navigation bar displaying the current page title and user avatar with a logout dropdown menu
 export default function Topbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
   const menuRef = useRef(null);
 
+  // Derive topbar title from the current URL path
   const base = "/" + location.pathname.split("/")[1];
   const title = PAGE_TITLES[base] ?? "Movie Rental";
 

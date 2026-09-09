@@ -5,11 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
-/// <summary>
-/// Data access repository for managing film languages.
-/// </summary>
+// Handles database operations related to film languages.
 public class LanguageRepository : ILanguageRepository
 {
+    // Receives the database context used to access language tables.
     private readonly AppDbContext _context;
 
     public LanguageRepository(AppDbContext context)
@@ -17,14 +16,17 @@ public class LanguageRepository : ILanguageRepository
         _context = context;
     }
 
+    // Reads all languages without tracking, including related films for counting.
     public IQueryable<Language> GetAllLanguages()
         => _context.Languages.AsNoTracking().Include(l => l.Films).AsQueryable();
 
+    // Finds a language by its ID along with its associated films.
     public async Task<Language?> GetLanguageByIdAsync(int id)
         => await _context.Languages
             .Include(l => l.Films)
             .FirstOrDefaultAsync(l => l.LanguageId == id);
 
+    // Adds a new language record to the database and saves changes.
     public async Task<Language> CreateLanguageAsync(Language language)
     {
         _context.Languages.Add(language);
@@ -32,6 +34,7 @@ public class LanguageRepository : ILanguageRepository
         return language;
     }
 
+    // Updates an existing language's name and last-updated timestamp.
     public async Task<Language?> UpdateLanguageAsync(Language language)
     {
         var existing = await _context.Languages.FindAsync(language.LanguageId);
@@ -42,6 +45,7 @@ public class LanguageRepository : ILanguageRepository
         return existing;
     }
 
+    // Deletes a language from the database if found.
     public async Task<bool> DeleteLanguageAsync(int id)
     {
         var language = await _context.Languages.FindAsync(id);
@@ -51,6 +55,7 @@ public class LanguageRepository : ILanguageRepository
         return true;
     }
 
+    // Queries films released in the specified language, including language and categories.
     public IQueryable<Film> GetFilmsByLanguageId(int languageId)
         => _context.Films
             .AsNoTracking()

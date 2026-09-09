@@ -2,7 +2,7 @@ using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Domain.QueryParameters;
 
-// Store-specific query parameters
+// Contains options used to filter, sort, and paginate stores returned by the API
 public class StoreQueryParametersDto : QueryParametersDto
 {
     // Filter by city name

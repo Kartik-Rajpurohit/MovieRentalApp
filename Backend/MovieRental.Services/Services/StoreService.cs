@@ -8,28 +8,34 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for store management, manager assignments, and store metrics.
+    // Handles business logic for store management, manager assignments, and store metrics.
     public class StoreService : IStoreService
     {
         private readonly IStoreRepository _storeRepository;
 
+        // Receives the store repository needed for store operations.
         public StoreService(IStoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
         }
 
+        // Retrieves a paginated and filtered list of stores with aggregated counts.
         public async Task<PaginatedResponseDto<StoreResponseDto>> GetAllStoresAsync(StoreQueryParametersDto queryParams)
         {
+            // Get the base query from the repository.
             var query = _storeRepository.GetAllStores();
 
+            // Filter by city name if provided.
             if (!string.IsNullOrWhiteSpace(queryParams.City))
                 query = query.Where(s =>
                     s.Address.City.Name.ToLower().Contains(queryParams.City.ToLower()));
 
+            // Filter by country name if provided.
             if (!string.IsNullOrWhiteSpace(queryParams.Country))
                 query = query.Where(s =>
                     s.Address.City.Country.Name.ToLower().Contains(queryParams.Country.ToLower()));
 
+            // Search by store ID, city, country, or manager name.
             if (!string.IsNullOrWhiteSpace(queryParams.Search))
             {
                 var s = queryParams.Search.ToLower();
@@ -42,6 +48,7 @@ namespace MovieRental.Services.Services
                         : "").Contains(s));
             }
 
+            // Apply dynamic sorting.
             query = queryParams.SortField?.ToLower() switch
             {
                 "storeid" => queryParams.SortOrder?.ToLower() == "desc"
@@ -59,6 +66,7 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
+            // Paginate and project store entities to response DTOs with aggregated counts.
             var data = await query
                 .Skip((queryParams.Page - 1) * queryParams.PageSize)
                 .Take(queryParams.PageSize)
@@ -91,6 +99,7 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Retrieves detailed store information by ID including address, manager, and operational counts.
         public async Task<StoreDetailDto?> GetStoreByIdAsync(int id)
         {
             return await _storeRepository.GetAllStores()
@@ -116,6 +125,8 @@ namespace MovieRental.Services.Services
                 })
                 .FirstOrDefaultAsync();
         }
+
+        // Validates and creates a new store location record.
         public async Task<StoreResponseDto> CreateStoreAsync(CreateStoreDto dto)
         {
             var store = new Store
@@ -128,8 +139,7 @@ namespace MovieRental.Services.Services
             return MapToDto(created);
         }
 
-        // Private helper - maps Store entity to StoreResponseDto (same pattern as UserService, InventoryService)
-        // Used only for in-memory mapping after Create; GetAll/GetById use EF .Select() for DB-side count aggregation
+        // Maps raw Store entity to StoreResponseDto for in-memory created results.
         private static StoreResponseDto MapToDto(Store s) => new StoreResponseDto
         {
             StoreId        = s.StoreId,

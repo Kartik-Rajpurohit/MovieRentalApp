@@ -2,6 +2,7 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import { InputText } from "primereact/inputtext";
 
+// Reusable search input component with a search icon and configurable placeholder
 export default function SearchBar({
   value,
   onChange,

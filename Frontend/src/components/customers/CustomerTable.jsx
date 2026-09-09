@@ -16,22 +16,29 @@ import { getCustomers } from "../../services/customerService";
 
 const INIT_FILTERS = { name: "", isActive: null };
 
+// Displays the customer directory in a DataTable with server-side pagination, search, and status filter modal
 export default function CustomerTable() {
   const navigate = useNavigate();
+  // Filter dialog visibility hook
   const filterDialog = useDialog();
+  // Server-side pagination hook
   const { lazyState, onPage, reset } = usePagination(10);
+  // Applied filters state and draft filters state for the modal dialog
   const { filters, setFilters, reset: resetFilters } = useFilters(INIT_FILTERS);
   const { filters: localFilters, setFilter: setLocalFilter, setFilters: setLocalFilters } = useFilters(INIT_FILTERS);
 
+  // Table records, count, loading, and search text
   const [customers, setCustomers] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
+  // Reload customer records whenever pagination, search, or filters change
   useEffect(() => {
     loadCustomers();
   }, [lazyState, search, filters]);
 
+  // Load paginated customer records from backend API
   const loadCustomers = async () => {
     setLoading(true);
     try {
@@ -50,16 +57,20 @@ export default function CustomerTable() {
     }
   };
 
+  // Handle search input changes and reset to first page
   const onSearchChange = (val) => {
     setSearch(val);
     reset();
   };
 
+  // Apply draft filters from the modal dialog and reload table
   const handleApply = () => {
     setFilters(localFilters);
     reset();
     filterDialog.close();
   };
+
+  // Reset all filters to default and close filter dialog
   const handleClear = () => {
     resetFilters();
     setLocalFilters(INIT_FILTERS);
@@ -67,10 +78,12 @@ export default function CustomerTable() {
     filterDialog.close();
   };
 
+  // Open the filter modal initialized with currently applied filters
   const openFilter = () => {
     setLocalFilters(filters);
     filterDialog.open();
   };
+
   const activeCount = [
     filters.name,
     filters.isActive !== null ? "x" : "",

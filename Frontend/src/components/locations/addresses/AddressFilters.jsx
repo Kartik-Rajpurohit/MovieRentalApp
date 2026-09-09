@@ -1,6 +1,7 @@
 import { InputText } from "primereact/inputtext";
 import { LABEL_STYLE } from "../../../utils/constants";
 
+// Filter input fields for filtering addresses by city name and postal code
 export default function AddressFilters({ filters, setFilter }) {
   return (
     <>

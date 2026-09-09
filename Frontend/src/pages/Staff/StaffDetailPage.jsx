@@ -8,13 +8,18 @@ import DetailPageHeader from "../../components/common/DetailPageHeader";
 import { getStaffById } from "../../services/staffService";
 import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 
+// Displays detailed information for a staff member including store assignment, status, and address
 export default function StaffDetailPage() {
+  // Read staff ID from route parameters
   const { id } = useParams();
+  // State holding detailed staff profile
   const [staff, setStaff] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch staff profile when staff ID changes
   useEffect(() => { fetchStaff(); }, [id]);
 
+  // Load staff profile and associated address information from backend
   const fetchStaff = async () => {
     setLoading(true);
     try {
@@ -27,6 +32,7 @@ export default function StaffDetailPage() {
     }
   };
 
+  // Show loading spinner while staff profile is loading
   if (loading) {
     return (
       <AppLayout>
@@ -34,6 +40,7 @@ export default function StaffDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

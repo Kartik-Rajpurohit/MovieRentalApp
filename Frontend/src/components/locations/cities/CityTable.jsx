@@ -14,9 +14,12 @@ import FormDialog from "../../common/FormDialog";
 import CityFormFields from "./CityFormFields";
 import { createCity } from "../../../services/cityService";
 
+// Displays cities in a DataTable with server-side pagination, sorting, search, country filtering, and city creation
 export default function CityTable() {
   const navigate = useNavigate();
+  // Server-side pagination hook
   const { lazyState, onPage, reset } = usePagination(10);
+  // Table state for city records
   const [cities, setCities] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -26,11 +29,13 @@ export default function CityTable() {
   const INIT_FILTERS = { countryId: null };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  // Dialog visibility and form state for creating a city
   const addDialog = useDialog();
   const [form, setForm] = useState({ name: "", countryId: null });
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
+  // Validate and submit new city creation
   const handleAdd = async () => {
     const errs = {};
     if (!form.name?.trim()) errs.name = "City name is required";
@@ -54,10 +59,12 @@ export default function CityTable() {
     }
   };
 
+  // Reload cities whenever pagination, search, sorting, or country filter change
   useEffect(() => {
     loadCities();
   }, [lazyState, search, sortField, sortOrder, filters]);
 
+  // Load paginated cities from backend API
   const loadCities = async () => {
     setLoading(true);
     try {

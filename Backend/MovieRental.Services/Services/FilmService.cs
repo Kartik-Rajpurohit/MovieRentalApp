@@ -8,11 +8,12 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Provides business logic for movie catalog search, filtering, creation, and relational mappings.
+    // Handles business logic for movie catalog search, filtering, creation, and relational mappings.
     public class FilmService : IFilmService
     {
         private readonly IFilmRepository _filmRepository;
 
+        // Receives the film repository needed to perform movie queries and persist changes.
         public FilmService(IFilmRepository filmRepository)
         {
             _filmRepository = filmRepository;
@@ -216,6 +217,7 @@ namespace MovieRental.Services.Services
             return await _filmRepository.DeleteFilmAsync(id);
         }
 
+        // Retrieves a paginated list of languages formatted for dropdown selectors.
         public async Task<IEnumerable<DropdownDto>> GetAllLanguagesAsync(int page, int pageSize)
         {
             return await _filmRepository.GetAllLanguages()
@@ -226,6 +228,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
         }
 
+        // Retrieves a paginated list of categories formatted for dropdown selectors.
         public async Task<IEnumerable<DropdownDto>> GetAllCategoriesAsync(int page, int pageSize)
         {
             return await _filmRepository.GetAllCategories()
@@ -236,6 +239,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
         }
 
+        // Retrieves a paginated list of actors formatted for dropdown selectors.
         public async Task<IEnumerable<DropdownDto>> GetAllActorsAsync(int page, int pageSize)
         {
             return await _filmRepository.GetAllActors()

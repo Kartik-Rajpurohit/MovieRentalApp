@@ -8,26 +8,32 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
-// Provides business logic for city records and address linkages.
+// Handles business logic for city records and country linkages.
 public class CityService : ICityService
 {
     private readonly ICityRepository _cityRepository;
 
+    // Receives the city repository needed to perform city queries and updates.
     public CityService(ICityRepository cityRepository)
     {
         _cityRepository = cityRepository;
     }
 
+    // Retrieves a paginated and filtered list of cities with country and address statistics.
     public async Task<PaginatedResponseDto<CityResponseDto>> GetAllCitiesAsync(CityQueryParametersDto queryParams)
     {
+        // Get the base query from the repository.
         var query = _cityRepository.GetAllCities();
 
+        // Filter by specific country ID if provided.
         if (queryParams.CountryId.HasValue)
             query = query.Where(c => c.CountryId == queryParams.CountryId.Value);
 
+        // Filter by city name using case-insensitive search.
         if (!string.IsNullOrEmpty(queryParams.Search))
             query = query.Where(c => c.Name.ToLower().Contains(queryParams.Search.ToLower()));
 
+        // Apply sorting based on city name, country name, or address count.
         query = queryParams.SortField?.ToLower() switch
         {
             "name" => queryParams.SortOrder?.ToLower() == "desc"
@@ -44,6 +50,7 @@ public class CityService : ICityService
 
         var totalRecords = await query.CountAsync();
 
+        // Paginate and project city entities into response DTOs.
         var data = await query
             .Skip((queryParams.Page - 1) * queryParams.PageSize)
             .Take(queryParams.PageSize)
@@ -68,10 +75,13 @@ public class CityService : ICityService
         };
     }
 
+    // Retrieves detailed city information by ID including associated address count.
     public async Task<CityDetailDto?> GetCityByIdAsync(int id)
     {
         var city = await _cityRepository.GetCityByIdAsync(id);
         if (city == null) return null;
+
+        // Convert the database entity into the detailed response DTO.
         return new CityDetailDto
         {
             CityId = city.CityId,
@@ -83,15 +93,21 @@ public class CityService : ICityService
         };
     }
 
+    // Creates a new city record associated with the specified country.
     public async Task<CityResponseDto> CreateCityAsync(CreateCityDto dto)
     {
+        // Map request DTO to database entity.
         var city = new City
         {
             Name = dto.Name,
             CountryId = dto.CountryId,
             LastUpdate = DateTime.UtcNow,
         };
+
+        // Persist the new city in the database.
         var created = await _cityRepository.CreateCityAsync(city);
+
+        // Map the created entity to the response DTO.
         return new CityResponseDto
         {
             CityId = created.CityId,
@@ -103,11 +119,15 @@ public class CityService : ICityService
         };
     }
 
+    // Updates an existing city record with the new name and country assignment.
     public async Task<CityResponseDto?> UpdateCityAsync(UpdateCityDto dto)
     {
         var city = new City { CityId = dto.CityId, Name = dto.Name, CountryId = dto.CountryId };
+
+        // Save updates via the repository.
         var updated = await _cityRepository.UpdateCityAsync(city);
         if (updated == null) return null;
+
         return new CityResponseDto
         {
             CityId = updated.CityId,
@@ -119,6 +139,7 @@ public class CityService : ICityService
         };
     }
 
+    // Deletes a city record by ID through the repository.
     public async Task<bool> DeleteCityAsync(int id)
         => await _cityRepository.DeleteCityAsync(id);
 }

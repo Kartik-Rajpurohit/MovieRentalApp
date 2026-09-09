@@ -1,6 +1,7 @@
 import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE } from "../../../utils/constants";
 
+// Filter controls for filtering the cities list by country
 export default function CityFilters({ filters, setFilter, countries }) {
   return (
     <div>

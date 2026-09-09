@@ -2,6 +2,7 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE, STATUS_OPTIONS } from "../../utils/constants";
 
+// Filter form fields for filtering customers by name and active status
 export default function CustomerFilters({ filters, setFilter }) {
   return (
     <>

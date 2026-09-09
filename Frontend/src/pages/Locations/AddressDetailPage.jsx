@@ -23,17 +23,22 @@ const FIELD_VALUE = {
   fontWeight: 600,
 };
 
+// Displays details for a single address including street, city, country, postal code, and usage counts
 export default function AddressDetailPage() {
+  // Read address ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // State holding detailed address record
   const [address, setAddress] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch address details when the address ID changes
   useEffect(() => {
     fetchAddress();
   }, [id]);
 
+  // Load address information from the backend service
   const fetchAddress = async () => {
     try {
       const data = await getAddressById(id);
@@ -45,6 +50,7 @@ export default function AddressDetailPage() {
     }
   };
 
+  // Show loading spinner while address details are being fetched
   if (loading) {
     return (
       <AppLayout>
@@ -53,6 +59,7 @@ export default function AddressDetailPage() {
     );
   }
 
+  // Fallback when no address matches the given ID
   if (!address) {
     return (
       <AppLayout>
@@ -61,6 +68,7 @@ export default function AddressDetailPage() {
       </AppLayout>
     );
   }
+
 
   return (
     <AppLayout>

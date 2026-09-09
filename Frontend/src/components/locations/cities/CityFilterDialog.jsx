@@ -6,6 +6,7 @@ import { getCountries } from "../../../services/countryService";
 
 const INIT_FILTERS = { countryId: null };
 
+// Modal dialog allowing users to filter cities by country
 export default function CityFilterDialog({
   visible,
   onHide,

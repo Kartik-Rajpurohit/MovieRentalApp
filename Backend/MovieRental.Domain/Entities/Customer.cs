@@ -3,38 +3,43 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRental.Domain.Entities
 {
-    // Represents a customer who rents films from the store
-    // Personal info (name, email, address) is stored in the linked User entity
+    // Represents a store customer who can rent films and make payments.
     [Table("customer")]
     public class Customer
     {
+        // Primary key uniquely identifying the customer.
         [Key]
         [Column("customer_id")]
         public int CustomerId { get; set; }
 
-        // FK → Store (customer's registered store)
+        // Foreign key linking customer to their home or registered store.
         [Column("store_id")]
         [ForeignKey("Store")]
         public int StoreId { get; set; }
+
+        // Navigation property for the customer's registered store.
         public Store Store { get; set; } = null!;
 
+        // Date when this customer account was originally registered.
         [Column("create_date")]
         public DateOnly CreateDate { get; set; }
 
-        // Integer active flag (legacy Sakila column)
+        // Integer active flag from legacy Sakila schema (1 = active, 0 = inactive).
         [Column("active")]
         public int? Active { get; set; }
 
-        // FK → User (customer's app login account — optional)
+        // Foreign key linking this customer profile to an application user login account.
         [Column("user_id")]
         [ForeignKey("User")]
         public int? UserId { get; set; }
+
+        // Navigation property for the associated application user account.
         public User? User { get; set; }
 
-        // One Customer → Many Rentals
+        // Collection of all rental transactions made by this customer.
         public ICollection<Rental> Rentals { get; set; } = new List<Rental>();
 
-        // One Customer → Many Payments
+        // Collection of all payments made by this customer.
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }

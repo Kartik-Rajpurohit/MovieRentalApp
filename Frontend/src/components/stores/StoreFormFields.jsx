@@ -11,10 +11,13 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Form input fields for selecting a manager and address when creating or editing a store.
 export default function StoreFormFields({ form, setForm, errors }) {
+  // Dropdown options for available addresses and staff members
   const [addresses, setAddresses] = useState([]);
   const [staffList, setStaffList] = useState([]);
 
+  // Fetch addresses and staff members on mount to populate dropdowns
   useEffect(() => {
     // Load addresses for dropdown
     getAddresses({ page: 1, pageSize: 100 })
@@ -39,6 +42,7 @@ export default function StoreFormFields({ form, setForm, errors }) {
       )
       .catch(console.error);
   }, []);
+
 
   return (
     <>

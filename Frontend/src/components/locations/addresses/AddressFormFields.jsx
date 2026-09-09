@@ -11,9 +11,12 @@ const labelStyle = {
   color: "#374151",
 };
 
+// Reusable form fields for address creation and editing (city selector, street, postal code, phone)
 export default function AddressFormFields({ form, setForm, errors }) {
+  // Cities dropdown options loaded from backend
   const [cities, setCities] = useState([]);
 
+  // Fetch all available cities for the dropdown menu
   useEffect(() => {
     // Load all cities for dropdown
     getCities({ page: 1, pageSize: 600 })
@@ -27,6 +30,7 @@ export default function AddressFormFields({ form, setForm, errors }) {
       )
       .catch(console.error);
   }, []);
+
 
   return (
     <>

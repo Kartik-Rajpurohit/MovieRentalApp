@@ -5,11 +5,10 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
-/// <summary>
-/// Data access repository for managing Address records and navigation to City and Country.
-/// </summary>
+// Handles database operations related to addresses.
 public class AddressRepository : IAddressRepository
 {
+    // Receives the database context used to access address and location tables.
     private readonly AppDbContext _context;
 
     public AddressRepository(AppDbContext context)
@@ -17,12 +16,14 @@ public class AddressRepository : IAddressRepository
         _context = context;
     }
 
+    // Reads all addresses without tracking, loading related City and Country records.
     public IQueryable<Address> GetAllAddresses()
         => _context.Addresses
             .AsNoTracking()
             .Include(a => a.City).ThenInclude(c => c.Country)
             .AsQueryable();
 
+    // Finds an address by ID, loading related City, Country, Users, and Stores.
     public async Task<Address?> GetAddressByIdAsync(int id)
         => await _context.Addresses
             .Include(a => a.City).ThenInclude(c => c.Country)
@@ -30,6 +31,7 @@ public class AddressRepository : IAddressRepository
             .Include(a => a.Stores)
             .FirstOrDefaultAsync(a => a.AddressId == id);
 
+    // Adds a new address to the database and re-fetches it with related entities.
     public async Task<Address> CreateAddressAsync(Address address)
     {
         _context.Addresses.Add(address);
@@ -37,6 +39,7 @@ public class AddressRepository : IAddressRepository
         return await GetAddressByIdAsync(address.AddressId) ?? address;
     }
 
+    // Updates an existing address record and refreshes its city navigation property.
     public async Task<Address?> UpdateAddressAsync(Address address)
     {
         var existing = await _context.Addresses.FindAsync(address.AddressId);
@@ -50,6 +53,7 @@ public class AddressRepository : IAddressRepository
         return await GetAddressByIdAsync(existing.AddressId);
     }
 
+    // Deletes the address from the database if it exists.
     public async Task<bool> DeleteAddressAsync(int id)
     {
         var address = await _context.Addresses.FindAsync(id);

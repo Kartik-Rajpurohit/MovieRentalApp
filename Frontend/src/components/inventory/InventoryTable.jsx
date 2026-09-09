@@ -16,25 +16,31 @@ import InventoryFilterDialog from "./InventoryFilterDialog";
  * Inventory table component displaying physical film copies across stores,
  * their dynamic availability status (Available vs Rented), and stock management actions.
  */
+// Displays physical film copies in a DataTable with store filtering, availability status, server-side pagination, and add action
 export default function InventoryTable() {
   const navigate = useNavigate();
+  // Server-side pagination hook
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Table records, count, and loading states
   const [inventory, setInventory] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState(1);
   const [search, setSearch] = useState("");
+  // Controls visibility of Add Copy dialog and Filter dialog
   const [dialogVisible, setDialogVisible] = useState(false);
   const INIT_FILTERS = { storeId: null, isAvailable: null };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
 
+  // Reload inventory whenever pagination, sorting, search, or filters change
   useEffect(() => {
     loadInventory();
   }, [lazyState, sortField, sortOrder, search, filters]);
 
+  // Load paginated inventory copies from the backend service
   const loadInventory = async () => {
     setLoading(true);
     try {
@@ -57,11 +63,13 @@ export default function InventoryTable() {
     }
   };
 
+  // Handle column sort change and reset pagination to page 1
   const onSort = (e) => {
     setSortField(e.sortField);
     setSortOrder(e.sortOrder);
     reset();
   };
+
 
   return (
     <div>

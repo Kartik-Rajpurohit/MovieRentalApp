@@ -9,23 +9,29 @@ import usePagination from "../../hooks/usePagination";
 import { getCategories } from "../../services/categoryService";
 import { AuthContext } from "../../context/AuthContext";
 
+// Displays movie categories in a DataTable with search, server-side pagination, sorting, and add action
 export default function CategoryTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  // Server-side pagination hook
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Table records and total records state
   const [categories, setCategories] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState("name");
   const [sortOrder, setSortOrder] = useState(1);
   const [search, setSearch] = useState("");
+  // Controls visibility of the Add Category modal dialog
   const [dialogVisible, setDialogVisible] = useState(false);
 
+  // Reload categories whenever pagination, sorting, or search change
   useEffect(() => {
     loadCategories();
   }, [lazyState, sortField, sortOrder, search]);
 
+  // Load paginated and sorted categories from the backend service
   const loadCategories = async () => {
     setLoading(true);
     try {
@@ -46,11 +52,13 @@ export default function CategoryTable() {
     }
   };
 
+  // Handle column header click to toggle sort field/order
   const onSort = (e) => {
     setSortField(e.sortField);
     setSortOrder(e.sortOrder);
     reset();
   };
+
 
   return (
     <div>

@@ -5,15 +5,14 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    /// <summary>
-    /// Data access repository for managing Customer entities and relations (User, Rentals, Payments, Address).
-    /// </summary>
+    // Handles database operations related to customers.
     public class CustomerRepository : ICustomerRepository
     {
+        // Receives the database context used to access customer data.
         private readonly AppDbContext _context;
         public CustomerRepository(AppDbContext context) => _context = context;
 
-        // Returns IQueryable with User relation loaded — service applies filters on top
+        // Reads all customers without tracking, including linked User account details.
         public IQueryable<Customer> GetAllCustomers()
         {
             return _context.Customers
@@ -22,9 +21,9 @@ namespace MovieRental.Repository.Repositories
                 .AsQueryable();
         }
 
+        // Finds a customer by ID, loading full User, Role, Address, City, and Country hierarchies.
         public async Task<Customer?> GetCustomerByIdAsync(int id)
         {
-            // Load all relations needed for DTO mapping in service
             return await _context.Customers
                 .Include(c => c.User)
                     .ThenInclude(u => u!.Role)

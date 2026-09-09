@@ -8,29 +8,36 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
-// Provides business logic for address management and city associations.
+// Handles business logic for address management and location associations.
 public class AddressService : IAddressService
 {
     private readonly IAddressRepository _addressRepository;
 
+    // Receives the address repository needed to manage address records.
     public AddressService(IAddressRepository addressRepository)
     {
         _addressRepository = addressRepository;
     }
 
+    // Retrieves addresses using the specified filtering, searching, sorting, and pagination options.
     public async Task<PaginatedResponseDto<AddressResponseDto>> GetAllAddressesAsync(AddressQueryParametersDto queryParams)
     {
+        // Get the base query from the repository.
         var query = _addressRepository.GetAllAddresses();
 
+        // Filter by specific city ID if provided.
         if (queryParams.CityId.HasValue)
             query = query.Where(a => a.CityId == queryParams.CityId.Value);
 
+        // Filter by city name containing the query string.
         if (!string.IsNullOrEmpty(queryParams.City))
             query = query.Where(a => a.City.Name.ToLower().Contains(queryParams.City.ToLower()));
 
+        // Filter by postal code.
         if (!string.IsNullOrEmpty(queryParams.PostalCode))
             query = query.Where(a => a.PostalCode != null && a.PostalCode.Contains(queryParams.PostalCode));
 
+        // General search across street and city name.
         if (!string.IsNullOrEmpty(queryParams.Search))
         {
             var s = queryParams.Search.ToLower();
@@ -39,6 +46,7 @@ public class AddressService : IAddressService
                 a.City.Name.ToLower().Contains(s));
         }
 
+        // Apply dynamic sorting based on street or city name.
         query = queryParams.SortField?.ToLower() switch
         {
             "street" => queryParams.SortOrder?.ToLower() == "desc"
@@ -52,6 +60,7 @@ public class AddressService : IAddressService
 
         var totalRecords = await query.CountAsync();
 
+        // Paginate and project address entities into response DTOs.
         var data = await query
             .Skip((queryParams.Page - 1) * queryParams.PageSize)
             .Take(queryParams.PageSize)
@@ -78,10 +87,13 @@ public class AddressService : IAddressService
         };
     }
 
+    // Retrieves full address details by ID including related user and store counts.
     public async Task<AddressDetailDto?> GetAddressByIdAsync(int id)
     {
         var a = await _addressRepository.GetAddressByIdAsync(id);
         if (a == null) return null;
+
+        // Convert the database entity into the detailed response DTO.
         return new AddressDetailDto
         {
             AddressId = a.AddressId,
@@ -97,8 +109,10 @@ public class AddressService : IAddressService
         };
     }
 
+    // Validates request data and creates a new address record.
     public async Task<AddressResponseDto> CreateAddressAsync(CreateAddressDto dto)
     {
+        // Map request DTO to database entity.
         var address = new Address
         {
             Street = dto.Street,
@@ -107,7 +121,11 @@ public class AddressService : IAddressService
             CityId = dto.CityId,
             LastUpdate = DateTime.UtcNow,
         };
+
+        // Persist the new address in the database.
         var created = await _addressRepository.CreateAddressAsync(address);
+
+        // Map the created entity to the response DTO.
         return new AddressResponseDto
         {
             AddressId = created.AddressId,
@@ -121,6 +139,7 @@ public class AddressService : IAddressService
         };
     }
 
+    // Updates an existing address record with the provided information.
     public async Task<AddressResponseDto?> UpdateAddressAsync(UpdateAddressDto dto)
     {
         var address = new Address
@@ -131,8 +150,11 @@ public class AddressService : IAddressService
             Phone = dto.Phone,
             CityId = dto.CityId,
         };
+
+        // Save updates via the repository.
         var updated = await _addressRepository.UpdateAddressAsync(address);
         if (updated == null) return null;
+
         return new AddressResponseDto
         {
             AddressId = updated.AddressId,
@@ -146,6 +168,7 @@ public class AddressService : IAddressService
         };
     }
 
+    // Deletes an address record by ID.
     public async Task<bool> DeleteAddressAsync(int id)
         => await _addressRepository.DeleteAddressAsync(id);
 }

@@ -4,17 +4,20 @@ import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE } from "../../utils/constants";
 import { AuthContext } from "../../context/AuthContext";
 
+// Status filter options: All, Active (not returned yet), or Returned
 const RETURN_STATUS_OPTIONS = [
   { label: "All", value: null },
   { label: "Active", value: false },
   { label: "Returned", value: true },
 ];
 
+// Form inputs for filtering rentals by status, and by customer/staff ID for admin/staff users.
 export default function RentalFilters({ filters, setFilter }) {
   const { user } = useContext(AuthContext);
 
   return (
     <>
+      {/* Return status dropdown: All / Active / Returned */}
       <div>
         <label style={LABEL_STYLE}>Return Status</label>
         <Dropdown
@@ -25,7 +28,9 @@ export default function RentalFilters({ filters, setFilter }) {
           style={{ width: "100%" }}
         />
       </div>
+      {/* Customer ID and Staff ID filters are only shown to Staff/Admin, not Customers */}
       {user?.role !== "Customer" && (
+
         <>
           <div>
             <label style={LABEL_STYLE}>Customer ID</label>

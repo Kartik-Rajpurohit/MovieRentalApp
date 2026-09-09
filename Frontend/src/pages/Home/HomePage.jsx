@@ -5,10 +5,11 @@ import { Card } from "primereact/card";
 import { Message } from "primereact/message";
 import { AuthContext } from "../../context/AuthContext";
 
-// Shown to logged-in users who have no role assigned yet
-// No sidebar — only logout option
+// Displays a welcome/waiting landing page for authenticated users who have no assigned role yet
+// Informs the user that their account is pending administrator approval and provides a logout action
 export default function HomePage() {
   const navigate = useNavigate();
+  // Access the current user profile and logout action
   const { user, logout } = useContext(AuthContext);
 
   return (

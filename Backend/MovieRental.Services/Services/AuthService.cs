@@ -20,6 +20,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _config;
     private readonly ILogger<AuthService> _logger;
 
+    // Receives repository for user queries, configuration for JWT keys, and logger for security audits.
     public AuthService(IUserRepository userRepository, IConfiguration config, ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
@@ -27,9 +28,10 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
-    // Verifies credentials, checks active status, and returns auth tokens.
+    // Verifies user credentials, checks account status, and issues JWT access and refresh tokens.
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
+        // Find user by email in the repository.
         var user = await _userRepository.GetUserByEmailAsync(dto.Email);
         if (user == null)
         {
@@ -41,6 +43,7 @@ public class AuthService : IAuthService
 
         try
         {
+            // Verify provided password against stored BCrypt hash.
             if (BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             {
                 isPasswordValid = true;
@@ -48,11 +51,11 @@ public class AuthService : IAuthService
         }
         catch (BCrypt.Net.SaltParseException)
         {
-            // Fallback for legacy plaintext password format
+            // Fallback for legacy plaintext password format if applicable.
             isPasswordValid = false;
         }
 
-        // Seamless auto-upgrade: If legacy password matches, upgrade to BCrypt immediately
+        // Seamless auto-upgrade: If legacy plaintext matches, hash with BCrypt and save.
         if (!isPasswordValid && user.PasswordHash == dto.Password)
         {
             isPasswordValid = true;
@@ -60,28 +63,32 @@ public class AuthService : IAuthService
             await _userRepository.UpdateUserAsync(user);
         }
 
+        // Reject login if password does not match.
         if (!isPasswordValid)
         {
             _logger.LogWarning("Login failed: invalid password attempt for email {Email}", dto.Email);
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
+        // Prevent login if the user account is deactivated.
         if (!user.IsActive)
         {
             _logger.LogWarning("Login rejected: user account {Email} is inactive", dto.Email);
             throw new UnauthorizedAccessException("User account is inactive");
         }
 
+        // Generate JWT access token and secure refresh token.
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
 
-        // Refresh token 7 din ke liye valid — DB mein save
+        // Store the refresh token in the database with 7 days validity.
         await _userRepository.SaveRefreshTokenAsync(
             user.UserId, refreshToken, DateTime.UtcNow.AddDays(7));
 
         _logger.LogInformation("User logged in successfully: {Email} (UserId: {UserId}, Role: {Role})",
             user.Email, user.UserId, user.Role?.RoleName ?? "Unassigned");
 
+        // Map user details and tokens to response DTO.
         return new AuthResponseDto
         {
             UserId = user.UserId,
@@ -96,26 +103,25 @@ public class AuthService : IAuthService
         };
     }
 
-    // Registers a new user account with hashed password and initial tokens.
+    // Registers a new user account with hashed password and generates initial session tokens.
     public async Task<AuthResponseDto> SignUpAsync(SignUpDto dto)
     {
+        // Ensure email is unique across all user accounts.
         if (await _userRepository.EmailExistsAsync(dto.Email))
         {
             _logger.LogWarning("Signup rejected: email {Email} is already registered", dto.Email);
             throw new InvalidOperationException("Email already registered");
         }
 
-        // Determine AddressId — use existing or create new
+        // Determine AddressId — use existing address if chosen or create a new address record.
         int? addressId = null;
 
         if (dto.ExistingAddressId.HasValue)
         {
-            // User selected an existing address from suggestions
             addressId = dto.ExistingAddressId.Value;
         }
         else if (!string.IsNullOrWhiteSpace(dto.Street) && dto.CityId.HasValue)
         {
-            // User typed a new address — create it in DB
             var newAddress = new Address
             {
                 Street = dto.Street,
@@ -127,6 +133,7 @@ public class AuthService : IAuthService
             addressId = await _userRepository.CreateAddressAsync(newAddress);
         }
 
+        // Hash the plain text password before saving to the database.
         var user = new User
         {
             FirstName = dto.FirstName,
@@ -140,12 +147,15 @@ public class AuthService : IAuthService
             UpdatedAt = DateTime.UtcNow
         };
 
+        // Create the user record through repository.
         var created = await _userRepository.CreateUserAsync(user);
 
+        // Reload user to include related navigation properties for token claims.
         var reloaded = await _userRepository.GetUserByIdAsync(created.UserId);
         if (reloaded == null)
             throw new InvalidOperationException("Failed to create user");
 
+        // Issue access and refresh tokens for immediate login after signup.
         var accessToken = GenerateAccessToken(reloaded);
         var refreshToken = GenerateRefreshToken();
 
@@ -172,7 +182,7 @@ public class AuthService : IAuthService
     // Validates an active refresh token, rotates it, and issues a new access token.
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenDto dto)
     {
-        // DB se user dhundo refresh token se
+        // Find user by their stored refresh token.
         var user = await _userRepository.GetUserByRefreshTokenAsync(dto.RefreshToken);
 
         if (user == null)
@@ -181,18 +191,18 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        // Expiry check
+        // Check if the refresh token has expired.
         if (user.RefreshTokenExpiry < DateTime.UtcNow)
         {
             _logger.LogWarning("Token refresh failed: refresh token expired for user {Email}", user.Email);
             throw new UnauthorizedAccessException("Refresh token expired, please login again");
         }
 
-        // Naya access token + naya refresh token generate karo (rotation)
+        // Generate a new access token and rotate the refresh token.
         var newAccessToken = GenerateAccessToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
-        // Purana refresh token replace karo
+        // Replace the old refresh token with the new one in the database.
         await _userRepository.SaveRefreshTokenAsync(
             user.UserId, newRefreshToken, DateTime.UtcNow.AddDays(7));
 
@@ -213,13 +223,14 @@ public class AuthService : IAuthService
         };
     }
 
-    // Access token — 15 minute valid (short lived)
+    // Generates a short-lived (15-minute) signed JWT token with user identity and role claims.
     private string GenerateAccessToken(User user)
     {
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        // Build standard claims: identity, email, name, and role.
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
@@ -228,21 +239,24 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "Unassigned")
         };
 
+        // Add customer claim if the user has an associated customer profile.
         if (user.Customer != null)
         {
             claims.Add(new Claim("customerId", user.Customer.CustomerId.ToString()));
         }
 
+        // Add staff and store claims if the user is a staff member.
         if (user.Staff != null)
         {
             claims.Add(new Claim("staffId", user.Staff.StaffId.ToString()));
             claims.Add(new Claim("storeId", user.Staff.StoreId.ToString()));
         }
 
+        // Create token descriptor with 15 minutes expiration.
         var descriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(15),  // 15 min
+            Expires = DateTime.UtcNow.AddMinutes(15),
             Issuer = _config["Jwt:Issuer"],
             Audience = _config["Jwt:Audience"],
             SigningCredentials = creds
@@ -252,13 +266,14 @@ public class AuthService : IAuthService
         return handler.CreateToken(descriptor);
     }
 
-    // Refresh token — random 64 byte string, DB mein store hota hai
+    // Generates a cryptographically secure 64-byte random string for refresh tokens.
     private static string GenerateRefreshToken()
     {
         var bytes = RandomNumberGenerator.GetBytes(64);
         return Convert.ToBase64String(bytes);
     }
 
+    // Revokes the given refresh token from the database during user logout.
     public async Task LogoutAsync(string refreshToken, int? userId = null)
     {
         var user = await _userRepository.GetUserByRefreshTokenAsync(refreshToken);
@@ -268,16 +283,19 @@ public class AuthService : IAuthService
             return;
         }
 
+        // Ensure token belongs to the requesting user if user ID is specified.
         if (userId.HasValue && user.UserId != userId.Value)
         {
             _logger.LogWarning("Logout rejected: token mismatch for UserId {UserId} vs Owner {OwnerId}", userId.Value, user.UserId);
             return;
         }
 
+        // Revoke token in repository.
         await _userRepository.RevokeRefreshTokenAsync(refreshToken, user.UserId);
         _logger.LogInformation("User {UserId} logged out and refresh token revoked", user.UserId);
     }
 
+    // Revokes all active refresh tokens for the given user ID to terminate all sessions.
     public async Task LogoutByUserIdAsync(int userId)
     {
         await _userRepository.RevokeRefreshTokenByUserIdAsync(userId);

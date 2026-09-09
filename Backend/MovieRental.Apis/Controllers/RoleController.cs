@@ -5,12 +5,13 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
-    // Handles role queries and role detail retrieval for administrators.
+    // Handles role queries and role creation for administrators.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")] // Only Admin can access role endpoints
+    [Authorize(Roles = "Admin")] // Only Admin can manage system roles
     public class RoleController : ControllerBase
     {
+        // Injected service for role management
         private readonly IRoleService _roleService;
 
         public RoleController(IRoleService roleService)
@@ -18,7 +19,8 @@ namespace MovieRental.Apis.Controllers
             _roleService = roleService;
         }
 
-        // GET api/role?page=1&pageSize=10&search=admin
+        // Gets a paginated list of system roles (Admin, Staff, Customer).
+        // Query parameters: page, pageSize, search name.
         [HttpGet]
         public async Task<IActionResult> GetAllRoles(
             [FromQuery] int page = 1,
@@ -28,6 +30,9 @@ namespace MovieRental.Apis.Controllers
             var result = await _roleService.GetAllRolesAsync(page, pageSize, search);
             return Ok(result);
         }
+
+        // Creates a new user role in the system.
+        // Returns 409 Conflict if a role with the same name already exists.
         [HttpPost]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto dto)
         {

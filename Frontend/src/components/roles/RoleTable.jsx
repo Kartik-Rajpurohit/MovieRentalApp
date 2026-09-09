@@ -8,20 +8,28 @@ import { getRoles } from "../../services/roleService";
 import { useNavigate } from "react-router-dom";
 import RoleDialog from "./RoleDialog";
 
+// Displays a paginated list of user roles with search, add role dialog, and navigation to details.
 export default function RoleTable() {
+  // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
 
+  // Roles records and total count from API
   const [roles, setRoles] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  // Loading indicator during API fetch
   const [loading, setLoading] = useState(false);
+  // Search filter query
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  // Controls visibility of the Add Role modal
   const [addVisible, setAddVisible] = useState(false);
 
+  // Reload roles list whenever pagination or search keyword changes
   useEffect(() => {
     loadRoles();
   }, [lazyState, search]);
 
+  // Fetch paginated roles from roleService
   const loadRoles = async () => {
     setLoading(true);
     try {
@@ -35,6 +43,7 @@ export default function RoleTable() {
     }
   };
 
+  // Update search query and reset pagination to page 1
   const onSearchChange = (val) => {
     setSearch(val);
     reset();
@@ -42,14 +51,17 @@ export default function RoleTable() {
 
   return (
     <div>
+      {/* Modal dialog to create a new role */}
       <RoleDialog
         visible={addVisible}
         onHide={() => setAddVisible(false)}
         onSuccess={loadRoles}
         mode="add"
       />
+      {/* Header bar with title and Add Role button */}
       <PageHeader title="Roles" onAdd={() => setAddVisible(true)} />
 
+      {/* Search input for filtering roles */}
       <div style={{ marginBottom: "16px" }}>
         <SearchBar
           value={search}
@@ -58,7 +70,9 @@ export default function RoleTable() {
         />
       </div>
 
+      {/* Table displaying roles with server pagination */}
       <DataTable
+
         value={roles}
         paginator
         lazy
