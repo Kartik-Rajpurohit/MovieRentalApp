@@ -5,6 +5,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles role queries and role detail retrieval for administrators.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")] // Only Admin can access role endpoints

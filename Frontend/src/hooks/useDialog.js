@@ -1,3 +1,4 @@
+// Provides open/close visibility state for PrimeReact modal dialogs.
 import { useState } from "react";
 
 export default function useDialog() {

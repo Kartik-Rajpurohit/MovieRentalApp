@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    /// <summary>
+    /// Data access repository for Staff members linked to User and Store records.
+    /// </summary>
     public class StaffRepository : IStaffRepository
     {
         private readonly AppDbContext _context;

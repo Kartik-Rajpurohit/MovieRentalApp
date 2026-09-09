@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles physical store locations, managers, and store-level metrics.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff")] // Admin and Staff can access store endpoints

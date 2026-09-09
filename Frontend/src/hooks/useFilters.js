@@ -1,3 +1,4 @@
+// Provides reusable filter state and updater functions for data tables.
 import { useState } from "react";
 
 export default function useFilters(initial = {}) {

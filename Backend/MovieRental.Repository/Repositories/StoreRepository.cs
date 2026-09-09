@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    /// <summary>
+    /// Data access repository for rental store locations and manager staff.
+    /// </summary>
     public class StoreRepository : IStoreRepository
     {
         private readonly AppDbContext _context;

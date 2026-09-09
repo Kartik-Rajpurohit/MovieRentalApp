@@ -1,3 +1,4 @@
+// Client service for user management, role assignment, active status toggle, and address cascade lookups.
 import api from "./api";
 const API = "/User";
 

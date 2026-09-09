@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles administrative user account management, role assignments, and status toggles.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")] // Only Admin can access user endpoints

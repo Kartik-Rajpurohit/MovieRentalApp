@@ -7,6 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for country lookups and geographical configurations.
     public class CountryService : ICountryService
     {
         private readonly ICountryRepository _countryRepository;

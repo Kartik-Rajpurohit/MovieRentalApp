@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for rental creation, returns, inventory availability checks, and role scoping.
     public class RentalService : IRentalService
     {
         private readonly IRentalRepository _rentalRepository;
@@ -71,6 +72,7 @@ namespace MovieRental.Services.Services
             LastUpdate = r.LastUpdate,
         };
 
+        // Gets a paginated list of rentals with role scoping and filters.
         public async Task<PaginatedResponseDto<RentalResponseDto>> GetAllRentalsAsync(RentalQueryParametersDto queryParams)
         {
             var query = _rentalRepository.GetAllRentals();
@@ -193,6 +195,7 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Gets rental details by ID, enforcing customer and staff store IDOR checks.
         public async Task<RentalDetailDto?> GetRentalByIdAsync(int id)
         {
             var rental = await _rentalRepository.GetRentalByIdAsync(id);
@@ -217,6 +220,7 @@ namespace MovieRental.Services.Services
             return MapToDetail(rental);
         }
 
+        // Validates copy availability and staff store assignment, then creates the rental.
         public async Task<RentalResponseDto> CreateRentalAsync(CreateRentalDto dto)
         {
             var inventory = await _inventoryRepository.GetInventoryByIdAsync(dto.InventoryId);
@@ -273,6 +277,7 @@ namespace MovieRental.Services.Services
             return MapToResponse(created);
         }
 
+        // Marks a rental as returned and updates return timestamp.
         public async Task<RentalResponseDto?> ReturnRentalAsync(int rentalId)
         {
             var rental = await _rentalRepository.GetRentalByIdAsync(rentalId);

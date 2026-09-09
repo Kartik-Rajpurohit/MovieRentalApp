@@ -16,6 +16,11 @@ import RentalFormFields from "./RentalFormFields";
 import { createRental } from "../../services/rentalService";
 import { AuthContext } from "../../context/AuthContext";
 
+/**
+ * Main rental list table component.
+ * Displays paginated rental records with status tags (Returned, Active, Overdue),
+ * supports server-side sorting, searching, filtering, and creating new rentals.
+ */
 export default function RentalTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();

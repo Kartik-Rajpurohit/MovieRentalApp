@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
 
+// Handles actor management and movie filmography queries.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin,Staff,Customer")] 
@@ -18,6 +19,7 @@ public class ActorController : ControllerBase
         _actorService = actorService;
     }
 
+    // Gets a paginated, sorted, and filtered list of actors.
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] ActorQueryParametersDto queryParams)
     {

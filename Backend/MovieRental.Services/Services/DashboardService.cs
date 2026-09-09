@@ -7,6 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
+// Aggregates business KPIs, revenue calculations, and recent activity for dashboards.
 public class DashboardService : IDashboardService
 {
     private readonly IUserRepository _userRepository;
@@ -35,6 +36,7 @@ public class DashboardService : IDashboardService
         _staffRepository = staffRepository;
     }
 
+    // Computes system-wide administrative KPIs, revenue by store, and top rented movies.
     public async Task<AdminDashboardDto> GetAdminDashboardAsync()
     {
         // Sequential awaits — EF Core DbContext is not thread-safe
@@ -106,6 +108,7 @@ public class DashboardService : IDashboardService
         };
     }
 
+    // Computes store-scoped metrics and inventory status for staff.
     public async Task<StaffDashboardDto> GetStaffDashboardAsync(int userId)
     {
         var staff = await _staffRepository.GetAllStaff()
@@ -171,6 +174,7 @@ public class DashboardService : IDashboardService
         };
     }
 
+    // Computes customer-specific rental summary and spend totals.
     public async Task<CustomerDashboardDto> GetCustomerDashboardAsync(int userId)
     {
         var customer = await _customerRepository.GetAllCustomers()

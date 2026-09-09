@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.Entities;
@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
+// Provides business logic for address management and city associations.
 public class AddressService : IAddressService
 {
     private readonly IAddressRepository _addressRepository;

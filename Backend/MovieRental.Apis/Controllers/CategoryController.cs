@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles movie genres/categories and their film counts.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff,Customer")]

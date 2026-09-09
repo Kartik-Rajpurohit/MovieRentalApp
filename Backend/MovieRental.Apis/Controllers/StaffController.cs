@@ -4,6 +4,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles staff profile and store assignment queries.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff")] // Admin and Staff can access staff endpoints

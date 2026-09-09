@@ -8,6 +8,7 @@ using System.Text;
 
 namespace MovieRental.Repository.Repositories
 {
+    // Handles database operations for user accounts, credentials, refresh tokens, and customer/staff role associations.
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;

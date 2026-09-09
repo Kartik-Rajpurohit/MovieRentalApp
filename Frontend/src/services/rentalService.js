@@ -1,7 +1,9 @@
+// Handles rental-related API calls (fetching rentals, creating new rentals, marking returns).
 import api from "./api";
 
 const API = "/Rental";
 
+// Fetch paginated rentals with optional search and filters
 export const getRentals = async (params = {}) => {
   const res = await api.get(API, { params });
   return res.data;

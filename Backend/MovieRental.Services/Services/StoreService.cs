@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Stores;
 using MovieRental.Domain.Entities;
@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for store management, manager assignments, and store metrics.
     public class StoreService : IStoreService
     {
         private readonly IStoreRepository _storeRepository;

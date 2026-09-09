@@ -7,6 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for customer profile querying, store assignments, and rental history.
     public class CustomerService : ICustomerService
     {
         private readonly ICustomerRepository _customerRepository;

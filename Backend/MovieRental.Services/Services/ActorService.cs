@@ -9,6 +9,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
+// Provides business logic for actor lookups, CRUD operations, and filmography associations.
 public class ActorService : IActorService
 {
     private readonly IActorRepository _actorRepository;

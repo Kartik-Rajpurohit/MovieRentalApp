@@ -5,6 +5,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles country records for address configurations.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff")]

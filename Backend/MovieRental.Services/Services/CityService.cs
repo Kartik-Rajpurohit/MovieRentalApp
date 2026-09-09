@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
+// Provides business logic for city records and address linkages.
 public class CityService : ICityService
 {
     private readonly ICityRepository _cityRepository;

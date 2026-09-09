@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Categories;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
@@ -9,6 +9,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for movie categories/genres and film associations.
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;

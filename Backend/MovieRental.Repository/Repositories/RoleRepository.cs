@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    /// <summary>
+    /// Data access repository for user roles (Admin, Staff, Customer).
+    /// </summary>
     public class RoleRepository : IRoleRepository
     {
         private readonly AppDbContext _context;

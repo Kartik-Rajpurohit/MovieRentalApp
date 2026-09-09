@@ -12,6 +12,10 @@ import { Button } from "primereact/button";
 import { Badge } from "primereact/badge";
 import InventoryFilterDialog from "./InventoryFilterDialog";
 
+/**
+ * Inventory table component displaying physical film copies across stores,
+ * their dynamic availability status (Available vs Rented), and stock management actions.
+ */
 export default function InventoryTable() {
   const navigate = useNavigate();
   const { lazyState, onPage, reset } = usePagination(10);

@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    /// <summary>
+    /// Data access repository for managing Customer entities and relations (User, Rentals, Payments, Address).
+    /// </summary>
     public class CustomerRepository : ICustomerRepository
     {
         private readonly AppDbContext _context;

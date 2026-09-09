@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MovieRental.Services.Services;
 
+// Handles authentication business logic: credential verification, token generation, and session revocation.
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
@@ -26,6 +27,7 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
+    // Verifies credentials, checks active status, and returns auth tokens.
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
         var user = await _userRepository.GetUserByEmailAsync(dto.Email);
@@ -94,6 +96,7 @@ public class AuthService : IAuthService
         };
     }
 
+    // Registers a new user account with hashed password and initial tokens.
     public async Task<AuthResponseDto> SignUpAsync(SignUpDto dto)
     {
         if (await _userRepository.EmailExistsAsync(dto.Email))
@@ -166,6 +169,7 @@ public class AuthService : IAuthService
         };
     }
 
+    // Validates an active refresh token, rotates it, and issues a new access token.
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenDto dto)
     {
         // DB se user dhundo refresh token se

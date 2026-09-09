@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles rental bookings, queries, and return operations.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff,Customer")] // Customer can view their own rentals
@@ -18,7 +19,7 @@ namespace MovieRental.Apis.Controllers
             _rentalService = rentalService;
         }
 
-        // GET api/rental — paginated list
+        // Gets a paginated list of rentals with optional filters.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] RentalQueryParametersDto queryParams)
         {
@@ -26,7 +27,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // GET api/rental/{id} — single rental detail
+        // Gets rental details by rental ID.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -35,7 +36,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // POST api/rental — create rental (Admin and Staff only)
+        // Creates a new rental for an available inventory copy (Admin and Staff only).
         [HttpPost]
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreateRentalDto dto)
@@ -51,7 +52,7 @@ namespace MovieRental.Apis.Controllers
             }
         }
 
-        // PATCH api/rental/{id}/return — mark as returned (Admin and Staff only)
+        // Marks a rental as returned and updates inventory availability (Admin and Staff only).
         [HttpPatch("{id}/return")]
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Return(int id)

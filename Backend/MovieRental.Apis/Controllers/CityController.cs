@@ -7,6 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
 
+// Handles city records linked to countries.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin,Staff")]

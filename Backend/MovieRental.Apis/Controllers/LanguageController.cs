@@ -5,6 +5,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
 
+// Handles movie language options and language lookup data.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin,Staff,Customer")]

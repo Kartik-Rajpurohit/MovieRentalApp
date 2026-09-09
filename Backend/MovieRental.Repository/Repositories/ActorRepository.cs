@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
+/// <summary>
+/// Data access repository for managing Actor entities and their film associations.
+/// </summary>
 public class ActorRepository : IActorRepository
 {
     private readonly AppDbContext _context;

@@ -34,6 +34,11 @@ const RATING_SEVERITY = {
   "NC-17": "danger",
 };
 
+/**
+ * Movie catalogue table component.
+ * Displays film titles, release year, duration, MPAA rating, and rental rates with pagination,
+ * multi-criteria filtering, and role-based edit/create dialog triggers.
+ */
 export default function MovieTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();

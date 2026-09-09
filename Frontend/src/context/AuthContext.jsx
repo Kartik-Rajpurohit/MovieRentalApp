@@ -1,3 +1,4 @@
+// Manages global authentication state, token storage, and session lifecycle.
 import { createContext, useState, useEffect, useCallback } from "react";
 import { refreshToken as refreshTokenApi } from "../services/authService";
 import api from "../services/api";

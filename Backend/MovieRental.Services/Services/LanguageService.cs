@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
+// Provides business logic for movie language options and film counts.
 public class LanguageService : ILanguageService
 {
     private readonly ILanguageRepository _languageRepository;

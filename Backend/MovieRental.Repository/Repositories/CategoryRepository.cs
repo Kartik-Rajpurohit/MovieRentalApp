@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    /// <summary>
+    /// Data access repository for film categories and genres.
+    /// </summary>
     public class CategoryRepository : ICategoryRepository
     {
         private readonly AppDbContext _context;

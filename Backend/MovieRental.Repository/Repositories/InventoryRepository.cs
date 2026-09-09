@@ -5,6 +5,7 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    // Handles database operations for movie inventory copies.
     public class InventoryRepository : IInventoryRepository
     {
         private readonly AppDbContext _context;
@@ -14,7 +15,7 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Returns IQueryable with Film and Rentals loaded — service applies filters
+        // Returns raw IQueryable of inventory copies with eager-loaded Film and Rentals.
         public IQueryable<Inventory> GetAllInventory()
         {
             return _context.Inventories

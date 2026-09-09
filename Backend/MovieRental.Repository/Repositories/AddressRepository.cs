@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
+/// <summary>
+/// Data access repository for managing Address records and navigation to City and Country.
+/// </summary>
 public class AddressRepository : IAddressRepository
 {
     private readonly AppDbContext _context;

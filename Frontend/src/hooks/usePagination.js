@@ -1,3 +1,4 @@
+// Provides reusable pagination state for PrimeReact lazy data tables.
 import { useState } from "react";
 
 export default function usePagination(defaultRows = 10) {

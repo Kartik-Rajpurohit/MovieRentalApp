@@ -1,3 +1,4 @@
+// Client service for movie/film catalogue APIs (CRUD, search, filtering, and dropdown options).
 import api from "./api";
 
 const MOVIE = "/Movie";

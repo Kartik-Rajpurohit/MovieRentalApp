@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for payment records, customer/staff role scoping, and transaction validation.
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
@@ -65,6 +66,7 @@ namespace MovieRental.Services.Services
             PaymentDate = p.PaymentDate,
         };
 
+        // Gets a paginated list of payments with amount and date filters and role scoping.
         public async Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(PaymentQueryParametersDto queryParams)
         {
             var query = _paymentRepository.GetAllPayments();
@@ -189,6 +191,7 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Gets payment details by ID, enforcing customer and staff store IDOR checks.
         public async Task<PaymentDetailDto?> GetPaymentByIdAsync(int id)
         {
             var payment = await _paymentRepository.GetPaymentByIdAsync(id);
@@ -213,6 +216,7 @@ namespace MovieRental.Services.Services
             return MapToDetail(payment);
         }
 
+        // Validates amount and customer match, then creates the payment.
         public async Task<PaymentResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
             if (dto.Amount <= 0)

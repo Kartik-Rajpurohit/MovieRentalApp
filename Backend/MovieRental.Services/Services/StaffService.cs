@@ -7,6 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for staff lookups and store affiliation queries.
     public class StaffService : IStaffService
     {
         private readonly IStaffRepository _staffRepository;

@@ -4,6 +4,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles customer profile and rental history queries for staff and administrators.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can view customer records

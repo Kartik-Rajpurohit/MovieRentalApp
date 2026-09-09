@@ -7,6 +7,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for role queries and role detail retrieval.
     public class RoleService : IRoleService
     {
         private readonly IRoleRepository _roleRepository;

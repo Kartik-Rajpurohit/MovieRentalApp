@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles movie catalog queries, creation, updates, and associated lookup data.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff,Customer")] // Admin, Staff, and Customer can access movie endpoints

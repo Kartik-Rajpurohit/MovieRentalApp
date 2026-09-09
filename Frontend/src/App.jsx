@@ -1,3 +1,4 @@
+// Root application component configuring global providers (Error Boundary, Toast, Auth), React Router, and RBAC routes.
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";

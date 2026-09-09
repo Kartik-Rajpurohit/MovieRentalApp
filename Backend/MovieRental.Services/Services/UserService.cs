@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for user management, role transitions, and status toggles.
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
@@ -17,6 +18,7 @@ namespace MovieRental.Services.Services
             _userRepository = userRepository;
         }
 
+        // Gets a paginated list of users with search, role, email, and active status filters.
         public async Task<PaginatedResponseDto<UserResponseDto>> GetAllUsersAsync(UserQueryParametersDto queryParams)
         {
             var query = _userRepository.GetAllUsers();
@@ -98,6 +100,7 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Gets user details by ID.
         public async Task<UserResponseDto?> GetUserByIdAsync(int id)
         {
             var user = await _userRepository.GetUserByIdAsync(id);
@@ -105,6 +108,7 @@ namespace MovieRental.Services.Services
             return MapToDto(user);
         }
 
+        // Creates a new user with hashed password and associated staff/customer profile.
         public async Task<UserResponseDto> CreateUserAsync(CreateUserDto dto)
         {
             // Business logic — reject duplicate email before hitting DB
@@ -145,6 +149,7 @@ namespace MovieRental.Services.Services
             return MapToDto(fullUser ?? created);
         }
 
+        // Updates user profile and handles role transitions without foreign key constraint violations.
         public async Task<UserResponseDto?> UpdateUserAsync(UpdateUserDto dto)
         {
             // Fetch existing entity — service applies PATCH logic
@@ -193,6 +198,7 @@ namespace MovieRental.Services.Services
             return reloaded == null ? null : MapToDto(reloaded);
         }
 
+        // Toggles a user's active status between enabled and disabled.
         public async Task<UserResponseDto?> ToggleUserStatusAsync(int id)
         {
             var user = await _userRepository.ToggleUserStatusAsync(id);

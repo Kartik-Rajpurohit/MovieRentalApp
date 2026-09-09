@@ -5,6 +5,7 @@ using System.Security.Claims;
 
 namespace MovieRental.Apis.Controllers;
 
+// Handles role-based dashboard metric requests.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin,Staff,Customer")]
@@ -14,7 +15,7 @@ public class DashboardController : ControllerBase
     public DashboardController(IDashboardService dashboardService)
         => _dashboardService = dashboardService;
 
-    // GET api/dashboard — role se decide karo kya return karna hai
+    // Returns role-specific dashboard metrics based on the caller's role.
     [HttpGet]
     public async Task<IActionResult> Get()
     {

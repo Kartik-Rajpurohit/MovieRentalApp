@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles inventory copy tracking, availability queries, and store assignments.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff")]  // Only Admin and Staff can access inventory
@@ -18,7 +19,7 @@ namespace MovieRental.Apis.Controllers
             _inventoryService = inventoryService;
         }
 
-        // GET api/inventory — paginated list with filters
+        // Gets a paginated list of inventory copies with store and availability filters.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] InventoryQueryParametersDto queryParams)
         {

@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
 
+// Handles address creation, retrieval, and updates for stores, staff, and customers.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin,Staff")]
@@ -18,6 +19,7 @@ public class AddressController : ControllerBase
         _addressService = addressService;
     }
 
+    // Gets a paginated list of addresses with city and postal code filters.
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] AddressQueryParametersDto queryParams)
     {

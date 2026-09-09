@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for inventory copy queries, availability evaluation, and store updates.
     public class InventoryService : IInventoryService
     {
         private readonly IInventoryRepository _inventoryRepository;
@@ -17,7 +18,7 @@ namespace MovieRental.Services.Services
             _inventoryRepository = inventoryRepository;
         }
 
-        // Map raw entity to response DTO — availability = no active rental (return_date is null)
+        // Maps raw entity to response DTO — availability is true if no active unreturned rental exists.
         private static InventoryResponseDto MapToResponse(Inventory i) => new()
         {
             InventoryId = i.InventoryId,
@@ -39,6 +40,7 @@ namespace MovieRental.Services.Services
             LastUpdate = i.LastUpdate,
         };
 
+        // Gets paginated inventory copies with store, film, and availability filters.
         public async Task<PaginatedResponseDto<InventoryResponseDto>> GetAllInventoryAsync(
             InventoryQueryParametersDto queryParams)
         {
@@ -99,6 +101,7 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Gets inventory details including total rental count.
         public async Task<InventoryDetailDto?> GetInventoryByIdAsync(int id)
         {
             var inventory = await _inventoryRepository.GetInventoryByIdAsync(id);
@@ -106,6 +109,7 @@ namespace MovieRental.Services.Services
             return MapToDetail(inventory);
         }
 
+        // Adds a new movie inventory copy to a store.
         public async Task<InventoryResponseDto> CreateInventoryAsync(CreateInventoryDto dto)
         {
             var entity = new Inventory
@@ -118,6 +122,7 @@ namespace MovieRental.Services.Services
             return MapToResponse(inventory);
         }
 
+        // Updates the store assignment of an inventory copy.
         public async Task<InventoryResponseDto?> UpdateInventoryAsync(UpdateInventoryDto dto)
         {
             var entity = new Inventory
@@ -131,6 +136,7 @@ namespace MovieRental.Services.Services
             return MapToResponse(inventory);
         }
 
+        // Deletes an inventory copy record.
         public async Task<bool> DeleteInventoryAsync(int id)
             => await _inventoryRepository.DeleteInventoryAsync(id);
     }

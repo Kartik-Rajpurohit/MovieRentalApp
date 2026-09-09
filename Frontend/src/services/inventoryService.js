@@ -1,3 +1,4 @@
+// Client service for inventory physical copies, availability, and store assignments.
 import api from "./api";
 
 const INVENTORY = "/Inventory";

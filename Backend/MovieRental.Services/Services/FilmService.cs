@@ -8,6 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
+    // Provides business logic for movie catalog search, filtering, creation, and relational mappings.
     public class FilmService : IFilmService
     {
         private readonly IFilmRepository _filmRepository;
@@ -17,6 +18,7 @@ namespace MovieRental.Services.Services
             _filmRepository = filmRepository;
         }
 
+        // Gets paginated movies with category, language, rating, and rental rate filters.
         public async Task<PaginatedResponseDto<MovieResponseDto>> GetAllFilmsAsync(MovieQueryParametersDto queryParams)
         {
             var query = _filmRepository.GetAllFilms();
@@ -116,6 +118,7 @@ namespace MovieRental.Services.Services
             };
         }
 
+        // Gets movie detail by ID including categories, actors, and inventory copies.
         public async Task<MovieDetailDto?> GetFilmByIdAsync(int id)
         {
             var film = await _filmRepository.GetFilmByIdAsync(id);
@@ -123,6 +126,7 @@ namespace MovieRental.Services.Services
             return MapToDetailDto(film);
         }
 
+        // Creates a new movie and links associated category and actor relationships.
         public async Task<MovieResponseDto> CreateFilmAsync(CreateMovieDto dto)
         {
             // Build Film entity from DTO
@@ -160,6 +164,7 @@ namespace MovieRental.Services.Services
             return MapToResponseDto(created);
         }
 
+        // Updates an existing movie and refreshes category/actor links.
         public async Task<MovieResponseDto?> UpdateFilmAsync(UpdateMovieDto dto)
         {
             // Fetch existing entity
@@ -205,6 +210,7 @@ namespace MovieRental.Services.Services
             return updated == null ? null : MapToResponseDto(updated);
         }
 
+        // Deletes a movie record.
         public async Task<bool> DeleteFilmAsync(int id)
         {
             return await _filmRepository.DeleteFilmAsync(id);

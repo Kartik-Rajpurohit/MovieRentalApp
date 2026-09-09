@@ -6,6 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
+    // Handles rental payment records and ledger queries.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff,Customer")] // Customer can view their own payments
@@ -18,7 +19,7 @@ namespace MovieRental.Apis.Controllers
             _paymentService = paymentService;
         }
 
-        // GET api/payment — paginated list
+        // Gets a paginated list of payments with amount and date filters.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PaymentQueryParametersDto queryParams)
         {
@@ -26,7 +27,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // GET api/payment/{id} — single payment detail
+        // Gets payment details by ID.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -35,7 +36,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // POST api/payment — create payment (Admin and Staff only)
+        // Creates a new payment for a rental (Admin and Staff only).
         [HttpPost]
         [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDto dto)

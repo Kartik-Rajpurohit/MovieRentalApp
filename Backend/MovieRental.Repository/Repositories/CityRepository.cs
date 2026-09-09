@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
+/// <summary>
+/// Data access repository for managing City entities with Country associations.
+/// </summary>
 public class CityRepository : ICityRepository
 {
     private readonly AppDbContext _context;

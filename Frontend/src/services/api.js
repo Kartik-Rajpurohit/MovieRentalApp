@@ -1,3 +1,4 @@
+// Configures the centralized Axios instance, bearer token injection, and 401 silent token refresh queue.
 import axios from "axios";
 import { getErrorMessage } from "../utils/errorUtils";
 

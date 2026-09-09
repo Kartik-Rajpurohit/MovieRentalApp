@@ -15,6 +15,11 @@ import PaymentFormFields from "./PaymentFormFields";
 import { createPayment } from "../../services/paymentService";
 import { AuthContext } from "../../context/AuthContext";
 
+/**
+ * Payment list table component.
+ * Displays financial transactions for rentals, supports date/amount filtering,
+ * search, sorting, and recording new payments against returned rentals.
+ */
 export default function PaymentTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();

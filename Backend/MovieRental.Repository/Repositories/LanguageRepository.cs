@@ -5,6 +5,9 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
+/// <summary>
+/// Data access repository for managing film languages.
+/// </summary>
 public class LanguageRepository : ILanguageRepository
 {
     private readonly AppDbContext _context;

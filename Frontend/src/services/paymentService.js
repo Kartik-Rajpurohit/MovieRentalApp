@@ -1,3 +1,4 @@
+// Client service for fetching rental payments, filtering transactions, and recording new payments.
 import api from "./api";
 
 const PAYMENT = "/Payment";

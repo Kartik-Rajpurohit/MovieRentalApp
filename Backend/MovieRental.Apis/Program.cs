@@ -11,6 +11,8 @@ using MovieRental.Services.Services;
 using System.Text;
 using System.Threading.RateLimiting;
 
+// Configures and starts the ASP.NET Core web API application, dependency injection, security, and middleware pipeline.
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Add Services ──────────────────────────────────────────────

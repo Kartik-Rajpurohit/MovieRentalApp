@@ -5,6 +5,7 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    // Handles database operations for payment transactions.
     public class PaymentRepository : IPaymentRepository
     {
         private readonly AppDbContext _context;
@@ -14,6 +15,7 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
+        // Returns raw IQueryable of payments with customer, staff, and rental relations.
         public IQueryable<Payment> GetAllPayments()
             => _context.Payments
                 .AsNoTracking()

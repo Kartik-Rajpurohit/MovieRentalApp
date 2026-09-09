@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 namespace MovieRental.Apis.Controllers;
 
+// Handles user authentication, registration, token refresh, and logout.
 [ApiController]
 [Route("api/[controller]")]
 [EnableRateLimiting("AuthRateLimit")] // Max 10 requests/min per IP on all auth endpoints
@@ -19,6 +20,7 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // Authenticates user and sets HttpOnly refresh token cookie.
     [HttpPost("login")]
     [AllowAnonymous] // Public — no token needed
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
@@ -35,6 +37,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    // Registers a new user account.
     [HttpPost("signup")]
     [AllowAnonymous] // Public — no token needed
     public async Task<IActionResult> SignUp([FromBody] SignUpDto dto)

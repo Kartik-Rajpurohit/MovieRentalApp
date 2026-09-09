@@ -5,6 +5,7 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
+    // Handles database operations for movies, categories, actors, and language relations.
     public class FilmRepository : IFilmRepository
     {
         private readonly AppDbContext _context;
