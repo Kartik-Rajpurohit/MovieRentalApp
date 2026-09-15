@@ -72,13 +72,13 @@ namespace MovieRental.Services.Services
         }
 
         // Retrieves category details by ID, including total assigned films count.
-        public async Task<CategoryDetailDto?> GetCategoryByIdAsync(int id)
+        public async Task<CategoryResponseDto?> GetCategoryByIdAsync(int id)
         {
             var category = await _categoryRepository.GetCategoryByIdAsync(id);
             if (category == null) return null;
 
-            // Convert entity into detailed response DTO.
-            return new CategoryDetailDto
+            // Convert entity into response DTO.
+            return new CategoryResponseDto
             {
                 CategoryId = category.CategoryId,
                 Name = category.Name,

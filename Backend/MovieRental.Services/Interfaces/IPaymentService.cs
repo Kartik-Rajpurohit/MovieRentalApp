@@ -10,8 +10,8 @@ namespace MovieRental.Services.Interfaces
         // Retrieves a paginated and filtered history of payments.
         Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(PaymentQueryParametersDto queryParams);
 
-        // Retrieves detailed payment information by ID.
-        Task<PaymentDetailDto?> GetPaymentByIdAsync(int id);
+        // Retrieves payment information by ID.
+        Task<PaymentResponseDto?> GetPaymentByIdAsync(int id);
 
         // Validates and processes a new rental payment.
         Task<PaymentResponseDto> CreatePaymentAsync(CreatePaymentDto dto);

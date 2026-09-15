@@ -10,7 +10,7 @@ export const getLanguages = () =>
 
 // GET request to fetch detailed language info by ID
 export const getLanguageById = (id) =>
-  api.get(`${LANGUAGE}/${id}/detail`).then(r => r.data);
+  api.get(`${LANGUAGE}/${id}`).then(r => r.data);
 
 // GET request to fetch films in a specific language with pagination and search
 export const getFilmsByLanguage = (id, page = 1, pageSize = 10, search = "") =>

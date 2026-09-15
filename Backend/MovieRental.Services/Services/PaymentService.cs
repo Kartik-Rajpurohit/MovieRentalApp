@@ -51,23 +51,6 @@ namespace MovieRental.Services.Services
             PaymentDate = p.PaymentDate,
         };
 
-        // Converts raw Payment entity into detailed response DTO.
-        private static PaymentDetailDto MapToDetail(Payment p) => new()
-        {
-            PaymentId = p.PaymentId,
-            CustomerId = p.CustomerId,
-            CustomerName = p.Customer?.User != null
-                ? $"{p.Customer.User.FirstName} {p.Customer.User.LastName}".Trim()
-                : $"Customer {p.CustomerId}",
-            StaffId = p.StaffId,
-            StaffName = p.Staff?.User != null
-                ? $"{p.Staff.User.FirstName} {p.Staff.User.LastName}".Trim()
-                : $"Staff {p.StaffId}",
-            RentalId = p.RentalId,
-            FilmTitle = p.Rental?.Inventory?.Film?.Title ?? "",
-            Amount = p.Amount,
-            PaymentDate = p.PaymentDate,
-        };
 
         // Gets a paginated list of payments with amount, date filters, and role-based data scoping.
         public async Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(PaymentQueryParametersDto queryParams)
@@ -199,7 +182,7 @@ namespace MovieRental.Services.Services
         }
 
         // Gets payment details by ID, enforcing IDOR ownership checks for customers and staff.
-        public async Task<PaymentDetailDto?> GetPaymentByIdAsync(int id)
+        public async Task<PaymentResponseDto?> GetPaymentByIdAsync(int id)
         {
             var payment = await _paymentRepository.GetPaymentByIdAsync(id);
             if (payment == null) return null;
@@ -222,7 +205,7 @@ namespace MovieRental.Services.Services
                     return null;
             }
 
-            return MapToDetail(payment);
+            return MapToResponse(payment);
         }
 
         // Validates payment amount, rental existence, and customer match before creating record.

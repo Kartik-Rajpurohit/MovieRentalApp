@@ -73,14 +73,6 @@ public class ActorController : ControllerBase
         return NoContent();
     }
 
-    // Gets detailed actor info including film count and filmography summary.
-    [HttpGet("{id}/detail")]
-    public async Task<IActionResult> GetDetail(int id)
-    {
-        var result = await _actorService.GetActorDetailAsync(id);
-        if (result == null) return NotFound();
-        return Ok(result);
-    }
 
     // Gets a paginated list of films featuring this actor.
     // Supports optional title search within the actor's filmography.

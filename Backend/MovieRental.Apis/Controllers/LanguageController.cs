@@ -72,14 +72,6 @@ public class LanguageController : ControllerBase
         return NoContent();
     }
 
-    // Gets detailed language information including total films available in this language.
-    [HttpGet("{id}/detail")]
-    public async Task<IActionResult> GetDetail(int id)
-    {
-        var result = await _languageService.GetLanguageDetailAsync(id);
-        if (result == null) return NotFound();
-        return Ok(result);
-    }
 
     // Gets a paginated list of films released in this language.
     // Supports optional title search within the language.

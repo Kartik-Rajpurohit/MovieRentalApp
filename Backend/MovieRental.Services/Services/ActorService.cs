@@ -148,21 +148,6 @@ public class ActorService : IActorService
     public async Task<bool> DeleteActorAsync(int id)
         => await _actorRepository.DeleteActorAsync(id);
 
-    // Retrieves detailed actor information including film count.
-    public async Task<ActorDetailDto?> GetActorDetailAsync(int id)
-    {
-        var actor = await _actorRepository.GetActorByIdAsync(id);
-        if (actor == null) return null;
-
-        return new ActorDetailDto
-        {
-            ActorId = actor.ActorId,
-            FirstName = actor.FirstName,
-            LastName = actor.LastName,
-            LastUpdate = actor.LastUpdate,
-            FilmCount = actor.FilmActors.Count
-        };
-    }
 
     // Retrieves a paginated list of movies starring the specified actor.
     public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByActorAsync(int actorId, int page, int pageSize, string? search)

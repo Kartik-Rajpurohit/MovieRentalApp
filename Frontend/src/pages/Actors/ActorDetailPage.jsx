@@ -12,7 +12,7 @@ import FormDialog from "../../components/common/FormDialog";
 import ActorFormFields from "../../components/actors/ActorFormFields";
 import usePagination from "../../hooks/usePagination";
 import {
-  getActorDetail,
+  getActorById,
   getFilmsByActor,
   updateActor,
   deleteActor,
@@ -69,7 +69,7 @@ export default function ActorDetailPage() {
   // Load actor profile information from the backend API
   const fetchActorDetail = async () => {
     try {
-      const data = await getActorDetail(id);
+      const data = await getActorById(id);
       setActor(data);
       setForm({ firstName: data.firstName, lastName: data.lastName });
     } catch (err) {

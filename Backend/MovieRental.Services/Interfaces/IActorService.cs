@@ -23,8 +23,6 @@ public interface IActorService
     // Removes an actor from the system by ID.
     Task<bool> DeleteActorAsync(int id);
 
-    // Retrieves detailed actor information including total movies count.
-    Task<ActorDetailDto?> GetActorDetailAsync(int id);
 
     // Retrieves a paginated list of movies featuring the specified actor.
     Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByActorAsync(int actorId, int page, int pageSize, string? search);

@@ -20,11 +20,6 @@ export const getActorById = async (id) => {
     return res.data;
 };
 
-// GET request to fetch detailed information for an actor (including film count)
-export const getActorDetail = async (id) => {
-    const res = await api.get(`${API}/${id}/detail`);
-    return res.data;
-};
 
 // GET request to fetch films starring a specific actor with pagination and search
 export const getFilmsByActor = async (id, page = 1, pageSize = 10, search = "") => {

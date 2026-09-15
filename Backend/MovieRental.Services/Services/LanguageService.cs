@@ -95,20 +95,6 @@ public class LanguageService : ILanguageService
     public async Task<bool> DeleteLanguageAsync(int id)
         => await _languageRepository.DeleteLanguageAsync(id);
 
-    // Retrieves detailed language information including movie count.
-    public async Task<LanguageDetailDto?> GetLanguageDetailAsync(int id)
-    {
-        var language = await _languageRepository.GetLanguageByIdAsync(id);
-        if (language == null) return null;
-
-        return new LanguageDetailDto
-        {
-            LanguageId = language.LanguageId,
-            Name = language.Name,
-            LastUpdate = language.LastUpdate,
-            FilmCount = language.Films.Count
-        };
-    }
 
     // Retrieves a paginated list of movies associated with a specific language.
     public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByLanguageAsync(

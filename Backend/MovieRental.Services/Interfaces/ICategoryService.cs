@@ -12,7 +12,7 @@ namespace MovieRental.Services.Interfaces
         Task<PaginatedResponseDto<CategoryResponseDto>> GetAllCategoriesAsync(CategoryQueryParametersDto queryParams);
 
         // Retrieves a category by ID with its list of associated movies.
-        Task<CategoryDetailDto?> GetCategoryByIdAsync(int id);
+        Task<CategoryResponseDto?> GetCategoryByIdAsync(int id);
 
         // Adds a new movie genre category to the system.
         Task<CategoryResponseDto> CreateCategoryAsync(CreateCategoryDto dto);
