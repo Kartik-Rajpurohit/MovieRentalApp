@@ -12,19 +12,21 @@ namespace MovieRental.Repository.Repositories
         private readonly AppDbContext _context;
         public StaffRepository(AppDbContext context) => _context = context;
 
-        // Reads all staff members without tracking, loading their linked User account.
+        // Reads all active staff members without tracking, loading their linked User account.
         public IQueryable<Staff> GetAllStaff()
         {
             return _context.Staff
                 .AsNoTracking()
+                .Where(s => !s.IsDeleted)
                 .Include(s => s.User)
                 .AsQueryable();
         }
 
-        // Finds a staff member by ID, loading full User, Role, Address, City, and Country trees.
+        // Finds an active staff member by ID, loading full User, Role, Address, City, and Country trees.
         public async Task<Staff?> GetStaffByIdAsync(int id)
         {
             return await _context.Staff
+                .Where(s => !s.IsDeleted)
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Role)
                 .Include(s => s.User)

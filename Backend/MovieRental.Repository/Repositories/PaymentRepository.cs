@@ -16,18 +16,20 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all payment records without tracking, including Customer, Staff, Rental, Inventory, and Movie.
+        // Reads all active payment records without tracking, including Customer, Staff, Rental, Inventory, and Movie.
         public IQueryable<Payment> GetAllPayments()
             => _context.Payments
                 .AsNoTracking()
+                .Where(p => !p.IsDeleted)
                 .Include(p => p.Customer).ThenInclude(c => c.User)
                 .Include(p => p.Staff).ThenInclude(s => s.User)
                 .Include(p => p.Rental).ThenInclude(r => r.Inventory).ThenInclude(i => i.Movie)
                 .AsQueryable();
 
-        // Finds a payment transaction by ID with full relation trees.
+        // Finds an active payment transaction by ID with full relation trees.
         public async Task<Payment?> GetPaymentByIdAsync(int id)
             => await _context.Payments
+                .Where(p => !p.IsDeleted)
                 .Include(p => p.Customer).ThenInclude(c => c.User)
                 .Include(p => p.Staff).ThenInclude(s => s.User)
                 .Include(p => p.Rental).ThenInclude(r => r.Inventory).ThenInclude(i => i.Movie)

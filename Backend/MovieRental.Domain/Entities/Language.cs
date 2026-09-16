@@ -20,6 +20,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
+        // Soft delete flag indicating whether this language is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Movies where this language is the primary spoken/dubbed audio.
         public ICollection<Movie> Movies { get; set; } = new List<Movie>();
 

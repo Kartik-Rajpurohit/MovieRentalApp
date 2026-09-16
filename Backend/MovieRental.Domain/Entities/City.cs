@@ -28,6 +28,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
+        // Soft delete flag indicating whether this city is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Collection of physical addresses located in this city.
         public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }

@@ -130,6 +130,50 @@ namespace MovieRental.Services.Services
         // Creates a new movie and links associated category and actor relationships.
         public async Task<MovieResponseDto> CreateMovieAsync(CreateMovieDto dto)
         {
+            // Validate language references
+            var languageExists = await _movieRepository.GetAllLanguages().AnyAsync(l => l.LanguageId == dto.LanguageId);
+            if (!languageExists)
+            {
+                throw new InvalidOperationException($"Language with ID {dto.LanguageId} does not exist or has been deleted.");
+            }
+
+            if (dto.OriginalLanguageId.HasValue)
+            {
+                var origLanguageExists = await _movieRepository.GetAllLanguages().AnyAsync(l => l.LanguageId == dto.OriginalLanguageId.Value);
+                if (!origLanguageExists)
+                {
+                    throw new InvalidOperationException($"Original Language with ID {dto.OriginalLanguageId.Value} does not exist or has been deleted.");
+                }
+            }
+
+            // Validate category references
+            if (dto.CategoryIds != null && dto.CategoryIds.Any())
+            {
+                var activeCategoryIds = await _movieRepository.GetAllCategories()
+                    .Where(c => dto.CategoryIds.Contains(c.CategoryId))
+                    .Select(c => c.CategoryId)
+                    .ToListAsync();
+                var missingCategories = dto.CategoryIds.Except(activeCategoryIds).ToList();
+                if (missingCategories.Any())
+                {
+                    throw new InvalidOperationException($"One or more categories do not exist or have been deleted: {string.Join(", ", missingCategories)}");
+                }
+            }
+
+            // Validate actor references
+            if (dto.ActorIds != null && dto.ActorIds.Any())
+            {
+                var activeActorIds = await _movieRepository.GetAllActors()
+                    .Where(a => dto.ActorIds.Contains(a.ActorId))
+                    .Select(a => a.ActorId)
+                    .ToListAsync();
+                var missingActors = dto.ActorIds.Except(activeActorIds).ToList();
+                if (missingActors.Any())
+                {
+                    throw new InvalidOperationException($"One or more actors do not exist or have been deleted: {string.Join(", ", missingActors)}");
+                }
+            }
+
             // Build Movie entity from DTO
             var movie = new Movie
             {
@@ -147,14 +191,14 @@ namespace MovieRental.Services.Services
                 LastUpdate = DateTime.UtcNow,
 
                 // Link categories via junction table
-                MovieCategories = dto.CategoryIds.Select(cid => new MovieCategory
+                MovieCategories = (dto.CategoryIds ?? []).Select(cid => new MovieCategory
                 {
                     CategoryId = cid,
                     LastUpdate = DateTime.UtcNow
                 }).ToList(),
 
                 // Link actors via junction table
-                MovieActors = dto.ActorIds.Select(aid => new MovieActor
+                MovieActors = (dto.ActorIds ?? []).Select(aid => new MovieActor
                 {
                     ActorId = aid,
                     LastUpdate = DateTime.UtcNow
@@ -171,6 +215,53 @@ namespace MovieRental.Services.Services
             // Fetch existing entity
             var movie = await _movieRepository.GetMovieByIdAsync(dto.MovieId);
             if (movie == null) return null;
+
+            // Validate language references if provided
+            if (dto.LanguageId.HasValue)
+            {
+                var languageExists = await _movieRepository.GetAllLanguages().AnyAsync(l => l.LanguageId == dto.LanguageId.Value);
+                if (!languageExists)
+                {
+                    throw new InvalidOperationException($"Language with ID {dto.LanguageId.Value} does not exist or has been deleted.");
+                }
+            }
+
+            if (dto.OriginalLanguageId.HasValue)
+            {
+                var origLanguageExists = await _movieRepository.GetAllLanguages().AnyAsync(l => l.LanguageId == dto.OriginalLanguageId.Value);
+                if (!origLanguageExists)
+                {
+                    throw new InvalidOperationException($"Original Language with ID {dto.OriginalLanguageId.Value} does not exist or has been deleted.");
+                }
+            }
+
+            // Validate category references if provided
+            if (dto.CategoryIds != null && dto.CategoryIds.Any())
+            {
+                var activeCategoryIds = await _movieRepository.GetAllCategories()
+                    .Where(c => dto.CategoryIds.Contains(c.CategoryId))
+                    .Select(c => c.CategoryId)
+                    .ToListAsync();
+                var missingCategories = dto.CategoryIds.Except(activeCategoryIds).ToList();
+                if (missingCategories.Any())
+                {
+                    throw new InvalidOperationException($"One or more categories do not exist or have been deleted: {string.Join(", ", missingCategories)}");
+                }
+            }
+
+            // Validate actor references if provided
+            if (dto.ActorIds != null && dto.ActorIds.Any())
+            {
+                var activeActorIds = await _movieRepository.GetAllActors()
+                    .Where(a => dto.ActorIds.Contains(a.ActorId))
+                    .Select(a => a.ActorId)
+                    .ToListAsync();
+                var missingActors = dto.ActorIds.Except(activeActorIds).ToList();
+                if (missingActors.Any())
+                {
+                    throw new InvalidOperationException($"One or more actors do not exist or have been deleted: {string.Join(", ", missingActors)}");
+                }
+            }
 
             // Only update fields that were actually sent — PATCH behaviour
             if (!string.IsNullOrWhiteSpace(dto.Title)) movie.Title = dto.Title;

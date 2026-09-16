@@ -28,6 +28,10 @@ namespace MovieRental.Domain.Entities
         [Column("active")]
         public int? Active { get; set; }
 
+        // Soft delete flag indicating whether this customer profile is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Foreign key linking this customer profile to an application user login account.
         [Column("user_id")]
         [ForeignKey("User")]

@@ -16,19 +16,21 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all inventory copies without tracking, loading related Movie and Rentals for availability checks.
+        // Reads all active inventory copies without tracking, loading related Movie and Rentals for availability checks.
         public IQueryable<Inventory> GetAllInventory()
         {
             return _context.Inventories
                 .AsNoTracking()
+                .Where(i => !i.IsDeleted && !i.Movie.IsDeleted)
                 .Include(i => i.Movie)
                 .Include(i => i.Rentals);
         }
 
-        // Finds a specific inventory copy by ID along with its movie and rental records.
+        // Finds a specific active inventory copy by ID along with its movie and rental records.
         public async Task<Inventory?> GetInventoryByIdAsync(int id)
         {
             return await _context.Inventories
+                .Where(i => !i.IsDeleted)
                 .Include(i => i.Movie)
                 .Include(i => i.Rentals)
                 .FirstOrDefaultAsync(i => i.InventoryId == id);
@@ -53,7 +55,7 @@ namespace MovieRental.Repository.Repositories
             var existing = await _context.Inventories
                 .Include(i => i.Movie)
                 .Include(i => i.Rentals)
-                .FirstOrDefaultAsync(i => i.InventoryId == inventory.InventoryId);
+                .FirstOrDefaultAsync(i => i.InventoryId == inventory.InventoryId && !i.IsDeleted);
 
             if (existing == null) return null;
 
@@ -65,15 +67,24 @@ namespace MovieRental.Repository.Repositories
             return existing;
         }
 
-        // Removes an inventory copy from the database if found.
+        // Soft-deletes an inventory copy record by setting IsDeleted = true.
         public async Task<bool> DeleteInventoryAsync(int id)
         {
             var inventory = await _context.Inventories.FindAsync(id);
-            if (inventory == null) return false;
+            if (inventory == null || inventory.IsDeleted) return false;
 
-            _context.Inventories.Remove(inventory);
+            inventory.IsDeleted = true;
+            inventory.LastUpdate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // Checks whether an active movie exists by ID.
+        public async Task<bool> MovieExistsAsync(int movieId)
+            => await _context.Movies.AnyAsync(m => m.MovieId == movieId && !m.IsDeleted);
+
+        // Checks whether an active store exists by ID.
+        public async Task<bool> StoreExistsAsync(int storeId)
+            => await _context.Stores.AnyAsync(s => s.StoreId == storeId && !s.IsDeleted);
     }
 }

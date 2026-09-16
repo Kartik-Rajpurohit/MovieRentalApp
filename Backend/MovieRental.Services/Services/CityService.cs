@@ -96,6 +96,11 @@ public class CityService : ICityService
     // Creates a new city record associated with the specified country.
     public async Task<CityResponseDto> CreateCityAsync(CreateCityDto dto)
     {
+        if (!await _cityRepository.CountryExistsAsync(dto.CountryId))
+        {
+            throw new InvalidOperationException($"Country with ID {dto.CountryId} does not exist or has been deleted.");
+        }
+
         // Map request DTO to database entity.
         var city = new City
         {
@@ -122,6 +127,11 @@ public class CityService : ICityService
     // Updates an existing city record with the new name and country assignment.
     public async Task<CityResponseDto?> UpdateCityAsync(UpdateCityDto dto)
     {
+        if (!await _cityRepository.CountryExistsAsync(dto.CountryId))
+        {
+            throw new InvalidOperationException($"Country with ID {dto.CountryId} does not exist or has been deleted.");
+        }
+
         var city = new City { CityId = dto.CityId, Name = dto.Name, CountryId = dto.CountryId };
 
         // Save updates via the repository.

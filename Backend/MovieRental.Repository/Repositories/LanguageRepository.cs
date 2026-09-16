@@ -16,13 +16,14 @@ public class LanguageRepository : ILanguageRepository
         _context = context;
     }
 
-    // Reads all languages without tracking, including related movies for counting.
+    // Reads all active languages without tracking, including related movies for counting.
     public IQueryable<Language> GetAllLanguages()
-        => _context.Languages.AsNoTracking().Include(l => l.Movies).AsQueryable();
+        => _context.Languages.AsNoTracking().Where(l => !l.IsDeleted).Include(l => l.Movies).AsQueryable();
 
-    // Finds a language by its ID along with its associated movies.
+    // Finds an active language by its ID along with its associated movies.
     public async Task<Language?> GetLanguageByIdAsync(int id)
         => await _context.Languages
+            .Where(l => !l.IsDeleted)
             .Include(l => l.Movies)
             .FirstOrDefaultAsync(l => l.LanguageId == id);
 
@@ -38,28 +39,29 @@ public class LanguageRepository : ILanguageRepository
     public async Task<Language?> UpdateLanguageAsync(Language language)
     {
         var existing = await _context.Languages.FindAsync(language.LanguageId);
-        if (existing == null) return null;
+        if (existing == null || existing.IsDeleted) return null;
         existing.Name = language.Name;
         existing.LastUpdate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return existing;
     }
 
-    // Deletes a language from the database if found.
+    // Soft-deletes a language from the database if found.
     public async Task<bool> DeleteLanguageAsync(int id)
     {
         var language = await _context.Languages.FindAsync(id);
-        if (language == null) return false;
-        _context.Languages.Remove(language);
+        if (language == null || language.IsDeleted) return false;
+        language.IsDeleted = true;
+        language.LastUpdate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
     }
 
-    // Queries movies released in the specified language, including language and categories.
+    // Queries active movies released in the specified language, including language and categories.
     public IQueryable<Movie> GetMoviesByLanguageId(int languageId)
         => _context.Movies
             .AsNoTracking()
-            .Where(m => m.LanguageId == languageId)
+            .Where(m => m.LanguageId == languageId && !m.IsDeleted)
             .Include(m => m.Language)
             .Include(m => m.MovieCategories)
                 .ThenInclude(mc => mc.Category) // Load categories for mapping in service

@@ -19,4 +19,7 @@ public interface IAddressRepository
 
     // Deletes an address by ID; returns true if deleted, false if not found.
     Task<bool> DeleteAddressAsync(int id);
+
+    // Checks whether an active city exists by ID.
+    Task<bool> CityExistsAsync(int cityId);
 }

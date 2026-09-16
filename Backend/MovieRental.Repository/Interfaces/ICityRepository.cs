@@ -19,4 +19,7 @@ public interface ICityRepository
 
     // Deletes a city by ID; returns true if deleted, false if not found.
     Task<bool> DeleteCityAsync(int id);
+
+    // Checks whether an active country exists by ID.
+    Task<bool> CountryExistsAsync(int countryId);
 }

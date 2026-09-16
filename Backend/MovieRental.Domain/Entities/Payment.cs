@@ -43,5 +43,9 @@ namespace MovieRental.Domain.Entities
         // Timestamp of when the payment was successfully processed.
         [Column("payment_date")]
         public DateTime PaymentDate { get; set; }
+
+        // Soft delete flag indicating whether this payment record is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }

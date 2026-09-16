@@ -16,18 +16,20 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all rentals without tracking, loading inventory, movie, customer, and staff details.
+        // Reads all active rentals without tracking, loading inventory, movie, customer, and staff details.
         public IQueryable<Rental> GetAllRentals()
             => _context.Rentals
                 .AsNoTracking()
+                .Where(r => !r.IsDeleted)
                 .Include(r => r.Inventory).ThenInclude(i => i.Movie)
                 .Include(r => r.Customer).ThenInclude(c => c.User)
                 .Include(r => r.Staff).ThenInclude(s => s.User)
                 .AsQueryable();
 
-        // Finds a rental by ID, including movie, customer, staff, and linked payment records.
+        // Finds an active rental by ID, including movie, customer, staff, and linked payment records.
         public async Task<Rental?> GetRentalByIdAsync(int id)
             => await _context.Rentals
+                .Where(r => !r.IsDeleted)
                 .Include(r => r.Inventory).ThenInclude(i => i.Movie)
                 .Include(r => r.Customer).ThenInclude(c => c.User)
                 .Include(r => r.Staff).ThenInclude(s => s.User)
@@ -62,5 +64,13 @@ namespace MovieRental.Repository.Repositories
 
             return await GetRentalByIdAsync(rentalId);
         }
+
+        // Checks whether an active customer exists by ID.
+        public async Task<bool> CustomerExistsAsync(int customerId)
+            => await _context.Customers.AnyAsync(c => c.CustomerId == customerId && !c.IsDeleted);
+
+        // Checks whether an active staff member exists by ID.
+        public async Task<bool> StaffExistsAsync(int staffId)
+            => await _context.Staff.AnyAsync(s => s.StaffId == staffId && !s.IsDeleted);
     }
 }

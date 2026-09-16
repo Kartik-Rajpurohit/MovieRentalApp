@@ -16,18 +16,20 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all categories without tracking, including movie links for counting.
+        // Reads all active categories without tracking, including movie links for counting.
         public IQueryable<Category> GetAllCategories()
         {
             return _context.Categories
                 .AsNoTracking()
+                .Where(c => !c.IsDeleted)
                 .Include(c => c.MovieCategories);
         }
 
-        // Finds a category by its ID.
+        // Finds an active category by its ID.
         public async Task<Category?> GetCategoryByIdAsync(int id)
         {
             return await _context.Categories
+                .Where(c => !c.IsDeleted)
                 .Include(c => c.MovieCategories)
                 .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
@@ -48,21 +50,22 @@ namespace MovieRental.Repository.Repositories
             return await GetCategoryByIdAsync(category.CategoryId);
         }
 
-        // Removes the category from the database if found.
+        // Soft-deletes the category from the database if found.
         public async Task<bool> DeleteCategoryAsync(int id)
         {
             var category = await _context.Categories.FindAsync(id);
-            if (category == null) return false;
-            _context.Categories.Remove(category);
+            if (category == null || category.IsDeleted) return false;
+            category.IsDeleted = true;
+            category.LastUpdate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // Queries movies belonging to this category through the MovieCategory join table.
+        // Queries active movies belonging to this category through the MovieCategory join table.
         public IQueryable<Movie> GetMoviesByCategoryId(int categoryId)
             => _context.MovieCategories
                 .AsNoTracking()
-                .Where(mc => mc.CategoryId == categoryId)
+                .Where(mc => mc.CategoryId == categoryId && !mc.Movie.IsDeleted)
                 .Select(mc => mc.Movie)
                 .AsQueryable();
     }

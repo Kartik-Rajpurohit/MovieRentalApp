@@ -27,6 +27,10 @@ namespace MovieRental.Domain.Entities
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
+        // Soft delete flag indicating whether this user account is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 

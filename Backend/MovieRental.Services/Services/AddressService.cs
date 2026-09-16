@@ -112,6 +112,11 @@ public class AddressService : IAddressService
     // Validates request data and creates a new address record.
     public async Task<AddressResponseDto> CreateAddressAsync(CreateAddressDto dto)
     {
+        if (!await _addressRepository.CityExistsAsync(dto.CityId))
+        {
+            throw new InvalidOperationException($"City with ID {dto.CityId} does not exist or has been deleted.");
+        }
+
         // Map request DTO to database entity.
         var address = new Address
         {
@@ -142,6 +147,11 @@ public class AddressService : IAddressService
     // Updates an existing address record with the provided information.
     public async Task<AddressResponseDto?> UpdateAddressAsync(UpdateAddressDto dto)
     {
+        if (!await _addressRepository.CityExistsAsync(dto.CityId))
+        {
+            throw new InvalidOperationException($"City with ID {dto.CityId} does not exist or has been deleted.");
+        }
+
         var address = new Address
         {
             AddressId = dto.AddressId,

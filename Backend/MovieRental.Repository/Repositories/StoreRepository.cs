@@ -16,11 +16,12 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all stores without tracking, loading manager staff, address, city, and country details.
+        // Reads all active stores without tracking, loading manager staff, address, city, and country details.
         public IQueryable<Store> GetAllStores()
         {
             return _context.Stores
                 .AsNoTracking()
+                .Where(s => !s.IsDeleted)
                 .Include(s => s.ManagerStaff)
                     .ThenInclude(st => st!.User)
                 .Include(s => s.Address)

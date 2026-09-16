@@ -243,6 +243,24 @@ namespace MovieRental.Services.Services
                 throw new InvalidOperationException($"Inventory item #{dto.InventoryId} does not exist.");
             }
 
+            if (inventory.Movie == null || inventory.Movie.IsDeleted)
+            {
+                _logger.LogWarning("Rental creation failed: Movie for inventory #{InventoryId} does not exist or has been deleted", dto.InventoryId);
+                throw new InvalidOperationException($"The movie for inventory #{dto.InventoryId} does not exist or has been deleted.");
+            }
+
+            if (!await _rentalRepository.CustomerExistsAsync(dto.CustomerId))
+            {
+                _logger.LogWarning("Rental creation failed: Customer #{CustomerId} does not exist or has been deleted", dto.CustomerId);
+                throw new InvalidOperationException($"Customer #{dto.CustomerId} does not exist or has been deleted.");
+            }
+
+            if (!await _rentalRepository.StaffExistsAsync(dto.StaffId))
+            {
+                _logger.LogWarning("Rental creation failed: Staff member #{StaffId} does not exist or has been deleted", dto.StaffId);
+                throw new InvalidOperationException($"Staff member #{dto.StaffId} does not exist or has been deleted.");
+            }
+
             // Business rule: The inventory copy must NOT already have an active unreturned rental.
             var isCurrentlyRented = await _rentalRepository.GetAllRentals()
                 .AnyAsync(r => r.InventoryId == dto.InventoryId && r.ReturnDate == null);

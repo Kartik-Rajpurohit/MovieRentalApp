@@ -12,19 +12,21 @@ namespace MovieRental.Repository.Repositories
         private readonly AppDbContext _context;
         public CustomerRepository(AppDbContext context) => _context = context;
 
-        // Reads all customers without tracking, including linked User account details.
+        // Reads all active customers without tracking, including linked User account details.
         public IQueryable<Customer> GetAllCustomers()
         {
             return _context.Customers
                 .AsNoTracking()
+                .Where(c => !c.IsDeleted)
                 .Include(c => c.User)
                 .AsQueryable();
         }
 
-        // Finds a customer by ID, loading full User, Role, Address, City, and Country hierarchies.
+        // Finds an active customer by ID, loading full User, Role, Address, City, and Country hierarchies.
         public async Task<Customer?> GetCustomerByIdAsync(int id)
         {
             return await _context.Customers
+                .Where(c => !c.IsDeleted)
                 .Include(c => c.User)
                     .ThenInclude(u => u!.Role)
                 .Include(c => c.User)

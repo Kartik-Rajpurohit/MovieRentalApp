@@ -16,15 +16,15 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all countries from the database without tracking.
+        // Reads all active countries from the database without tracking.
         public IQueryable<Country> GetAllCountries()
-            => _context.Countries.AsNoTracking().AsQueryable();
+            => _context.Countries.AsNoTracking().Where(c => !c.IsDeleted).AsQueryable();
 
-        // Finds a country by its ID, loading its associated cities.
+        // Finds an active country by its ID, loading its associated cities.
         public async Task<Country?> GetCountryByIdAsync(int id)
             => await _context.Countries
-                .Include(c => c.Cities)
-                .FirstOrDefaultAsync(c => c.CountryId == id);
+                .Include(c => c.Cities.Where(ct => !ct.IsDeleted))
+                .FirstOrDefaultAsync(c => c.CountryId == id && !c.IsDeleted);
 
         // Adds a new country record to the database and saves changes.
         public async Task<Country> CreateCountryAsync(Country country)
@@ -38,19 +38,20 @@ namespace MovieRental.Repository.Repositories
         public async Task<Country?> UpdateCountryAsync(Country country)
         {
             var existing = await _context.Countries.FindAsync(country.CountryId);
-            if (existing == null) return null;
+            if (existing == null || existing.IsDeleted) return null;
             existing.Name = country.Name;
             existing.LastUpdate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return existing;
         }
 
-        // Removes the country from the database if found.
+        // Soft-deletes the country from the database if found.
         public async Task<bool> DeleteCountryAsync(int id)
         {
             var country = await _context.Countries.FindAsync(id);
-            if (country == null) return false;
-            _context.Countries.Remove(country);
+            if (country == null || country.IsDeleted) return false;
+            country.IsDeleted = true;
+            country.LastUpdate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }

@@ -19,22 +19,24 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all users without tracking, loading Role, Address, City, and Country.
+        // Reads all active users without tracking, loading Role, Address, City, and Country.
         // Returns IQueryable so filtering, sorting, and pagination can be applied in the service.
         public IQueryable<User> GetAllUsers()
         {
             return _context.Users
                 .AsNoTracking()
+                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Address)
                     .ThenInclude(a => a!.City)
                         .ThenInclude(c => c!.Country);
         }
 
-        // Finds a user by ID with their Role, Customer, Staff, and Address details.
+        // Finds an active user by ID with their Role, Customer, Staff, and Address details.
         public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _context.Users
+                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
@@ -129,28 +131,29 @@ namespace MovieRental.Repository.Repositories
 
         // Returns all countries without tracking for address dropdowns.
         public IQueryable<Country> GetAllCountries()
-            => _context.Countries.AsQueryable();
+            => _context.Countries.Where(c => !c.IsDeleted).AsQueryable();
 
         // Returns cities filtered by country ID for dependent dropdowns.
         public IQueryable<City> GetCitiesByCountry(int countryId)
-            => _context.Cities.Where(c => c.CountryId == countryId);
+            => _context.Cities.Where(c => c.CountryId == countryId && !c.IsDeleted);
 
         // Returns all available system roles.
         public IQueryable<Role> GetAllRoles()
-            => _context.Roles.AsQueryable();
+            => _context.Roles.Where(r => !r.IsDeleted).AsQueryable();
 
         // Returns all stores for branch selection.
         public IQueryable<Store> GetAllStores()
-            => _context.Stores.AsQueryable();
+            => _context.Stores.Where(s => !s.IsDeleted).AsQueryable();
 
         // Returns addresses in a city for existing address reuse.
         public IQueryable<Address> GetAddressesByCity(int cityId)
-            => _context.Addresses.Where(a => a.CityId == cityId);
+            => _context.Addresses.Where(a => a.CityId == cityId && !a.IsDeleted);
 
         // Finds a user by email with full profile, role, and address details.
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _context.Users
+                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
@@ -182,6 +185,7 @@ namespace MovieRental.Repository.Repositories
         {
             var hashed = HashRefreshToken(refreshToken);
             return await _context.Users
+                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
@@ -215,49 +219,31 @@ namespace MovieRental.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // Safely unlinks or deletes a staff record when changing roles.
+        // Safely unlinks and soft deletes a staff record when changing roles.
         public async Task DeleteStaffByUserIdAsync(int userId)
         {
             var staff = await _context.Staff
-                .Include(s => s.Rentals)
-                .Include(s => s.Payments)
                 .FirstOrDefaultAsync(s => s.UserId == userId);
 
             if (staff != null)
             {
-                if (staff.Rentals.Any() || staff.Payments.Any())
-                {
-                    // Has historical transactions: unlink user account to preserve financial ledger
-                    staff.UserId = null;
-                }
-                else
-                {
-                    _context.Staff.Remove(staff);
-                }
+                staff.IsDeleted = true;
+                staff.UserId = null;
                 await _context.SaveChangesAsync();
             }
         }
 
-        // Safely unlinks or deletes a customer record when changing roles.
+        // Safely unlinks and soft deletes a customer record when changing roles.
         public async Task DeleteCustomerByUserIdAsync(int userId)
         {
             var customer = await _context.Customers
-                .Include(c => c.Rentals)
-                .Include(c => c.Payments)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (customer != null)
             {
-                if (customer.Rentals.Any() || customer.Payments.Any())
-                {
-                    // Has historical transactions: unlink user account and deactivate to preserve ledger
-                    customer.UserId = null;
-                    customer.Active = 0;
-                }
-                else
-                {
-                    _context.Customers.Remove(customer);
-                }
+                customer.IsDeleted = true;
+                customer.UserId = null;
+                customer.Active = 0;
                 await _context.SaveChangesAsync();
             }
         }

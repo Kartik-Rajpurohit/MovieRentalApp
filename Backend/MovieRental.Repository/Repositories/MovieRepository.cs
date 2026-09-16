@@ -16,12 +16,13 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all movies without tracking, loading related language, categories, and actors.
+        // Reads all active movies without tracking, loading related language, categories, and actors.
         // Returns IQueryable so filtering, sorting, and pagination can be applied in the service.
         public IQueryable<Movie> GetAllMovies()
         {
             return _context.Movies
                 .AsNoTracking()
+                .Where(m => !m.IsDeleted)
                 .Include(m => m.Language)
                 .Include(m => m.MovieCategories)
                     .ThenInclude(mc => mc.Category)
@@ -29,17 +30,18 @@ namespace MovieRental.Repository.Repositories
                     .ThenInclude(ma => ma.Actor);
         }
 
-        // Finds a movie by ID with all related categories, actors, languages, and inventory items.
+        // Finds an active movie by ID with all related categories, actors, languages, and inventory items.
         public async Task<Movie?> GetMovieByIdAsync(int id)
         {
             return await _context.Movies
+                .Where(m => !m.IsDeleted)
                 .Include(m => m.Language)
                 .Include(m => m.OriginalLanguage)
                 .Include(m => m.MovieCategories)
                     .ThenInclude(mc => mc.Category)
                 .Include(m => m.MovieActors)
                     .ThenInclude(ma => ma.Actor)
-                .Include(m => m.Inventories)
+                .Include(m => m.Inventories.Where(i => !i.IsDeleted))
                 .FirstOrDefaultAsync(m => m.MovieId == id);
         }
 
@@ -63,27 +65,28 @@ namespace MovieRental.Repository.Repositories
             return await GetMovieByIdAsync(movie.MovieId);
         }
 
-        // Removes a movie from the database if it exists.
+        // Soft-deletes a movie record by setting IsDeleted = true.
         public async Task<bool> DeleteMovieAsync(int id)
         {
             var movie = await _context.Movies.FindAsync(id);
-            if (movie == null) return false;
+            if (movie == null || movie.IsDeleted) return false;
 
-            _context.Movies.Remove(movie);
+            movie.IsDeleted = true;
+            movie.LastUpdate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // Returns all languages without tracking for movie form dropdowns.
+        // Returns all active languages without tracking for movie form dropdowns.
         public IQueryable<Language> GetAllLanguages()
-            => _context.Languages.AsNoTracking().AsQueryable();
+            => _context.Languages.AsNoTracking().Where(l => !l.IsDeleted).AsQueryable();
 
-        // Returns all categories without tracking for movie genre selection.
+        // Returns all active categories without tracking for movie genre selection.
         public IQueryable<Category> GetAllCategories()
-            => _context.Categories.AsNoTracking().AsQueryable();
+            => _context.Categories.AsNoTracking().Where(c => !c.IsDeleted).AsQueryable();
 
-        // Returns all actors without tracking for movie cast selection.
+        // Returns all active actors without tracking for movie cast selection.
         public IQueryable<Actor> GetAllActors()
-            => _context.Actors.AsNoTracking().AsQueryable();
+            => _context.Actors.AsNoTracking().Where(a => !a.IsDeleted).AsQueryable();
     }
 }

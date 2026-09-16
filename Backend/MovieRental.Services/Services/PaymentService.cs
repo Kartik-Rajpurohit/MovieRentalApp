@@ -235,6 +235,18 @@ namespace MovieRental.Services.Services
                     $"Customer #{dto.CustomerId} does not match the customer on rental record #{dto.RentalId} (Customer #{rental.CustomerId}).");
             }
 
+            if (!await _rentalRepository.CustomerExistsAsync(dto.CustomerId))
+            {
+                _logger.LogWarning("Payment creation rejected: Customer #{CustomerId} does not exist or has been deleted", dto.CustomerId);
+                throw new InvalidOperationException($"Customer #{dto.CustomerId} does not exist or has been deleted.");
+            }
+
+            if (!await _rentalRepository.StaffExistsAsync(dto.StaffId))
+            {
+                _logger.LogWarning("Payment creation rejected: Staff member #{StaffId} does not exist or has been deleted", dto.StaffId);
+                throw new InvalidOperationException($"Staff member #{dto.StaffId} does not exist or has been deleted.");
+            }
+
             var userPrincipal = _httpContextAccessor.HttpContext?.User;
             var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
 

@@ -24,6 +24,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
+        // Soft delete flag indicating whether this actor is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Navigation property linking the actor to movies via the film_actor junction table.
         public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     }

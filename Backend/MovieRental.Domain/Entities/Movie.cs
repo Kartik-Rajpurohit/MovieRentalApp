@@ -69,6 +69,10 @@ namespace MovieRental.Domain.Entities
         [Column("special_features")]
         public string[]? SpecialFeatures { get; set; }
 
+        // Soft delete flag indicating whether this movie is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Navigation property linking the movie to its cast via the film_actor junction table.
         public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
 

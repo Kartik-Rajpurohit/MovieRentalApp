@@ -40,6 +40,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
+        // Soft delete flag indicating whether this rental record is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // One Rental → Many Payments (e.g. advance + late fee)
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }

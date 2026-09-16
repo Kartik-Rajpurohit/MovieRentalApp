@@ -19,5 +19,11 @@ namespace MovieRental.Repository.Interfaces
 
         // Deletes an inventory copy by ID; returns true if deleted, false if not found.
         Task<bool> DeleteInventoryAsync(int id);
+
+        // Checks whether an active movie exists by ID.
+        Task<bool> MovieExistsAsync(int movieId);
+
+        // Checks whether an active store exists by ID.
+        Task<bool> StoreExistsAsync(int storeId);
     }
 }

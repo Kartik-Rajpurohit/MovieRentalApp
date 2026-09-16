@@ -32,6 +32,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
+        // Soft delete flag indicating whether this inventory copy is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Collection of all rental transactions involving this specific copy over time.
         public ICollection<Rental> Rentals { get; set; } = new List<Rental>();
     }

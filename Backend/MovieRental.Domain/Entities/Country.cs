@@ -20,6 +20,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
+        // Soft delete flag indicating whether this country is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // Collection of cities located within this country.
         public ICollection<City> Cities { get; set; } = new List<City>();
     }

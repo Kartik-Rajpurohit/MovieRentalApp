@@ -114,6 +114,16 @@ namespace MovieRental.Services.Services
         // Adds a new movie inventory copy to a store.
         public async Task<InventoryResponseDto> CreateInventoryAsync(CreateInventoryDto dto)
         {
+            if (!await _inventoryRepository.MovieExistsAsync(dto.MovieId))
+            {
+                throw new InvalidOperationException($"Movie with ID {dto.MovieId} does not exist or has been deleted.");
+            }
+
+            if (!await _inventoryRepository.StoreExistsAsync(dto.StoreId))
+            {
+                throw new InvalidOperationException($"Store with ID {dto.StoreId} does not exist or has been deleted.");
+            }
+
             var entity = new Inventory
             {
                 MovieId = dto.MovieId,
@@ -127,6 +137,11 @@ namespace MovieRental.Services.Services
         // Updates the store assignment of an inventory copy.
         public async Task<InventoryResponseDto?> UpdateInventoryAsync(UpdateInventoryDto dto)
         {
+            if (dto.StoreId.HasValue && !await _inventoryRepository.StoreExistsAsync(dto.StoreId.Value))
+            {
+                throw new InvalidOperationException($"Store with ID {dto.StoreId.Value} does not exist or has been deleted.");
+            }
+
             var entity = new Inventory
             {
                 InventoryId = dto.InventoryId,

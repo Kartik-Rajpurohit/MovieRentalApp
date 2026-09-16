@@ -16,19 +16,21 @@ public class AddressRepository : IAddressRepository
         _context = context;
     }
 
-    // Reads all addresses without tracking, loading related City and Country records.
+    // Reads all active addresses without tracking, loading related City and Country records.
     public IQueryable<Address> GetAllAddresses()
         => _context.Addresses
             .AsNoTracking()
+            .Where(a => !a.IsDeleted && !a.City.IsDeleted)
             .Include(a => a.City).ThenInclude(c => c.Country)
             .AsQueryable();
 
-    // Finds an address by ID, loading related City, Country, Users, and Stores.
+    // Finds an active address by ID, loading related City, Country, Users, and Stores.
     public async Task<Address?> GetAddressByIdAsync(int id)
         => await _context.Addresses
+            .Where(a => !a.IsDeleted)
             .Include(a => a.City).ThenInclude(c => c.Country)
-            .Include(a => a.Users)
-            .Include(a => a.Stores)
+            .Include(a => a.Users.Where(u => !u.IsDeleted))
+            .Include(a => a.Stores.Where(s => !s.IsDeleted))
             .FirstOrDefaultAsync(a => a.AddressId == id);
 
     // Adds a new address to the database and re-fetches it with related entities.
@@ -43,7 +45,7 @@ public class AddressRepository : IAddressRepository
     public async Task<Address?> UpdateAddressAsync(Address address)
     {
         var existing = await _context.Addresses.FindAsync(address.AddressId);
-        if (existing == null) return null;
+        if (existing == null || existing.IsDeleted) return null;
         existing.Street = address.Street;
         existing.PostalCode = address.PostalCode;
         existing.Phone = address.Phone;
@@ -53,13 +55,18 @@ public class AddressRepository : IAddressRepository
         return await GetAddressByIdAsync(existing.AddressId);
     }
 
-    // Deletes the address from the database if it exists.
+    // Soft-deletes the address from the database if it exists.
     public async Task<bool> DeleteAddressAsync(int id)
     {
         var address = await _context.Addresses.FindAsync(id);
-        if (address == null) return false;
-        _context.Addresses.Remove(address);
+        if (address == null || address.IsDeleted) return false;
+        address.IsDeleted = true;
+        address.LastUpdate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
     }
+
+    // Checks whether an active city exists by ID.
+    public async Task<bool> CityExistsAsync(int cityId)
+        => await _context.Cities.AnyAsync(c => c.CityId == cityId && !c.IsDeleted);
 }

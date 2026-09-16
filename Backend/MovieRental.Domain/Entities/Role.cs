@@ -20,6 +20,10 @@ namespace MovieRental.Domain.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
+        // Soft delete flag indicating whether this role is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // One Role → Many Users
         public ICollection<User> Users { get; set; } = new List<User>();
     }

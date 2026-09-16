@@ -22,6 +22,10 @@ namespace MovieRental.Domain.Entities
         [Column("picture")]
         public byte[]? Picture { get; set; }
 
+        // Soft delete flag indicating whether this staff member is active or deleted.
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
         // FK → User (staff member's app login account — optional)
         [Column("user_id")]
         [ForeignKey("User")]
