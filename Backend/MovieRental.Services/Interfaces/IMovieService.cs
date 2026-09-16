@@ -5,22 +5,22 @@ using MovieRental.Domain.QueryParameters;
 namespace MovieRental.Services.Interfaces
 {
     // Defines business operations for movies, including search, details, and lookup options.
-    public interface IFilmService
+    public interface IMovieService
     {
         // Retrieves a paginated and filtered catalog of movies.
-        Task<PaginatedResponseDto<MovieResponseDto>> GetAllFilmsAsync(MovieQueryParametersDto queryParams);
+        Task<PaginatedResponseDto<MovieResponseDto>> GetAllMoviesAsync(MovieQueryParametersDto queryParams);
 
         // Retrieves detailed movie information by ID, including actors and categories.
-        Task<MovieDetailDto?> GetFilmByIdAsync(int id);
+        Task<MovieDetailDto?> GetMovieByIdAsync(int id);
 
         // Validates and creates a new movie with related actors and categories.
-        Task<MovieResponseDto> CreateFilmAsync(CreateMovieDto dto);
+        Task<MovieResponseDto> CreateMovieAsync(CreateMovieDto dto);
 
         // Updates an existing movie and synchronizes related actors/categories.
-        Task<MovieResponseDto?> UpdateFilmAsync(UpdateMovieDto dto);
+        Task<MovieResponseDto?> UpdateMovieAsync(UpdateMovieDto dto);
 
         // Deletes a movie record by ID.
-        Task<bool> DeleteFilmAsync(int id);
+        Task<bool> DeleteMovieAsync(int id);
 
         // Retrieves languages formatted as dropdown options for movie forms.
         Task<IEnumerable<DropdownDto>> GetAllLanguagesAsync(int page, int pageSize);

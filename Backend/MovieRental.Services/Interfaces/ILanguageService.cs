@@ -24,6 +24,6 @@ public interface ILanguageService
 
 
     // Retrieves a paginated list of movies associated with a specific language.
-    Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByLanguageAsync(int languageId, int page, int pageSize, string? search);
+    Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByLanguageAsync(int languageId, int page, int pageSize, string? search);
 }
 

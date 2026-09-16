@@ -12,6 +12,6 @@ public class CategoryResponseDto
     // Timestamp when the category was last updated
     public DateTime LastUpdate { get; set; }
 
-    // Total films linked to this category
-    public int FilmCount { get; set; }
+    // Total movies linked to this category
+    public int MovieCount { get; set; }
 }

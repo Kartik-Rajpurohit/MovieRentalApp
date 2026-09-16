@@ -6,7 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
 
-// Handles actor management and movie filmography queries.
+// Handles actor management and movie queries.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin,Staff,Customer")] // All authenticated users can read actors; write operations require Admin/Staff
@@ -74,12 +74,12 @@ public class ActorController : ControllerBase
     }
 
 
-    // Gets a paginated list of films featuring this actor.
-    // Supports optional title search within the actor's filmography.
-    [HttpGet("{id}/films")]
-    public async Task<IActionResult> GetFilms(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
+    // Gets a paginated list of movies featuring this actor.
+    // Supports optional title search within the actor's movies.
+    [HttpGet("{id}/movies")]
+    public async Task<IActionResult> GetMovies(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
     {
-        var result = await _actorService.GetFilmsByActorAsync(id, page, pageSize, search);
+        var result = await _actorService.GetMoviesByActorAsync(id, page, pageSize, search);
         return Ok(result);
     }
 }

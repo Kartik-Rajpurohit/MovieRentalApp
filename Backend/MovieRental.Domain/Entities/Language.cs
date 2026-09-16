@@ -20,10 +20,10 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
-        // Films where this language is the primary spoken/dubbed audio.
-        public ICollection<Film> Films { get; set; } = new List<Film>();
+        // Movies where this language is the primary spoken/dubbed audio.
+        public ICollection<Movie> Movies { get; set; } = new List<Movie>();
 
-        // Films where this language is the original production audio.
-        public ICollection<Film> OriginalLanguageFilms { get; set; } = new List<Film>();
+        // Movies where this language is the original production audio.
+        public ICollection<Movie> OriginalLanguageMovies { get; set; } = new List<Movie>();
     }
 }

@@ -12,7 +12,7 @@ public class StaffDashboardDto
     // Number of currently active (unreturned) rentals at this store
     public int ActiveRentals { get; set; }
 
-    // Number of available film copies in this store's inventory
+    // Number of available movie copies in this store's inventory
     public int AvailableInventory { get; set; }
 
     // Total registered customers at this store

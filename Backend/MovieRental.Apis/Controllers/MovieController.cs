@@ -12,12 +12,12 @@ namespace MovieRental.Apis.Controllers
     [Authorize(Roles = "Admin,Staff,Customer")] // All users can browse the movie catalog; write actions require Admin
     public class MovieController : ControllerBase
     {
-        // Injected service handling film database queries, joins, and mutations
-        private readonly IFilmService _filmService;
+        // Injected service handling movie database queries, joins, and mutations
+        private readonly IMovieService _movieService;
 
-        public MovieController(IFilmService filmService)
+        public MovieController(IMovieService movieService)
         {
-            _filmService = filmService;
+            _movieService = movieService;
         }
 
         // Gets a paginated, filtered, and sorted list of movies.
@@ -25,49 +25,49 @@ namespace MovieRental.Apis.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] MovieQueryParametersDto queryParams)
         {
-            var result = await _filmService.GetAllFilmsAsync(queryParams);
+            var result = await _movieService.GetAllMoviesAsync(queryParams);
             return Ok(result);
         }
 
-        // Gets full movie details by FilmId (including categories, actors, and rental statistics).
+        // Gets full movie details by MovieId (including categories, actors, and rental statistics).
         // Returns 404 NotFound if the movie does not exist.
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _filmService.GetFilmByIdAsync(id);
-            return result is null ? NotFound($"Film with id {id} not found") : Ok(result);
+            var result = await _movieService.GetMovieByIdAsync(id);
+            return result is null ? NotFound($"Movie with id {id} not found") : Ok(result);
         }
 
-        // Creates a new film with category and actor associations.
+        // Creates a new movie with category and actor associations.
         // Restricted to Admin role.
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateMovieDto dto)
         {
-            var result = await _filmService.CreateFilmAsync(dto);
+            var result = await _movieService.CreateMovieAsync(dto);
             return Ok(result);
         }
 
-        // Partially updates an existing film (only fields provided in the request body are modified).
+        // Partially updates an existing movie (only fields provided in the request body are modified).
         // Restricted to Admin role.
-        // Returns 404 NotFound if the film does not exist.
+        // Returns 404 NotFound if the movie does not exist.
         [HttpPatch]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromBody] UpdateMovieDto dto)
         {
-            var result = await _filmService.UpdateFilmAsync(dto);
-            return result is null ? NotFound($"Film with id {dto.FilmId} not found") : Ok(result);
+            var result = await _movieService.UpdateMovieAsync(dto);
+            return result is null ? NotFound($"Movie with id {dto.MovieId} not found") : Ok(result);
         }
 
-        // Deletes a film by ID.
+        // Deletes a movie by ID.
         // Restricted to Admin role.
-        // Returns 200 OK on success, or 404 NotFound if film does not exist.
+        // Returns 200 OK on success, or 404 NotFound if movie does not exist.
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _filmService.DeleteFilmAsync(id);
-            return deleted ? Ok() : NotFound($"Film with id {id} not found");
+            var deleted = await _movieService.DeleteMovieAsync(id);
+            return deleted ? Ok() : NotFound($"Movie with id {id} not found");
         }
 
         // Gets a list of languages for dropdown selection in the Add/Edit Movie form.
@@ -76,7 +76,7 @@ namespace MovieRental.Apis.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 100)
         {
-            var result = await _filmService.GetAllLanguagesAsync(page, pageSize);
+            var result = await _movieService.GetAllLanguagesAsync(page, pageSize);
             return Ok(result);
         }
 
@@ -86,7 +86,7 @@ namespace MovieRental.Apis.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 100)
         {
-            var result = await _filmService.GetAllCategoriesAsync(page, pageSize);
+            var result = await _movieService.GetAllCategoriesAsync(page, pageSize);
             return Ok(result);
         }
 
@@ -96,7 +96,7 @@ namespace MovieRental.Apis.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 100)
         {
-            var result = await _filmService.GetAllActorsAsync(page, pageSize);
+            var result = await _movieService.GetAllActorsAsync(page, pageSize);
             return Ok(result);
         }
     }

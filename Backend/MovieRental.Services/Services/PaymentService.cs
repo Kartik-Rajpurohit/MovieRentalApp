@@ -46,7 +46,7 @@ namespace MovieRental.Services.Services
                 ? $"{p.Staff.User.FirstName} {p.Staff.User.LastName}".Trim()
                 : $"Staff {p.StaffId}",
             RentalId = p.RentalId,
-            FilmTitle = p.Rental?.Inventory?.Film?.Title ?? "",
+            MovieTitle = p.Rental?.Inventory?.Movie?.Title ?? "",
             Amount = p.Amount,
             PaymentDate = p.PaymentDate,
         };
@@ -126,7 +126,7 @@ namespace MovieRental.Services.Services
             {
                 var s = queryParams.Search.ToLower();
                 query = query.Where(p =>
-                    p.Rental.Inventory.Film.Title.ToLower().Contains(s) ||
+                    p.Rental.Inventory.Movie.Title.ToLower().Contains(s) ||
                     (p.Customer.User != null && (p.Customer.User.FirstName + " " + p.Customer.User.LastName).ToLower().Contains(s)) ||
                     p.PaymentId.ToString().Contains(s));
             }
@@ -140,9 +140,9 @@ namespace MovieRental.Services.Services
                 "paymentdate" => queryParams.SortOrder?.ToLower() == "desc"
                     ? query.OrderByDescending(p => p.PaymentDate)
                     : query.OrderBy(p => p.PaymentDate),
-                "filmtitle" => queryParams.SortOrder?.ToLower() == "desc"
-                    ? query.OrderByDescending(p => p.Rental.Inventory.Film.Title)
-                    : query.OrderBy(p => p.Rental.Inventory.Film.Title),
+                "movietitle" => queryParams.SortOrder?.ToLower() == "desc"
+                    ? query.OrderByDescending(p => p.Rental.Inventory.Movie.Title)
+                    : query.OrderBy(p => p.Rental.Inventory.Movie.Title),
                 _ => query.OrderByDescending(p => p.PaymentId)
             };
 
@@ -165,7 +165,7 @@ namespace MovieRental.Services.Services
                         ? (p.Staff.User.FirstName + " " + p.Staff.User.LastName).Trim()
                         : "Staff #" + p.StaffId,
                     RentalId = p.RentalId,
-                    FilmTitle = p.Rental.Inventory.Film.Title,
+                    MovieTitle = p.Rental.Inventory.Movie.Title,
                     Amount = p.Amount,
                     PaymentDate = p.PaymentDate,
                 })

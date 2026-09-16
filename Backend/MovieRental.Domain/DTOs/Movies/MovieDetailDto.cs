@@ -3,10 +3,10 @@ namespace MovieRental.Domain.DTOs.Movies;
 // Response DTO containing full details of a movie, including categories, cast actors, and languages
 public class MovieDetailDto
 {
-    // Unique ID of the film
-    public int FilmId { get; set; }
+    // Unique ID of the movie
+    public int MovieId { get; set; }
 
-    // Film title
+    // Movie title
     public string Title { get; set; } = string.Empty;
 
     // Full synopsis or description

@@ -105,7 +105,7 @@ export default function CategoryTable() {
         rowClassName={() => "cursor-pointer"}
       >
         <Column field="name" header="Name" sortable />
-        <Column field="filmCount" header="Movies" style={{ width: "100px" }} />
+        <Column field="movieCount" header="Movies" style={{ width: "100px" }} />
         <Column
           field="lastUpdate"
           header="Last Updated"

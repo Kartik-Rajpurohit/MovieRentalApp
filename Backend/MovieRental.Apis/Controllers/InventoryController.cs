@@ -20,7 +20,7 @@ namespace MovieRental.Apis.Controllers
             _inventoryService = inventoryService;
         }
 
-        // Gets a paginated list of inventory copies with film title, store, and dynamic availability filters.
+        // Gets a paginated list of inventory copies with movie title, store, and dynamic availability filters.
         // Query parameters: page, pageSize, search, storeId, isAvailable.
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] InventoryQueryParametersDto queryParams)
@@ -39,8 +39,8 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // Adds a new physical copy of a film to a specific store.
-        // Receives FilmId and StoreId in request body.
+        // Adds a new physical copy of a movie to a specific store.
+        // Receives MovieId and StoreId in request body.
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateInventoryDto dto)
         {

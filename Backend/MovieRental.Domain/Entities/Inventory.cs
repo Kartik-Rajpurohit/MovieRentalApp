@@ -12,13 +12,13 @@ namespace MovieRental.Domain.Entities
         [Column("inventory_id")]
         public int InventoryId { get; set; }
 
-        // Foreign key linking to the film this copy is an instance of.
+        // Foreign key linking to the movie this copy is an instance of. Maps to column 'film_id'.
         [Column("film_id")]
-        [ForeignKey("Film")]
-        public int FilmId { get; set; }
+        [ForeignKey("Movie")]
+        public int MovieId { get; set; }
 
-        // Navigation property for the movie film.
-        public Film Film { get; set; } = null!;
+        // Navigation property for the movie.
+        public Movie Movie { get; set; } = null!;
 
         // Foreign key linking to the physical store where this copy is held.
         [Column("store_id")]

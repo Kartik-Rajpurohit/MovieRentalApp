@@ -12,7 +12,7 @@ const labelStyle = {
   color: "#374151",
 };
 
-const emptyForm = { filmId: null, storeId: null };
+const emptyForm = { movieId: null, storeId: null };
 
 // Modal dialog for adding a new movie inventory copy or editing store assignment of an existing copy
 export default function InventoryDialog({
@@ -23,7 +23,7 @@ export default function InventoryDialog({
   inventory = null,
 }) {
   const isEdit = mode === "edit";
-  // Form input state (filmId and storeId)
+  // Form input state (movieId and storeId)
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function InventoryDialog({
     if (isEdit && inventory) {
       setForm({
         inventoryId: inventory.inventoryId,
-        filmId: inventory.filmId,
+        movieId: inventory.movieId,
         storeId: inventory.storeId,
       });
     } else {
@@ -46,7 +46,7 @@ export default function InventoryDialog({
   // Validate movie ID and store ID inputs
   const validate = () => {
     const e = {};
-    if (!isEdit && !form.filmId) e.filmId = "Movie ID is required";
+    if (!isEdit && !form.movieId) e.movieId = "Movie ID is required";
     if (!form.storeId) e.storeId = "Store ID is required";
     return e;
   };
@@ -63,7 +63,7 @@ export default function InventoryDialog({
       if (isEdit) {
         await updateInventory({ inventoryId: form.inventoryId, storeId: form.storeId });
       } else {
-        await createInventory({ filmId: form.filmId, storeId: form.storeId });
+        await createInventory({ movieId: form.movieId, storeId: form.storeId });
       }
       onSuccess();
       onHide();
@@ -116,15 +116,15 @@ export default function InventoryDialog({
           <div>
             <label style={labelStyle}>Movie ID</label>
             <InputNumber
-              value={form.filmId}
-              onValueChange={(e) => setForm((prev) => ({ ...prev, filmId: e.value }))}
+              value={form.movieId}
+              onValueChange={(e) => setForm((prev) => ({ ...prev, movieId: e.value }))}
               placeholder="Enter movie ID"
               style={{ width: "100%" }}
               inputStyle={{ width: "100%" }}
-              className={errors.filmId ? "p-invalid" : ""}
+              className={errors.movieId ? "p-invalid" : ""}
               min={1}
             />
-            {errors.filmId && <small className="p-error">{errors.filmId}</small>}
+            {errors.movieId && <small className="p-error">{errors.movieId}</small>}
           </div>
         )}
 

@@ -49,7 +49,7 @@ export default function CustomerDashboard({ stats }) {
           emptyMessage="No active rentals."
         >
           <Column field="rentalId" header="ID" style={{ width: "70px" }} />
-          <Column field="filmTitle" header="Movie" />
+          <Column field="movieTitle" header="Movie" />
           <Column
             field="rentalDate"
             header="Rented On"

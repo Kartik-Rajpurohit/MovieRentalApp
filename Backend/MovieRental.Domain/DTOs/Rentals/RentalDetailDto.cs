@@ -12,17 +12,17 @@ public class RentalDetailDto
     // Date and time when the movie was returned (null if still rented out)
     public DateTime? ReturnDate { get; set; }
 
-    // Indicates whether the film has been returned
+    // Indicates whether the movie has been returned
     public bool IsReturned => ReturnDate.HasValue;
 
     // Inventory copy ID
     public int InventoryId { get; set; }
 
-    // Film ID
-    public int FilmId { get; set; }
+    // Movie ID
+    public int MovieId { get; set; }
 
-    // Film title
-    public string FilmTitle { get; set; } = string.Empty;
+    // Movie title
+    public string MovieTitle { get; set; } = string.Empty;
 
     // Customer ID
     public int CustomerId { get; set; }

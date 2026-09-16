@@ -12,7 +12,7 @@ public class LanguageResponseDto
     // Timestamp when the language was last updated
     public DateTime LastUpdate { get; set; }
 
-    // Total films linked to this language
-    public int FilmCount { get; set; }
+    // Total movies linked to this language
+    public int MovieCount { get; set; }
 }
 

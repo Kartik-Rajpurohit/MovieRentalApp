@@ -2,10 +2,10 @@ using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces
 {
-    // Defines database operations for Category entities and genre film listings.
+    // Defines database operations for Category entities and genre movie listings.
     public interface ICategoryRepository
     {
-        // Returns a queryable collection of all categories with their film links.
+        // Returns a queryable collection of all categories with their movie links.
         IQueryable<Category> GetAllCategories();
 
         // Finds a category by its ID.
@@ -20,7 +20,7 @@ namespace MovieRental.Repository.Interfaces
         // Deletes a category by ID; returns true if deleted, false if not found.
         Task<bool> DeleteCategoryAsync(int id);
 
-        // Returns a queryable collection of films that belong to the specified category.
-        IQueryable<Film> GetFilmsByCategoryId(int categoryId);
+        // Returns a queryable collection of movies that belong to the specified category.
+        IQueryable<Movie> GetMoviesByCategoryId(int categoryId);
     }
 }

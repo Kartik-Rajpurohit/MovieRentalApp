@@ -10,7 +10,7 @@ import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import LanguageDialog from "../../components/languages/LanguageDialog";
-import { getLanguageById, getFilmsByLanguage, deleteLanguage } from "../../services/languageService";
+import { getLanguageById, getMoviesByLanguage, deleteLanguage } from "../../services/languageService";
 import { AuthContext } from "../../context/AuthContext";
 
 const RATING_SEVERITY = {
@@ -27,10 +27,10 @@ export default function LanguageDetailPage() {
   // State holding language profile information
   const [language, setLanguage] = useState(null);
   // Paginated movies in this language
-  const [films, setFilms] = useState([]);
+  const [movies, setMovies] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [pageLoading, setPageLoading] = useState(true);
-  const [filmsLoading, setFilmsLoading] = useState(false);
+  const [moviesLoading, setMoviesLoading] = useState(false);
   // Controls visibility of the edit language dialog
   const [editVisible, setEditVisible] = useState(false);
   const [search, setSearch] = useState("");
@@ -40,7 +40,7 @@ export default function LanguageDetailPage() {
   // Fetch language details when the ID changes
   useEffect(() => { loadLanguage(); }, [id]);
   // Fetch movies whenever ID, pagination page, or search query change
-  useEffect(() => { loadFilms(); }, [id, page, search]);
+  useEffect(() => { loadMovies(); }, [id, page, search]);
 
   // Load language details from the backend
   const loadLanguage = async () => {
@@ -55,17 +55,17 @@ export default function LanguageDetailPage() {
     }
   };
 
-  // Load films associated with this language with pagination and search
-  const loadFilms = async () => {
-    setFilmsLoading(true);
+  // Load movies associated with this language with pagination and search
+  const loadMovies = async () => {
+    setMoviesLoading(true);
     try {
-      const data = await getFilmsByLanguage(id, page + 1, rows, search);
-      setFilms(data.data ?? []);
+      const data = await getMoviesByLanguage(id, page + 1, rows, search);
+      setMovies(data.data ?? []);
       setTotalRecords(data.totalRecords ?? 0);
     } catch (err) {
       console.error(err);
     } finally {
-      setFilmsLoading(false);
+      setMoviesLoading(false);
     }
   };
 
@@ -109,16 +109,16 @@ export default function LanguageDetailPage() {
         backPath="/languages"
         backLabel="Languages"
         title={language?.name}
-        subtitle={`${language?.filmCount} movie${language?.filmCount !== 1 ? "s" : ""}`}
+        subtitle={`${language?.movieCount} movie${language?.movieCount !== 1 ? "s" : ""}`}
         actions={user?.role === "Admin" ? [
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
         ] : []}
       />
 
-      {/* Films in this language */}
+      {/* Movies in this language */}
       <Card title={`Movies in "${language?.name}"`}>
-        {/* Search inside films */}
+        {/* Search inside movies */}
         <div style={{ marginBottom: "16px" }}>
           <InputText
             value={search}
@@ -129,17 +129,17 @@ export default function LanguageDetailPage() {
         </div>
 
         <DataTable
-          value={films}
+          value={movies}
           paginator
           lazy
-          loading={filmsLoading}
+          loading={moviesLoading}
           first={page * rows}
           rows={rows}
           totalRecords={totalRecords}
           onPage={(e) => setPage(e.page)}
           rowsPerPageOptions={[5, 10, 20]}
           emptyMessage="No movies found."
-          onRowClick={(e) => navigate(`/movies/${e.data.filmId}`)}
+          onRowClick={(e) => navigate(`/movies/${e.data.movieId}`)}
           rowClassName={() => "cursor-pointer"}
         >
           <Column field="title" header="Title" sortable />

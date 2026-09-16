@@ -8,7 +8,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
-// Handles business logic for movie language options and film associations.
+// Handles business logic for movie language options and movie associations.
 public class LanguageService : ILanguageService
 {
     private readonly ILanguageRepository _languageRepository;
@@ -19,7 +19,7 @@ public class LanguageService : ILanguageService
         _languageRepository = languageRepository;
     }
 
-    // Retrieves all available languages with associated film counts.
+    // Retrieves all available languages with associated movie counts.
     public async Task<IEnumerable<LanguageResponseDto>> GetAllLanguagesAsync()
     {
         // Fetch entities first, then map in memory — avoids EF Core translation issues
@@ -32,7 +32,7 @@ public class LanguageService : ILanguageService
             LanguageId = l.LanguageId,
             Name = l.Name,
             LastUpdate = l.LastUpdate,
-            FilmCount = l.Films.Count
+            MovieCount = l.Movies.Count
         }).ToList();
     }
 
@@ -47,7 +47,7 @@ public class LanguageService : ILanguageService
             LanguageId = language.LanguageId,
             Name = language.Name,
             LastUpdate = language.LastUpdate,
-            FilmCount = language.Films.Count
+            MovieCount = language.Movies.Count
         };
     }
 
@@ -66,7 +66,7 @@ public class LanguageService : ILanguageService
             LanguageId = created.LanguageId,
             Name = created.Name,
             LastUpdate = created.LastUpdate,
-            FilmCount = 0
+            MovieCount = 0
         };
     }
 
@@ -87,7 +87,7 @@ public class LanguageService : ILanguageService
             LanguageId = updated.LanguageId,
             Name = updated.Name,
             LastUpdate = updated.LastUpdate,
-            FilmCount = updated.Films.Count
+            MovieCount = updated.Movies.Count
         };
     }
 
@@ -97,37 +97,37 @@ public class LanguageService : ILanguageService
 
 
     // Retrieves a paginated list of movies associated with a specific language.
-    public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByLanguageAsync(
+    public async Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByLanguageAsync(
         int languageId, int page, int pageSize, string? search)
     {
-        var query = _languageRepository.GetFilmsByLanguageId(languageId);
+        var query = _languageRepository.GetMoviesByLanguageId(languageId);
 
         // Filter movies by title if search query is provided.
         if (!string.IsNullOrEmpty(search))
-            query = query.Where(f => f.Title.ToLower().Contains(search.ToLower()));
+            query = query.Where(m => m.Title.ToLower().Contains(search.ToLower()));
 
         var totalRecords = await query.CountAsync();
 
         // Paginate and project movie entities to response DTOs.
         var data = await query
-            .OrderBy(f => f.Title)
+            .OrderBy(m => m.Title)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(f => new MovieResponseDto
+            .Select(m => new MovieResponseDto
             {
-                FilmId = f.FilmId,
-                Title = f.Title,
-                Description = f.Description,
-                ReleaseYear = f.ReleaseYear,
-                LanguageId = f.LanguageId,
-                LanguageName = f.Language.Name,
-                RentalDuration = f.RentalDuration,
-                RentalRate = f.RentalRate,
-                Length = f.Length,
-                ReplacementCost = f.ReplacementCost,
-                Rating = f.Rating,
-                Categories = f.FilmCategories
-                    .Select(fc => fc.Category.Name)
+                MovieId = m.MovieId,
+                Title = m.Title,
+                Description = m.Description,
+                ReleaseYear = m.ReleaseYear,
+                LanguageId = m.LanguageId,
+                LanguageName = m.Language.Name,
+                RentalDuration = m.RentalDuration,
+                RentalRate = m.RentalRate,
+                Length = m.Length,
+                ReplacementCost = m.ReplacementCost,
+                Rating = m.Rating,
+                Categories = m.MovieCategories
+                    .Select(mc => mc.Category.Name)
                     .ToList()
             })
             .ToListAsync();

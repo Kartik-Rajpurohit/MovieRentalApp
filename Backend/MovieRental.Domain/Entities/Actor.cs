@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRental.Domain.Entities
 {
-    // Represents an actor who can appear in multiple films.
+    // Represents an actor who can appear in multiple movies.
     [Table("actor")]
     public class Actor
     {
@@ -24,7 +24,7 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
-        // Navigation property linking the actor to films via the film_actor junction table.
-        public ICollection<FilmActor> FilmActors { get; set; } = new List<FilmActor>();
+        // Navigation property linking the actor to movies via the film_actor junction table.
+        public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
     }
 }

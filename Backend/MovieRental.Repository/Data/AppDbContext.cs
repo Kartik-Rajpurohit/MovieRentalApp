@@ -19,13 +19,13 @@ namespace MovieRental.Repository.Data
         public DbSet<City> Cities { get; set; }
         public DbSet<Address> Addresses { get; set; }
 
-        // Film-related tables
+        // Movie-related tables
         public DbSet<Language> Languages { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Actor> Actors { get; set; }
-        public DbSet<Film> Films { get; set; }
-        public DbSet<FilmActor> FilmActors { get; set; }
-        public DbSet<FilmCategory> FilmCategories { get; set; }
+        public DbSet<Movie> Movies { get; set; }
+        public DbSet<MovieActor> MovieActors { get; set; }
+        public DbSet<MovieCategory> MovieCategories { get; set; }
 
         // Business tables
         public DbSet<Customer> Customers { get; set; }

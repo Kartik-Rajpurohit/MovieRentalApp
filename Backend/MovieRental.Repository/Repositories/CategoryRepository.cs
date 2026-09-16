@@ -5,7 +5,7 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories
 {
-    // Handles database operations related to film categories and genres.
+    // Handles database operations related to movie categories and genres.
     public class CategoryRepository : ICategoryRepository
     {
         // Receives the database context used to access category data.
@@ -16,19 +16,19 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all categories without tracking, including film links for counting.
+        // Reads all categories without tracking, including movie links for counting.
         public IQueryable<Category> GetAllCategories()
         {
             return _context.Categories
                 .AsNoTracking()
-                .Include(c => c.FilmCategories);
+                .Include(c => c.MovieCategories);
         }
 
         // Finds a category by its ID.
         public async Task<Category?> GetCategoryByIdAsync(int id)
         {
             return await _context.Categories
-                .Include(c => c.FilmCategories)
+                .Include(c => c.MovieCategories)
                 .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
@@ -58,12 +58,12 @@ namespace MovieRental.Repository.Repositories
             return true;
         }
 
-        // Queries films belonging to this category through the FilmCategory join table.
-        public IQueryable<Film> GetFilmsByCategoryId(int categoryId)
-            => _context.FilmCategories
+        // Queries movies belonging to this category through the MovieCategory join table.
+        public IQueryable<Movie> GetMoviesByCategoryId(int categoryId)
+            => _context.MovieCategories
                 .AsNoTracking()
-                .Where(fc => fc.CategoryId == categoryId)
-                .Select(fc => fc.Film)
+                .Where(mc => mc.CategoryId == categoryId)
+                .Select(mc => mc.Movie)
                 .AsQueryable();
     }
 }

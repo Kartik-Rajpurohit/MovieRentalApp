@@ -170,7 +170,7 @@ export default function ActorTable() {
           body={(r) => `${r.firstName} ${r.lastName}`}
         />
         <Column
-          field="filmCount"
+          field="movieCount"
           header="Movies"
           sortable
           style={{ width: "100px" }}

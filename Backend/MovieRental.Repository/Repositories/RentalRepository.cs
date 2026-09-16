@@ -16,19 +16,19 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all rentals without tracking, loading inventory, film, customer, and staff details.
+        // Reads all rentals without tracking, loading inventory, movie, customer, and staff details.
         public IQueryable<Rental> GetAllRentals()
             => _context.Rentals
                 .AsNoTracking()
-                .Include(r => r.Inventory).ThenInclude(i => i.Film)
+                .Include(r => r.Inventory).ThenInclude(i => i.Movie)
                 .Include(r => r.Customer).ThenInclude(c => c.User)
                 .Include(r => r.Staff).ThenInclude(s => s.User)
                 .AsQueryable();
 
-        // Finds a rental by ID, including film, customer, staff, and linked payment records.
+        // Finds a rental by ID, including movie, customer, staff, and linked payment records.
         public async Task<Rental?> GetRentalByIdAsync(int id)
             => await _context.Rentals
-                .Include(r => r.Inventory).ThenInclude(i => i.Film)
+                .Include(r => r.Inventory).ThenInclude(i => i.Movie)
                 .Include(r => r.Customer).ThenInclude(c => c.User)
                 .Include(r => r.Staff).ThenInclude(s => s.User)
                 .Include(r => r.Payments)

@@ -17,15 +17,15 @@ public class ActorRepository : IActorRepository
     }
 
     // Reads all actors from the database without tracking for better query performance.
-    // Loads the FilmActors join table so related films can be counted.
+    // Loads the MovieActors join table so related movies can be counted.
     public IQueryable<Actor> GetAllActors()
-        => _context.Actors.AsNoTracking().Include(a => a.FilmActors).AsQueryable();
+        => _context.Actors.AsNoTracking().Include(a => a.MovieActors).AsQueryable();
 
-    // Finds an actor by ID and includes their film details.
+    // Finds an actor by ID and includes their movie details.
     public async Task<Actor?> GetActorByIdAsync(int id)
         => await _context.Actors
-            .Include(a => a.FilmActors)
-            .ThenInclude(fa => fa.Film)
+            .Include(a => a.MovieActors)
+            .ThenInclude(ma => ma.Movie)
             .FirstOrDefaultAsync(a => a.ActorId == id);
 
     // Adds a new actor record to the database and saves changes.
@@ -58,11 +58,11 @@ public class ActorRepository : IActorRepository
         return true;
     }
 
-    // Queries films linked to a specific actor through the FilmActors join table.
-    public IQueryable<Film> GetFilmsByActorId(int actorId)
-    => _context.FilmActors
+    // Queries movies linked to a specific actor through the MovieActors join table.
+    public IQueryable<Movie> GetMoviesByActorId(int actorId)
+    => _context.MovieActors
         .AsNoTracking()
-        .Where(fa => fa.ActorId == actorId)
-        .Select(fa => fa.Film)
+        .Where(ma => ma.ActorId == actorId)
+        .Select(ma => ma.Movie)
         .AsQueryable();
 }

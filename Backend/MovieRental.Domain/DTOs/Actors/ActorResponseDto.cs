@@ -18,6 +18,6 @@ public class ActorResponseDto
     // Timestamp when the actor was last modified in the database
     public DateTime LastUpdate { get; set; }
 
-    // Total number of films this actor has appeared in
-    public int FilmCount { get; set; }
+    // Total number of movies this actor has appeared in
+    public int MovieCount { get; set; }
 }

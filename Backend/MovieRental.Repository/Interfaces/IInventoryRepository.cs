@@ -2,16 +2,16 @@ using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces
 {
-    // Defines database operations for Inventory physical film copies.
+    // Defines database operations for Inventory physical movie copies.
     public interface IInventoryRepository
     {
-        // Returns a queryable collection of inventory items with film, store, and rental history.
+        // Returns a queryable collection of inventory items with movie, store, and rental history.
         IQueryable<Inventory> GetAllInventory();
 
-        // Finds an inventory copy by its ID with full film, store, and rental details.
+        // Finds an inventory copy by its ID with full movie, store, and rental details.
         Task<Inventory?> GetInventoryByIdAsync(int id);
 
-        // Adds a new physical copy of a film to a store.
+        // Adds a new physical copy of a movie to a store.
         Task<Inventory> CreateInventoryAsync(Inventory inventory);
 
         // Updates an inventory item's store assignment.

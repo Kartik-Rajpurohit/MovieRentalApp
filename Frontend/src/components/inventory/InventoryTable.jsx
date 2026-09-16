@@ -13,10 +13,10 @@ import { Badge } from "primereact/badge";
 import InventoryFilterDialog from "./InventoryFilterDialog";
 
 /**
- * Inventory table component displaying physical film copies across stores,
+ * Inventory table component displaying physical movie copies across stores,
  * their dynamic availability status (Available vs Rented), and stock management actions.
  */
-// Displays physical film copies in a DataTable with store filtering, availability status, server-side pagination, and add action
+// Displays physical movie copies in a DataTable with store filtering, availability status, server-side pagination, and add action
 export default function InventoryTable() {
   const navigate = useNavigate();
   // Server-side pagination hook
@@ -148,7 +148,7 @@ export default function InventoryTable() {
           sortable
           style={{ width: "80px" }}
         />
-        <Column field="filmTitle" header="Movie" sortable />
+        <Column field="movieTitle" header="Movie" sortable />
         <Column
           field="storeId"
           header="Store"

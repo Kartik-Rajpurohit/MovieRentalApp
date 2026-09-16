@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRental.Domain.Entities
 {
-    // Represents a film rental transaction — customer borrowing a specific inventory copy
+    // Represents a movie rental transaction — customer borrowing a specific inventory copy
     [Table("rental")]
     public class Rental
     {
@@ -11,7 +11,7 @@ namespace MovieRental.Domain.Entities
         [Column("rental_id")]
         public int RentalId { get; set; }
 
-        // Date and time when the film was rented out
+        // Date and time when the movie was rented out
         [Column("rental_date")]
         public DateTime RentalDate { get; set; }
 
@@ -21,13 +21,13 @@ namespace MovieRental.Domain.Entities
         public int InventoryId { get; set; }
         public Inventory Inventory { get; set; } = null!;
 
-        // FK → Customer (who rented the film)
+        // FK → Customer (who rented the movie)
         [Column("customer_id")]
         [ForeignKey("Customer")]
         public int CustomerId { get; set; }
         public Customer Customer { get; set; } = null!;
 
-        // Date and time when the film was returned — null means still rented out
+        // Date and time when the movie was returned — null means still rented out
         [Column("return_date")]
         public DateTime? ReturnDate { get; set; }
 

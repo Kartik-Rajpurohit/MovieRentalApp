@@ -53,7 +53,7 @@ export default function RentalDetailPage() {
     }
   };
 
-  // Mark the rented film as returned after confirmation
+  // Mark the rented movie as returned after confirmation
   const handleReturn = () => {
     confirmDialog({
       message: `Mark rental #${id} as returned?`,
@@ -107,13 +107,13 @@ export default function RentalDetailPage() {
       />
 
       <Card>
-        {/* Header — Film name + status */}
+        {/* Header — Movie name + status */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "32px" }}>
           <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <i className="pi pi-sync" style={{ fontSize: "1.8rem", color: "#6366f1" }} />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 600 }}>{rental.filmTitle}</h2>
+            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 600 }}>{rental.movieTitle}</h2>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
               <Tag value={rental.isReturned ? "Returned" : "Active"} severity={rental.isReturned ? "success" : "warning"} />
               <span style={{ color: "#6b7280", fontSize: "14px" }}>Rental #{rental.rentalId}</span>
@@ -124,7 +124,7 @@ export default function RentalDetailPage() {
         {/* Info Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "24px" }}>
           <div><p style={FIELD_LABEL}>Rental ID</p><p style={FIELD_VALUE}>{rental.rentalId}</p></div>
-          <div><p style={FIELD_LABEL}>Movie</p><p style={FIELD_VALUE}>{rental.filmTitle}</p></div>
+          <div><p style={FIELD_LABEL}>Movie</p><p style={FIELD_VALUE}>{rental.movieTitle}</p></div>
           <div><p style={FIELD_LABEL}>Inventory ID</p><p style={FIELD_VALUE}>{rental.inventoryId}</p></div>
           <div><p style={FIELD_LABEL}>Customer</p><p style={{ ...FIELD_VALUE, textTransform: "capitalize" }}>{rental.customerName?.toLowerCase()}</p></div>
           <div><p style={FIELD_LABEL}>Staff</p><p style={{ ...FIELD_VALUE, textTransform: "capitalize" }}>{rental.staffName?.toLowerCase()}</p></div>

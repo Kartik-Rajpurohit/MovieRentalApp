@@ -40,8 +40,8 @@ namespace MovieRental.Services.Services
             RentalDate = r.RentalDate,
             ReturnDate = r.ReturnDate,
             InventoryId = r.InventoryId,
-            FilmId = r.Inventory?.FilmId ?? 0,
-            FilmTitle = r.Inventory?.Film?.Title ?? "",
+            MovieId = r.Inventory?.MovieId ?? 0,
+            MovieTitle = r.Inventory?.Movie?.Title ?? "",
             CustomerId = r.CustomerId,
             CustomerName = r.Customer?.User != null
                 ? $"{r.Customer.User.FirstName} {r.Customer.User.LastName}".Trim()
@@ -51,8 +51,8 @@ namespace MovieRental.Services.Services
                 ? $"{r.Staff.User.FirstName} {r.Staff.User.LastName}".Trim()
                 : $"Staff {r.StaffId}",
             LastUpdate = r.LastUpdate,
-            RentalRate = r.Inventory?.Film?.RentalRate ?? 0,
-            SuggestedAmount = r.Inventory?.Film?.RentalRate ?? 0,
+            RentalRate = r.Inventory?.Movie?.RentalRate ?? 0,
+            SuggestedAmount = r.Inventory?.Movie?.RentalRate ?? 0,
         };
 
         // Converts raw Rental entity into detailed response DTO including payment aggregation.
@@ -62,8 +62,8 @@ namespace MovieRental.Services.Services
             RentalDate = r.RentalDate,
             ReturnDate = r.ReturnDate,
             InventoryId = r.InventoryId,
-            FilmId = r.Inventory?.FilmId ?? 0,
-            FilmTitle = r.Inventory?.Film?.Title ?? "",
+            MovieId = r.Inventory?.MovieId ?? 0,
+            MovieTitle = r.Inventory?.Movie?.Title ?? "",
             CustomerId = r.CustomerId,
             CustomerName = r.Customer?.User != null
                 ? $"{r.Customer.User.FirstName} {r.Customer.User.LastName}".Trim()
@@ -143,7 +143,7 @@ namespace MovieRental.Services.Services
             {
                 var s = queryParams.Search.ToLower();
                 query = query.Where(r =>
-                    r.Inventory.Film.Title.ToLower().Contains(s) ||
+                    r.Inventory.Movie.Title.ToLower().Contains(s) ||
                     (r.Customer.User != null && (r.Customer.User.FirstName + " " + r.Customer.User.LastName).ToLower().Contains(s)) ||
                     r.RentalId.ToString().Contains(s));
             }
@@ -157,9 +157,9 @@ namespace MovieRental.Services.Services
                 "returndate" => queryParams.SortOrder?.ToLower() == "desc"
                     ? query.OrderByDescending(r => r.ReturnDate)
                     : query.OrderBy(r => r.ReturnDate),
-                "filmtitle" => queryParams.SortOrder?.ToLower() == "desc"
-                    ? query.OrderByDescending(r => r.Inventory.Film.Title)
-                    : query.OrderBy(r => r.Inventory.Film.Title),
+                "movietitle" => queryParams.SortOrder?.ToLower() == "desc"
+                    ? query.OrderByDescending(r => r.Inventory.Movie.Title)
+                    : query.OrderBy(r => r.Inventory.Movie.Title),
                 _ => query.OrderByDescending(r => r.RentalId)
             };
 
@@ -176,8 +176,8 @@ namespace MovieRental.Services.Services
                     RentalDate = r.RentalDate,
                     ReturnDate = r.ReturnDate,
                     InventoryId = r.InventoryId,
-                    FilmId = r.Inventory.FilmId,
-                    FilmTitle = r.Inventory.Film.Title,
+                    MovieId = r.Inventory.MovieId,
+                    MovieTitle = r.Inventory.Movie.Title,
                     CustomerId = r.CustomerId,
                     CustomerName = r.Customer.User != null
                         ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
@@ -187,11 +187,11 @@ namespace MovieRental.Services.Services
                         ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
                         : "Staff #" + r.StaffId,
                     LastUpdate = r.LastUpdate,
-                    RentalRate = r.Inventory.Film.RentalRate,
+                    RentalRate = r.Inventory.Movie.RentalRate,
                     SuggestedAmount = r.ReturnDate.HasValue
-                        ? r.Inventory.Film.RentalRate *
+                        ? r.Inventory.Movie.RentalRate *
                           (decimal)Math.Max(1, (r.ReturnDate.Value - r.RentalDate).TotalDays)
-                        : r.Inventory.Film.RentalRate,
+                        : r.Inventory.Movie.RentalRate,
                 })
                 .ToListAsync();
 

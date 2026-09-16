@@ -36,7 +36,7 @@ const RATING_SEVERITY = {
 
 /**
  * Movie catalogue table component.
- * Displays film titles, release year, duration, MPAA rating, and rental rates with pagination,
+ * Displays movie titles, release year, duration, MPAA rating, and rental rates with pagination,
  * multi-criteria filtering, and role-based edit/create dialog triggers.
  */
 export default function MovieTable() {
@@ -213,7 +213,7 @@ export default function MovieTable() {
         onSort={onSort}
         removableSort
         emptyMessage="No movies found."
-        onRowClick={(e) => navigate(`/movies/${e.data.filmId}`)}
+        onRowClick={(e) => navigate(`/movies/${e.data.movieId}`)}
         rowClassName={() => "cursor-pointer"}
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"

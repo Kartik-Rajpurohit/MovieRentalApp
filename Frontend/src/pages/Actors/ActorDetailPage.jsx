@@ -13,7 +13,7 @@ import ActorFormFields from "../../components/actors/ActorFormFields";
 import usePagination from "../../hooks/usePagination";
 import {
   getActorById,
-  getFilmsByActor,
+  getMoviesByActor,
   updateActor,
   deleteActor,
 } from "../../services/actorService";
@@ -42,10 +42,10 @@ export default function ActorDetailPage() {
   // State for holding actor profile details
   const [actor, setActor] = useState(null);
   // State for holding the paginated list of movies this actor appeared in
-  const [films, setFilms] = useState([]);
+  const [movies, setMovies] = useState([]);
   const [totalRecords, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filmsLoading, setFilmsLoading] = useState(false);
+  const [moviesLoading, setMoviesLoading] = useState(false);
   const [search, setSearch] = useState("");
   // Controls visibility of the edit actor dialog
   const [editVisible, setEditVisible] = useState(false);
@@ -63,7 +63,7 @@ export default function ActorDetailPage() {
 
   // Fetch movies whenever actor ID, pagination settings, or search query change
   useEffect(() => {
-    fetchFilms();
+    fetchMovies();
   }, [id, lazyState, search]);
 
   // Load actor profile information from the backend API
@@ -79,22 +79,22 @@ export default function ActorDetailPage() {
     }
   };
 
-  // Load films associated with this actor with pagination and search
-  const fetchFilms = async () => {
-    setFilmsLoading(true);
+  // Load movies associated with this actor with pagination and search
+  const fetchMovies = async () => {
+    setMoviesLoading(true);
     try {
-      const res = await getFilmsByActor(
+      const res = await getMoviesByActor(
         id,
         lazyState.page + 1,
         lazyState.rows,
         search,
       );
-      setFilms(res.data ?? []);
+      setMovies(res.data ?? []);
       setTotal(res.totalRecords ?? 0);
     } catch (err) {
       console.error(err);
     } finally {
-      setFilmsLoading(false);
+      setMoviesLoading(false);
     }
   };
 
@@ -204,7 +204,7 @@ export default function ActorDetailPage() {
             </div>
             <div>
               <p style={FIELD_LABEL}>Total Movies</p>
-              <p style={FIELD_VALUE}>{actor.filmCount}</p>
+              <p style={FIELD_VALUE}>{actor.movieCount}</p>
             </div>
             <div>
               <p style={FIELD_LABEL}>Last Update</p>
@@ -250,8 +250,8 @@ export default function ActorDetailPage() {
           />
 
           <DataTable
-            value={films}
-            loading={filmsLoading}
+            value={movies}
+            loading={moviesLoading}
             paginator
             lazy
             first={lazyState.first}
@@ -262,11 +262,11 @@ export default function ActorDetailPage() {
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
             emptyMessage="No movies found."
-            onRowClick={(e) => navigate(`/movies/${e.data.filmId}`)}
+            onRowClick={(e) => navigate(`/movies/${e.data.movieId}`)}
             rowClassName={() => "cursor-pointer"}
             style={{ marginTop: "16px" }}
           >
-            <Column field="filmId" header="ID" style={{ width: "70px" }} />
+            <Column field="movieId" header="ID" style={{ width: "70px" }} />
             <Column field="title" header="Title" />
             <Column
               field="releaseYear"

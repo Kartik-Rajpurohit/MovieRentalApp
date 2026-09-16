@@ -76,7 +76,7 @@ export default function MovieDialog({
 
     if (isEdit && movie) {
       setForm({
-        filmId: movie.filmId,
+        movieId: movie.movieId,
         title: movie.title ?? "",
         description: movie.description ?? "",
         releaseYear: movie.releaseYear ?? null,
@@ -142,7 +142,7 @@ export default function MovieDialog({
     try {
       if (isEdit) {
         await updateMovie({
-          filmId: form.filmId,
+          movieId: form.movieId,
           title: form.title,
           description: form.description,
           releaseYear: form.releaseYear,

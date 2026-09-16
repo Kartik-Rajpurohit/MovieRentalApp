@@ -1,4 +1,4 @@
-// Handles API requests related to movies/films catalogue, filtering, and dropdown options
+// Handles API requests related to movies catalogue, filtering, and dropdown options
 import api from "./api";
 
 // Base route for Movie endpoints

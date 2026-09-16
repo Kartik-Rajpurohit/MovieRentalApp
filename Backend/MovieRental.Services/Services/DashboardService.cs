@@ -11,7 +11,7 @@ namespace MovieRental.Services.Services;
 public class DashboardService : IDashboardService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IFilmRepository _filmRepository;
+    private readonly IMovieRepository _movieRepository;
     private readonly IRentalRepository _rentalRepository;
     private readonly IPaymentRepository _paymentRepository;
     private readonly IInventoryRepository _inventoryRepository;
@@ -21,7 +21,7 @@ public class DashboardService : IDashboardService
     // Receives all required domain repositories to aggregate system-wide statistics.
     public DashboardService(
         IUserRepository userRepository,
-        IFilmRepository filmRepository,
+        IMovieRepository movieRepository,
         IRentalRepository rentalRepository,
         IPaymentRepository paymentRepository,
         IInventoryRepository inventoryRepository,
@@ -29,7 +29,7 @@ public class DashboardService : IDashboardService
         IStaffRepository staffRepository)
     {
         _userRepository = userRepository;
-        _filmRepository = filmRepository;
+        _movieRepository = movieRepository;
         _rentalRepository = rentalRepository;
         _paymentRepository = paymentRepository;
         _inventoryRepository = inventoryRepository;
@@ -42,7 +42,7 @@ public class DashboardService : IDashboardService
     {
         // Query counts and totals sequentially from each repository.
         var totalUsers = await _userRepository.GetAllUsers().CountAsync();
-        var totalFilms = await _filmRepository.GetAllFilms().CountAsync();
+        var totalMovies = await _movieRepository.GetAllMovies().CountAsync();
         var totalRentals = await _rentalRepository.GetAllRentals().CountAsync();
         var totalRevenue = await _paymentRepository.GetAllPayments().SumAsync(p => p.Amount);
         var activeRentals = await _rentalRepository.GetAllRentals().CountAsync(r => r.ReturnDate == null);
@@ -51,14 +51,14 @@ public class DashboardService : IDashboardService
         var totalStaff = await _staffRepository.GetAllStaff().CountAsync();
 
         // Calculate top 5 most frequently rented movies across all inventory items.
-        var topFilms = await _filmRepository.GetAllFilms()
-            .Select(f => new TopFilmDto
+        var topMovies = await _movieRepository.GetAllMovies()
+            .Select(m => new TopMovieDto
             {
-                FilmId = f.FilmId,
-                Title = f.Title,
-                RentalCount = f.Inventories.SelectMany(i => i.Rentals).Count()
+                MovieId = m.MovieId,
+                Title = m.Title,
+                RentalCount = m.Inventories.SelectMany(i => i.Rentals).Count()
             })
-            .OrderByDescending(f => f.RentalCount)
+            .OrderByDescending(m => m.RentalCount)
             .Take(5)
             .ToListAsync();
 
@@ -82,31 +82,31 @@ public class DashboardService : IDashboardService
                 RentalId = r.RentalId,
                 RentalDate = r.RentalDate,
                 ReturnDate = r.ReturnDate,
-                FilmTitle = r.Inventory.Film.Title,
+                MovieTitle = r.Inventory.Movie.Title,
                 CustomerName = r.Customer.User != null
                     ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
                     : "Customer #" + r.CustomerId,
                 StaffName = r.Staff.User != null
                     ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
                     : "Staff #" + r.StaffId,
-                RentalRate = r.Inventory.Film.RentalRate,
+                RentalRate = r.Inventory.Movie.RentalRate,
                 SuggestedAmount = r.ReturnDate.HasValue
-                    ? r.Inventory.Film.RentalRate * (decimal)Math.Max(1, (r.ReturnDate.Value - r.RentalDate).TotalDays)
-                    : r.Inventory.Film.RentalRate,
+                    ? r.Inventory.Movie.RentalRate * (decimal)Math.Max(1, (r.ReturnDate.Value - r.RentalDate).TotalDays)
+                    : r.Inventory.Movie.RentalRate,
             })
             .ToListAsync();
 
         return new AdminDashboardDto
         {
             TotalUsers = totalUsers,
-            TotalFilms = totalFilms,
+            TotalMovies = totalMovies,
             TotalRentals = totalRentals,
             TotalRevenue = totalRevenue,
             ActiveRentals = activeRentals,
             AvailableInventory = availableInventory,
             TotalCustomers = totalCustomers,
             TotalStaff = totalStaff,
-            TopRentedFilms = topFilms,
+            TopRentedMovies = topMovies,
             RevenueByStore = revenueByStore,
             RecentRentals = recentRentals,
         };
@@ -142,14 +142,14 @@ public class DashboardService : IDashboardService
                 RentalId = r.RentalId,
                 RentalDate = r.RentalDate,
                 ReturnDate = r.ReturnDate,
-                FilmTitle = r.Inventory.Film.Title,
+                MovieTitle = r.Inventory.Movie.Title,
                 CustomerName = r.Customer.User != null
                     ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
                     : "Customer #" + r.CustomerId,
                 StaffName = r.Staff.User != null
                     ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
                     : "Staff #" + r.StaffId,
-                RentalRate = r.Inventory.Film.RentalRate,
+                RentalRate = r.Inventory.Movie.RentalRate,
             })
             .ToListAsync();
 
@@ -166,7 +166,7 @@ public class DashboardService : IDashboardService
                 CustomerName = p.Customer.User != null
                     ? (p.Customer.User.FirstName + " " + p.Customer.User.LastName).Trim()
                     : "Customer #" + p.CustomerId,
-                FilmTitle = p.Rental.Inventory.Film.Title,
+                MovieTitle = p.Rental.Inventory.Movie.Title,
             })
             .ToListAsync();
 
@@ -209,15 +209,15 @@ public class DashboardService : IDashboardService
                 RentalId = r.RentalId,
                 RentalDate = r.RentalDate,
                 ReturnDate = r.ReturnDate,
-                FilmTitle = r.Inventory.Film.Title,
+                MovieTitle = r.Inventory.Movie.Title,
                 CustomerName = r.Customer.User != null
                     ? (r.Customer.User.FirstName + " " + r.Customer.User.LastName).Trim()
                     : "Customer #" + r.CustomerId,
                 StaffName = r.Staff.User != null
                     ? (r.Staff.User.FirstName + " " + r.Staff.User.LastName).Trim()
                     : "Staff #" + r.StaffId,
-                RentalRate = r.Inventory.Film.RentalRate,
-                SuggestedAmount = r.Inventory.Film.RentalRate,
+                RentalRate = r.Inventory.Movie.RentalRate,
+                SuggestedAmount = r.Inventory.Movie.RentalRate,
             })
             .ToListAsync();
 

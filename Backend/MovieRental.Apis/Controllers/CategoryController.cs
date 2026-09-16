@@ -6,7 +6,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
 {
-    // Handles movie genres/categories and their film counts.
+    // Handles movie genres/categories and their movie counts.
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin,Staff,Customer")] // All users can browse categories; only Admin and Staff can modify
@@ -20,7 +20,7 @@ namespace MovieRental.Apis.Controllers
             _categoryService = categoryService;
         }
 
-        // Gets a paginated list of categories with film counts.
+        // Gets a paginated list of categories with movie counts.
         // Query parameters: page, pageSize, search.
         [HttpGet]
         public async Task<IActionResult> GetAllCategories(
@@ -40,7 +40,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // Creates a new film category/genre.
+        // Creates a new movie category/genre.
         // Restricted to Admin and Staff roles.
         [HttpPost]
         [Authorize(Roles = "Admin,Staff")]
@@ -72,12 +72,12 @@ namespace MovieRental.Apis.Controllers
             return NoContent();
         }
 
-        // Gets a paginated list of films belonging to this category.
+        // Gets a paginated list of movies belonging to this category.
         // Supports optional title search within the genre.
-        [HttpGet("{id}/films")]
-        public async Task<IActionResult> GetFilms(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
+        [HttpGet("{id}/movies")]
+        public async Task<IActionResult> GetMovies(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
         {
-            var result = await _categoryService.GetFilmsByCategoryAsync(id, page, pageSize, search);
+            var result = await _categoryService.GetMoviesByCategoryAsync(id, page, pageSize, search);
             return Ok(result);
         }
     }

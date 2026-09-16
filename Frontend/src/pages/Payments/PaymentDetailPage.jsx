@@ -97,7 +97,7 @@ export default function PaymentDetailPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
           <div style={fieldStyle}>
             <span style={labelStyle}>Movie</span>
-            <span style={valueStyle}>{payment.filmTitle || "—"}</span>
+            <span style={valueStyle}>{payment.movieTitle || "—"}</span>
           </div>
 
           <div style={fieldStyle}>

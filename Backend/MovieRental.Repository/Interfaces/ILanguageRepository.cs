@@ -2,10 +2,10 @@ using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces;
 
-// Defines database operations for film languages.
+// Defines database operations for movie languages.
 public interface ILanguageRepository
 {
-    // Returns a queryable collection of all languages with related films.
+    // Returns a queryable collection of all languages with related movies.
     IQueryable<Language> GetAllLanguages();
 
     // Finds a language by its ID.
@@ -20,7 +20,7 @@ public interface ILanguageRepository
     // Deletes a language by ID; returns true if deleted, false if not found.
     Task<bool> DeleteLanguageAsync(int id);
 
-    // Returns a queryable collection of films matching the specified language.
-    IQueryable<Film> GetFilmsByLanguageId(int languageId);
+    // Returns a queryable collection of movies matching the specified language.
+    IQueryable<Movie> GetMoviesByLanguageId(int languageId);
 }
 

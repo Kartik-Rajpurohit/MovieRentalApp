@@ -79,7 +79,7 @@ export default function LanguageTable() {
       >
         <Column field="name" header="Name" sortable />
         <Column
-          field="filmCount"
+          field="movieCount"
           header="Movies"
           style={{ width: "100px" }}
           sortable

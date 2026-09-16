@@ -42,7 +42,7 @@ public class StoreDetailDto
     // Total customers registered at this store
     public int TotalCustomers { get; set; }
 
-    // Total film inventory copies available at this store
+    // Total movie inventory copies available at this store
     public int TotalInventory { get; set; }
 
     // Timestamp when store was last modified

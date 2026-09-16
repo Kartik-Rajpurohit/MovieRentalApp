@@ -4,7 +4,7 @@ import api from "./api";
 // Base route for Inventory endpoints
 const INVENTORY = "/Inventory";
 
-// GET request to fetch a paginated list of inventory copies with optional filters (storeId, filmId, availability)
+// GET request to fetch a paginated list of inventory copies with optional filters (storeId, movieId, availability)
 export const getInventory = (params = {}) =>
   api.get(INVENTORY, { params }).then(r => r.data);
 
@@ -12,7 +12,7 @@ export const getInventory = (params = {}) =>
 export const getInventoryById = (id) =>
   api.get(`${INVENTORY}/${id}`).then(r => r.data);
 
-// POST request to add a new physical film copy to a store's inventory
+// POST request to add a new physical movie copy to a store's inventory
 export const createInventory = (dto) =>
   api.post(INVENTORY, dto).then(r => r.data);
 

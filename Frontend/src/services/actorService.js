@@ -21,11 +21,11 @@ export const getActorById = async (id) => {
 };
 
 
-// GET request to fetch films starring a specific actor with pagination and search
-export const getFilmsByActor = async (id, page = 1, pageSize = 10, search = "") => {
+// GET request to fetch movies starring a specific actor with pagination and search
+export const getMoviesByActor = async (id, page = 1, pageSize = 10, search = "") => {
     const params = { page, pageSize };
     if (search) params.search = search;
-    const res = await api.get(`${API}/${id}/films`, { params });
+    const res = await api.get(`${API}/${id}/movies`, { params });
     return res.data;
 };
 

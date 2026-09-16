@@ -2,10 +2,10 @@ using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Interfaces
 {
-    // Defines database operations for Customer film Rentals.
+    // Defines database operations for Customer movie Rentals.
     public interface IRentalRepository
     {
-        // Returns a queryable collection of rentals with customer, staff, and film details.
+        // Returns a queryable collection of rentals with customer, staff, and movie details.
         IQueryable<Rental> GetAllRentals();
 
         // Finds a rental record by its ID with full details.

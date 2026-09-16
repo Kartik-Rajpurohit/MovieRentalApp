@@ -30,7 +30,7 @@ export default function RentalFormFields({ form, setForm, errors }) {
       .then((res) =>
         setInventory(
           (res.data ?? []).map((i) => ({
-            label: `#${i.inventoryId} — ${i.filmTitle} (Store ${i.storeId})`,
+            label: `#${i.inventoryId} — ${i.movieTitle} (Store ${i.storeId})`,
             value: i.inventoryId,
             storeId: i.storeId,
           }))

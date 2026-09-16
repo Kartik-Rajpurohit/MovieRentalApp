@@ -39,7 +39,7 @@ namespace MovieRental.Apis.Controllers
             return Ok(result);
         }
 
-        // Creates a new rental booking for an available film copy.
+        // Creates a new rental booking for an available movie copy.
         // Restricted to Admin and Staff roles.
         // Returns 400 BadRequest if inventory copy is currently rented or customer is invalid.
         [HttpPost]
@@ -62,7 +62,7 @@ namespace MovieRental.Apis.Controllers
         // Returns 404 NotFound if rental does not exist, or 400 BadRequest if already returned.
         [HttpPatch("{id}/return")]
         [Authorize(Roles = "Admin,Staff")]
-        public async Task<IActionResult> Return(int id)
+        public async Task<IActionResult> Return(int id)//TODO- Correc tthe naming convention of the method to be more descriptive, e.g., ReturnRental
         {
             try
             {

@@ -6,11 +6,11 @@ public class InventoryResponseDto
     // Unique ID of the inventory copy
     public int InventoryId { get; set; }
 
-    // Film ID of the movie
-    public int FilmId { get; set; }
+    // Movie ID of the movie
+    public int MovieId { get; set; }
 
     // Title of the movie
-    public string FilmTitle { get; set; } = string.Empty;
+    public string MovieTitle { get; set; } = string.Empty;
 
     // Store ID where this copy is located
     public int StoreId { get; set; }

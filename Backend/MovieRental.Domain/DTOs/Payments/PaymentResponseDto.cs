@@ -21,8 +21,8 @@ public class PaymentResponseDto
     // Associated rental transaction ID
     public int RentalId { get; set; }
 
-    // Title of the rented film
-    public string FilmTitle { get; set; } = string.Empty;
+    // Title of the rented movie
+    public string MovieTitle { get; set; } = string.Empty;
 
     // Amount paid
     public decimal Amount { get; set; }

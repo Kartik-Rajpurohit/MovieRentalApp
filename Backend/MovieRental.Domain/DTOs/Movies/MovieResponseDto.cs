@@ -3,10 +3,10 @@ namespace MovieRental.Domain.DTOs.Movies;
 // Response DTO containing essential movie information returned in list endpoints
 public class MovieResponseDto
 {
-    // Unique ID of the film
-    public int FilmId { get; set; }
+    // Unique ID of the movie
+    public int MovieId { get; set; }
 
-    // Film title
+    // Movie title
     public string Title { get; set; } = string.Empty;
 
     // Short plot synopsis

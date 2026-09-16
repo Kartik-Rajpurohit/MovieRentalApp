@@ -22,7 +22,7 @@ export const createRental = async (dto) => {
   return res.data;
 };
 
-// PATCH request to mark a rented film copy as returned
+// PATCH request to mark a rented movie copy as returned
 export const returnRental = async (id) => {
   const res = await api.patch(`${API}/${id}/return`);
   return res.data;

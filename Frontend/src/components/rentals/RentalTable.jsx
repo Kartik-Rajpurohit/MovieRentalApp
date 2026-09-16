@@ -223,7 +223,7 @@ export default function RentalTable() {
           sortable
           style={{ width: "80px" }}
         />
-        <Column field="filmTitle" header="Movie" sortable />
+        <Column field="movieTitle" header="Movie" sortable />
         {user?.role !== "Customer" && (
           <Column
             field="customerName"

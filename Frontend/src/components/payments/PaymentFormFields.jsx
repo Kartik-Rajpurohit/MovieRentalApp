@@ -25,7 +25,7 @@ export default function PaymentFormFields({ form, setForm, errors }) {
       .then((res) =>
         setRentals(
           (res.data ?? []).map((r) => ({
-            label: `#${r.rentalId} — ${r.filmTitle} (${r.customerName?.toLowerCase()})`,
+            label: `#${r.rentalId} — ${r.movieTitle} (${r.customerName?.toLowerCase()})`,
             value: r.rentalId,
             customerId: r.customerId,
             customerName: r.customerName,

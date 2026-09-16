@@ -3,14 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRental.Domain.Entities
 {
-    // Represents a movie/film available in the catalog for rental.
+    // Represents a movie available in the catalog for rental.
+    // Maps to the existing PostgreSQL 'film' table in the Sakila database schema.
     [Table("film")]
-    public class Film
+    public class Movie
     {
-        // Primary key uniquely identifying the film.
+        // Primary key uniquely identifying the movie. Maps to existing database column 'film_id'.
         [Key]
         [Column("film_id")]
-        public int FilmId { get; set; }
+        public int MovieId { get; set; }
 
         // Title of the movie.
         [Column("title")]
@@ -20,11 +21,11 @@ namespace MovieRental.Domain.Entities
         [Column("description")]
         public string? Description { get; set; }
 
-        // The four-digit year the film was released in theaters.
+        // The four-digit year the movie was released in theaters.
         [Column("release_year")]
         public int? ReleaseYear { get; set; }
 
-        // Foreign key linking to the film's primary spoken or dubbed language.
+        // Foreign key linking to the movie's primary spoken or dubbed language.
         [Column("language_id")]
         [ForeignKey("Language")]
         public int LanguageId { get; set; }
@@ -68,13 +69,13 @@ namespace MovieRental.Domain.Entities
         [Column("special_features")]
         public string[]? SpecialFeatures { get; set; }
 
-        // Navigation property linking the film to its cast via the film_actor junction table.
-        public ICollection<FilmActor> FilmActors { get; set; } = new List<FilmActor>();
+        // Navigation property linking the movie to its cast via the film_actor junction table.
+        public ICollection<MovieActor> MovieActors { get; set; } = new List<MovieActor>();
 
-        // Navigation property linking the film to its genres via the film_category junction table.
-        public ICollection<FilmCategory> FilmCategories { get; set; } = new List<FilmCategory>();
+        // Navigation property linking the movie to its genres via the film_category junction table.
+        public ICollection<MovieCategory> MovieCategories { get; set; } = new List<MovieCategory>();
 
-        // Physical inventory copies of this film stocked across all stores.
+        // Physical inventory copies of this movie stocked across all stores.
         public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
     }
 }

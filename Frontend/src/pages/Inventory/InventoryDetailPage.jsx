@@ -26,7 +26,7 @@ const FIELD_VALUE = {
   fontWeight: 600,
 };
 
-// Displays details for a single inventory record including film title, store, and rental status
+// Displays details for a single inventory record including movie title, store, and rental status
 export default function InventoryDetailPage() {
   // Read inventory ID from the route parameters
   const { id } = useParams();
@@ -104,7 +104,7 @@ export default function InventoryDetailPage() {
       <DetailPageHeader
         backPath="/inventory"
         backLabel="Inventory"
-        title={`#${inventory.inventoryId} — ${inventory.filmTitle}`}
+        title={`#${inventory.inventoryId} — ${inventory.movieTitle}`}
         actions={[
           { label: "Edit", icon: "pi pi-pencil", outlined: true, onClick: () => setEditVisible(true) },
           { label: "Delete", icon: "pi pi-trash", severity: "danger", outlined: true, onClick: handleDelete },
@@ -119,7 +119,7 @@ export default function InventoryDetailPage() {
           </div>
           <div>
             <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 600 }}>
-              {inventory.filmTitle}
+              {inventory.movieTitle}
             </h2>
             <span style={{ color: "#6b7280", fontSize: "14px" }}>
               Inventory #{inventory.inventoryId}
@@ -135,7 +135,7 @@ export default function InventoryDetailPage() {
           </div>
           <div>
             <p style={FIELD_LABEL}>Movie</p>
-            <p style={FIELD_VALUE}>{inventory.filmTitle}</p>
+            <p style={FIELD_VALUE}>{inventory.movieTitle}</p>
           </div>
           <div>
             <p style={FIELD_LABEL}>Store</p>

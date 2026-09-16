@@ -24,6 +24,6 @@ namespace MovieRental.Services.Interfaces
         Task<bool> DeleteCategoryAsync(int id);
 
         // Retrieves a paginated list of movies belonging to the specified category.
-        Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByCategoryAsync(int categoryId, int page, int pageSize, string? search);
+        Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByCategoryAsync(int categoryId, int page, int pageSize, string? search);
     }
 }

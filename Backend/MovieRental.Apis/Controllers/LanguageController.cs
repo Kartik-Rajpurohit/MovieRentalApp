@@ -73,16 +73,16 @@ public class LanguageController : ControllerBase
     }
 
 
-    // Gets a paginated list of films released in this language.
+    // Gets a paginated list of movies released in this language.
     // Supports optional title search within the language.
-    [HttpGet("{id}/films")]
-    public async Task<IActionResult> GetFilms(
+    [HttpGet("{id}/movies")]
+    public async Task<IActionResult> GetMovies(
         int id,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? search = null)
     {
-        var result = await _languageService.GetFilmsByLanguageAsync(id, page, pageSize, search);
+        var result = await _languageService.GetMoviesByLanguageAsync(id, page, pageSize, search);
         return Ok(result);
     }
 }

@@ -58,7 +58,7 @@ export default function StaffDashboard({ stats }) {
         <Card title="Recent Rentals">
           <DataTable value={stats.recentRentals} emptyMessage="No rentals.">
             <Column field="rentalId" header="ID" style={{ width: "60px" }} />
-            <Column field="filmTitle" header="Movie" />
+            <Column field="movieTitle" header="Movie" />
             <Column field="customerName" header="Customer" />
           </DataTable>
         </Card>

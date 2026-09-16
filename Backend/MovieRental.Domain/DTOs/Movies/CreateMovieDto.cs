@@ -1,6 +1,6 @@
 namespace MovieRental.Domain.DTOs.Movies;
 
-// Request DTO sent by the client to create a new movie/film
+// Request DTO sent by the client to create a new movie
 public class CreateMovieDto
 {
     // Movie title
@@ -36,9 +36,9 @@ public class CreateMovieDto
     // Special disc features (e.g. Trailers, Commentaries, Deleted Scenes)
     public string[]? SpecialFeatures { get; set; }
 
-    // IDs of categories/genres to associate with this film
+    // IDs of categories/genres to associate with this movie
     public List<int> CategoryIds { get; set; } = new();
 
-    // IDs of cast actors to associate with this film
+    // IDs of cast actors to associate with this movie
     public List<int> ActorIds { get; set; } = new();
 }

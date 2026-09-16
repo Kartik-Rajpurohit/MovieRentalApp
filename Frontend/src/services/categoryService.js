@@ -32,8 +32,8 @@ export const updateCategory = (dto) =>
 export const deleteCategory = (id) =>
   api.delete(`${CATEGORY}/${id}`).then((r) => r.data);
 
-// GET request to fetch films linked to a specific category with pagination and search
-export const getFilmsByCategory = async (
+// GET request to fetch movies linked to a specific category with pagination and search
+export const getMoviesByCategory = async (
   categoryId,
   page = 1,
   pageSize = 10,
@@ -41,6 +41,6 @@ export const getFilmsByCategory = async (
 ) => {
   const params = { page, pageSize };
   if (search) params.search = search;
-  const res = await api.get(`${CATEGORY}/${categoryId}/films`, { params });
+  const res = await api.get(`${CATEGORY}/${categoryId}/movies`, { params });
   return res.data;
 };

@@ -5,7 +5,7 @@ using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces;
 
-// Defines business operations for managing actors and their movie filmography.
+// Defines business operations for managing actors and their movies.
 public interface IActorService
 {
     // Retrieves a paginated, filtered, and sorted list of actors.
@@ -25,5 +25,5 @@ public interface IActorService
 
 
     // Retrieves a paginated list of movies featuring the specified actor.
-    Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByActorAsync(int actorId, int page, int pageSize, string? search);
+    Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByActorAsync(int actorId, int page, int pageSize, string? search);
 }

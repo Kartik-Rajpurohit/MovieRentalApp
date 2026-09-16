@@ -14,7 +14,7 @@ import usePagination from "../../hooks/usePagination";
 import {
   getCategoryById,
   deleteCategory,
-  getFilmsByCategory,
+  getMoviesByCategory,
 } from "../../services/categoryService";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -40,9 +40,9 @@ export default function CategoryDetailPage() {
   const [editVisible, setEditVisible] = useState(false);
 
   // Paginated movies belonging to this category
-  const [films, setFilms] = useState([]);
+  const [movies, setMovies] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [filmsLoading, setFilmsLoading] = useState(false);
+  const [moviesLoading, setMoviesLoading] = useState(false);
   const [search, setSearch] = useState("");
   // Reusable pagination hook for movies list
   const { lazyState, onPage, reset } = usePagination(10);
@@ -54,7 +54,7 @@ export default function CategoryDetailPage() {
 
   // Reload movies whenever category ID, pagination, or search query change
   useEffect(() => {
-    loadFilms();
+    loadMovies();
   }, [id, lazyState, search]);
 
   // Load category details from the backend
@@ -71,16 +71,16 @@ export default function CategoryDetailPage() {
   };
 
   // Load movies in this category with pagination and search
-  const loadFilms = async () => {
-    setFilmsLoading(true);
+  const loadMovies = async () => {
+    setMoviesLoading(true);
     try {
-      const res = await getFilmsByCategory(id, lazyState.page + 1, lazyState.rows, search);
-      setFilms(res.data ?? []);
+      const res = await getMoviesByCategory(id, lazyState.page + 1, lazyState.rows, search);
+      setMovies(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
     } catch (err) {
       console.error(err);
     } finally {
-      setFilmsLoading(false);
+      setMoviesLoading(false);
     }
   };
 
@@ -142,8 +142,8 @@ export default function CategoryDetailPage() {
         <SearchBar value={search} onChange={onSearchChange} placeholder="Search movies..." />
 
         <DataTable
-          value={films}
-          loading={filmsLoading}
+          value={movies}
+          loading={moviesLoading}
           paginator
           lazy
           first={lazyState.first}
@@ -154,7 +154,7 @@ export default function CategoryDetailPage() {
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
           emptyMessage="No movies in this category."
-          onRowClick={(e) => navigate(`/movies/${e.data.filmId}`)}
+          onRowClick={(e) => navigate(`/movies/${e.data.movieId}`)}
           rowClassName={() => "cursor-pointer"}
           style={{ marginTop: "16px" }}
         >

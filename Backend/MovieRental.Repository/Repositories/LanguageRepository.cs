@@ -5,7 +5,7 @@ using MovieRental.Repository.Interfaces;
 
 namespace MovieRental.Repository.Repositories;
 
-// Handles database operations related to film languages.
+// Handles database operations related to movie languages.
 public class LanguageRepository : ILanguageRepository
 {
     // Receives the database context used to access language tables.
@@ -16,14 +16,14 @@ public class LanguageRepository : ILanguageRepository
         _context = context;
     }
 
-    // Reads all languages without tracking, including related films for counting.
+    // Reads all languages without tracking, including related movies for counting.
     public IQueryable<Language> GetAllLanguages()
-        => _context.Languages.AsNoTracking().Include(l => l.Films).AsQueryable();
+        => _context.Languages.AsNoTracking().Include(l => l.Movies).AsQueryable();
 
-    // Finds a language by its ID along with its associated films.
+    // Finds a language by its ID along with its associated movies.
     public async Task<Language?> GetLanguageByIdAsync(int id)
         => await _context.Languages
-            .Include(l => l.Films)
+            .Include(l => l.Movies)
             .FirstOrDefaultAsync(l => l.LanguageId == id);
 
     // Adds a new language record to the database and saves changes.
@@ -55,14 +55,14 @@ public class LanguageRepository : ILanguageRepository
         return true;
     }
 
-    // Queries films released in the specified language, including language and categories.
-    public IQueryable<Film> GetFilmsByLanguageId(int languageId)
-        => _context.Films
+    // Queries movies released in the specified language, including language and categories.
+    public IQueryable<Movie> GetMoviesByLanguageId(int languageId)
+        => _context.Movies
             .AsNoTracking()
-            .Where(f => f.LanguageId == languageId)
-            .Include(f => f.Language)
-            .Include(f => f.FilmCategories)
-                .ThenInclude(fc => fc.Category) // Load categories for mapping in service
+            .Where(m => m.LanguageId == languageId)
+            .Include(m => m.Language)
+            .Include(m => m.MovieCategories)
+                .ThenInclude(mc => mc.Category) // Load categories for mapping in service
             .AsQueryable();
 }
 

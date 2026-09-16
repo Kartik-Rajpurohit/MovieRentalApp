@@ -9,7 +9,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
 {
-    // Handles business logic for movie categories/genres and film associations.
+    // Handles business logic for movie categories/genres and movie associations.
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
@@ -52,13 +52,13 @@ namespace MovieRental.Services.Services
                 .Take(queryParams.PageSize)
                 .ToListAsync();
 
-            // Map each category entity to its response DTO with film count.
+            // Map each category entity to its response DTO with movie count.
             var data = entities.Select(c => new CategoryResponseDto
             {
                 CategoryId = c.CategoryId,
                 Name = c.Name,
                 LastUpdate = c.LastUpdate,
-                FilmCount = c.FilmCategories.Count
+                MovieCount = c.MovieCategories.Count
             }).ToList();
 
             return new PaginatedResponseDto<CategoryResponseDto>
@@ -71,7 +71,7 @@ namespace MovieRental.Services.Services
             };
         }
 
-        // Retrieves category details by ID, including total assigned films count.
+        // Retrieves category details by ID, including total assigned movies count.
         public async Task<CategoryResponseDto?> GetCategoryByIdAsync(int id)
         {
             var category = await _categoryRepository.GetCategoryByIdAsync(id);
@@ -83,7 +83,7 @@ namespace MovieRental.Services.Services
                 CategoryId = category.CategoryId,
                 Name = category.Name,
                 LastUpdate = category.LastUpdate,
-                FilmCount = category.FilmCategories.Count
+                MovieCount = category.MovieCategories.Count
             };
         }
 
@@ -106,7 +106,7 @@ namespace MovieRental.Services.Services
                 CategoryId = created.CategoryId,
                 Name = created.Name,
                 LastUpdate = created.LastUpdate,
-                FilmCount = 0
+                MovieCount = 0
             };
         }
 
@@ -126,7 +126,7 @@ namespace MovieRental.Services.Services
                 CategoryId = updated.CategoryId,
                 Name = updated.Name,
                 LastUpdate = updated.LastUpdate,
-                FilmCount = updated.FilmCategories.Count
+                MovieCount = updated.MovieCategories.Count
             };
         }
 
@@ -135,37 +135,37 @@ namespace MovieRental.Services.Services
             => await _categoryRepository.DeleteCategoryAsync(id);
 
         // Retrieves a paginated list of movies belonging to the specified category.
-        public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByCategoryAsync(
+        public async Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByCategoryAsync(
             int categoryId, int page, int pageSize, string? search)
         {
-            var query = _categoryRepository.GetFilmsByCategoryId(categoryId);
+            var query = _categoryRepository.GetMoviesByCategoryId(categoryId);
 
             // Filter movies by title when search is specified.
             if (!string.IsNullOrEmpty(search))
-                query = query.Where(f => f.Title.ToLower().Contains(search.ToLower()));
+                query = query.Where(m => m.Title.ToLower().Contains(search.ToLower()));
 
             var totalRecords = await query.CountAsync();
 
             // Paginate and project movie entities to movie response DTOs.
             var data = await query
-                .OrderBy(f => f.Title)
+                .OrderBy(m => m.Title)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(f => new MovieResponseDto
+                .Select(m => new MovieResponseDto
                 {
-                    FilmId = f.FilmId,
-                    Title = f.Title,
-                    Description = f.Description,
-                    ReleaseYear = f.ReleaseYear,
-                    LanguageId = f.LanguageId,
-                    LanguageName = f.Language.Name,
-                    RentalDuration = f.RentalDuration,
-                    RentalRate = f.RentalRate,
-                    Length = f.Length,
-                    ReplacementCost = f.ReplacementCost,
-                    Rating = f.Rating,
-                    Categories = f.FilmCategories
-                        .Select(fc => fc.Category.Name)
+                    MovieId = m.MovieId,
+                    Title = m.Title,
+                    Description = m.Description,
+                    ReleaseYear = m.ReleaseYear,
+                    LanguageId = m.LanguageId,
+                    LanguageName = m.Language.Name,
+                    RentalDuration = m.RentalDuration,
+                    RentalRate = m.RentalRate,
+                    Length = m.Length,
+                    ReplacementCost = m.ReplacementCost,
+                    Rating = m.Rating,
+                    Categories = m.MovieCategories
+                        .Select(mc => mc.Category.Name)
                         .ToList()
                 })
                 .ToListAsync();

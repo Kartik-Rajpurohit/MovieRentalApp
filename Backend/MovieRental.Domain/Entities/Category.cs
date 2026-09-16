@@ -20,7 +20,7 @@ namespace MovieRental.Domain.Entities
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
 
-        // Navigation property linking the category to films via the film_category junction table.
-        public ICollection<FilmCategory> FilmCategories { get; set; } = new List<FilmCategory>();
+        // Navigation property linking the category to movies via the film_category junction table.
+        public ICollection<MovieCategory> MovieCategories { get; set; } = new List<MovieCategory>();
     }
 }

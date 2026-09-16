@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRental.Domain.Entities
 {
-    // Represents a store customer who can rent films and make payments.
+    // Represents a store customer who can rent movies and make payments.
     [Table("customer")]
     public class Customer
     {

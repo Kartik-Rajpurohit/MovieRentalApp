@@ -5,7 +5,7 @@ import InventoryTable from "../../components/inventory/InventoryTable";
 export default function InventoryPage() {
   return (
     <AppLayout>
-      {/* Table displaying inventory items with film title, store, availability status, and actions */}
+      {/* Table displaying inventory items with movie title, store, availability status, and actions */}
       <InventoryTable />
     </AppLayout>
   );

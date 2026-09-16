@@ -1,10 +1,10 @@
 namespace MovieRental.Domain.DTOs.Movies;
 
-// Request DTO sent by the client to update an existing movie/film
+// Request DTO sent by the client to update an existing movie
 public class UpdateMovieDto
 {
-    // Unique ID of the film to update
-    public int FilmId { get; set; }
+    // Unique ID of the movie to update
+    public int MovieId { get; set; }
 
     // Updated movie title
     public string? Title { get; set; }

@@ -110,9 +110,9 @@ builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 
-// Film
-builder.Services.AddScoped<IFilmRepository, FilmRepository>();
-builder.Services.AddScoped<IFilmService, FilmService>();
+// Movie
+builder.Services.AddScoped<IMovieRepository, MovieRepository>();
+builder.Services.AddScoped<IMovieService, MovieService>();
 
 // Actor
 builder.Services.AddScoped<IActorRepository, ActorRepository>();

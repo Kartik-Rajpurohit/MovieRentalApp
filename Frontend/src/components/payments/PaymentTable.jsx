@@ -253,7 +253,7 @@ export default function PaymentTable() {
           style={{ width: "80px" }}
         />
         <Column
-          field="filmTitle"
+          field="movieTitle"
           header="Movie"
           sortable
           style={{ minWidth: "180px" }}

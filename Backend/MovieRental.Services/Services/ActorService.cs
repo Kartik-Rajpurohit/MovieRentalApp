@@ -9,7 +9,7 @@ using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
 
-// Handles business logic for actor lookups, CRUD operations, and filmography associations.
+// Handles business logic for actor lookups, CRUD operations, and movie associations.
 public class ActorService : IActorService
 {
     private readonly IActorRepository _actorRepository;
@@ -44,9 +44,9 @@ public class ActorService : IActorService
             "lastname" => queryParams.SortOrder == "desc"
                 ? query.OrderByDescending(a => a.LastName)
                 : query.OrderBy(a => a.LastName),
-            "filmcount" => queryParams.SortOrder == "desc"
-                ? query.OrderByDescending(a => a.FilmActors.Count)
-                : query.OrderBy(a => a.FilmActors.Count),
+            "moviecount" => queryParams.SortOrder == "desc"
+                ? query.OrderByDescending(a => a.MovieActors.Count)
+                : query.OrderBy(a => a.MovieActors.Count),
             _ => query.OrderBy(a => a.ActorId)
         };
 
@@ -64,7 +64,7 @@ public class ActorService : IActorService
                 FirstName = a.FirstName,
                 LastName = a.LastName,
                 LastUpdate = a.LastUpdate,
-                FilmCount = a.FilmActors.Count
+                MovieCount = a.MovieActors.Count
             })
             .ToListAsync();
 
@@ -91,7 +91,7 @@ public class ActorService : IActorService
             FirstName = actor.FirstName,
             LastName = actor.LastName,
             LastUpdate = actor.LastUpdate,
-            FilmCount = actor.FilmActors.Count
+            MovieCount = actor.MovieActors.Count
         };
     }
 
@@ -116,7 +116,7 @@ public class ActorService : IActorService
             FirstName = created.FirstName,
             LastName = created.LastName,
             LastUpdate = created.LastUpdate,
-            FilmCount = 0
+            MovieCount = 0
         };
     }
 
@@ -140,7 +140,7 @@ public class ActorService : IActorService
             FirstName = updated.FirstName,
             LastName = updated.LastName,
             LastUpdate = updated.LastUpdate,
-            FilmCount = updated.FilmActors.Count
+            MovieCount = updated.MovieActors.Count
         };
     }
 
@@ -150,36 +150,36 @@ public class ActorService : IActorService
 
 
     // Retrieves a paginated list of movies starring the specified actor.
-    public async Task<PaginatedResponseDto<MovieResponseDto>> GetFilmsByActorAsync(int actorId, int page, int pageSize, string? search)
+    public async Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByActorAsync(int actorId, int page, int pageSize, string? search)
     {
-        var query = _actorRepository.GetFilmsByActorId(actorId);
+        var query = _actorRepository.GetMoviesByActorId(actorId);
 
         // Apply title search filter if specified.
         if (!string.IsNullOrEmpty(search))
-            query = query.Where(f => f.Title.ToLower().Contains(search.ToLower()));
+            query = query.Where(m => m.Title.ToLower().Contains(search.ToLower()));
 
         var totalRecords = await query.CountAsync();
 
         // Paginate and project movie entities to response DTOs.
         var data = await query
-            .OrderBy(f => f.Title)
+            .OrderBy(m => m.Title)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(f => new MovieResponseDto
+            .Select(m => new MovieResponseDto
             {
-                FilmId = f.FilmId,
-                Title = f.Title,
-                Description = f.Description,
-                ReleaseYear = f.ReleaseYear,
-                LanguageId = f.LanguageId,
-                LanguageName = f.Language.Name,
-                RentalDuration = f.RentalDuration,
-                RentalRate = f.RentalRate,
-                Length = f.Length,
-                ReplacementCost = f.ReplacementCost,
-                Rating = f.Rating,
-                Categories = f.FilmCategories
-                    .Select(fc => fc.Category.Name)
+                MovieId = m.MovieId,
+                Title = m.Title,
+                Description = m.Description,
+                ReleaseYear = m.ReleaseYear,
+                LanguageId = m.LanguageId,
+                LanguageName = m.Language.Name,
+                RentalDuration = m.RentalDuration,
+                RentalRate = m.RentalRate,
+                Length = m.Length,
+                ReplacementCost = m.ReplacementCost,
+                Rating = m.Rating,
+                Categories = m.MovieCategories
+                    .Select(mc => mc.Category.Name)
                     .ToList()
             })
             .ToListAsync();

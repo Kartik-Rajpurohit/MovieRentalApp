@@ -23,8 +23,8 @@ namespace MovieRental.Services.Services
         private static InventoryResponseDto MapToResponse(Inventory i) => new()
         {
             InventoryId = i.InventoryId,
-            FilmId = i.FilmId,
-            FilmTitle = i.Film?.Title ?? "",
+            MovieId = i.MovieId,
+            MovieTitle = i.Movie?.Title ?? "",
             StoreId = i.StoreId,
             IsAvailable = !i.Rentals.Any(r => r.ReturnDate == null),
             LastUpdate = i.LastUpdate,
@@ -34,23 +34,23 @@ namespace MovieRental.Services.Services
         private static InventoryDetailDto MapToDetail(Inventory i) => new()
         {
             InventoryId = i.InventoryId,
-            FilmId = i.FilmId,
-            FilmTitle = i.Film?.Title ?? "",
+            MovieId = i.MovieId,
+            MovieTitle = i.Movie?.Title ?? "",
             StoreId = i.StoreId,
             IsAvailable = !i.Rentals.Any(r => r.ReturnDate == null),
             TotalRentals = i.Rentals.Count,
             LastUpdate = i.LastUpdate,
         };
 
-        // Gets paginated inventory copies with store, film, and availability filters.
+        // Gets paginated inventory copies with store, movie, and availability filters.
         public async Task<PaginatedResponseDto<InventoryResponseDto>> GetAllInventoryAsync(
             InventoryQueryParametersDto queryParams)
         {
             var query = _inventoryRepository.GetAllInventory();
 
-            // Filter by film
-            if (queryParams.FilmId.HasValue)
-                query = query.Where(i => i.FilmId == queryParams.FilmId.Value);
+            // Filter by movie
+            if (queryParams.MovieId.HasValue)
+                query = query.Where(i => i.MovieId == queryParams.MovieId.Value);
 
             // Filter by store
             if (queryParams.StoreId.HasValue)
@@ -64,21 +64,21 @@ namespace MovieRental.Services.Services
                     : query.Where(i => i.Rentals.Any(r => r.ReturnDate == null));
             }
 
-            // Global search — by film title or inventory ID
+            // Global search — by movie title or inventory ID
             if (!string.IsNullOrEmpty(queryParams.Search))
             {
                 var s = queryParams.Search.ToLower();
                 query = query.Where(i =>
-                    i.Film.Title.ToLower().Contains(s) ||
+                    i.Movie.Title.ToLower().Contains(s) ||
                     i.InventoryId.ToString().Contains(s));
             }
 
             // Sorting
             query = queryParams.SortField?.ToLower() switch
             {
-                "filmtitle" => queryParams.SortOrder?.ToLower() == "desc"
-                    ? query.OrderByDescending(i => i.Film.Title)
-                    : query.OrderBy(i => i.Film.Title),
+                "movietitle" => queryParams.SortOrder?.ToLower() == "desc"
+                    ? query.OrderByDescending(i => i.Movie.Title)
+                    : query.OrderBy(i => i.Movie.Title),
                 "storeid" => queryParams.SortOrder?.ToLower() == "desc"
                     ? query.OrderByDescending(i => i.StoreId)
                     : query.OrderBy(i => i.StoreId),
@@ -116,7 +116,7 @@ namespace MovieRental.Services.Services
         {
             var entity = new Inventory
             {
-                FilmId = dto.FilmId,
+                MovieId = dto.MovieId,
                 StoreId = dto.StoreId,
                 LastUpdate = DateTime.UtcNow
             };
