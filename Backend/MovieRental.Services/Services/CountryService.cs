@@ -20,33 +20,52 @@ namespace MovieRental.Services.Services
 
         // Retrieves a paginated and searchable list of countries with sorting options.
         public async Task<PaginatedResponseDto<CountryResponseDto>> GetAllCountriesAsync(
-            int page, int pageSize, string? search, string? sortField, string? sortOrder)
+            PaginationInputDto pagination,
+            CountryFilterDto filter)
         {
             // Get the base query from the repository.
             var query = _countryRepository.GetAllCountries();
 
-            // Apply case-insensitive country name search filter.
-            if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(c => c.Name.ToLower().Contains(search.ToLower()));
-
-            // Sort by country name or city count.
-            query = sortField?.ToLower() switch
+            // 1. Search by country name.
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                "name" => sortOrder?.ToLower() == "desc"
+                var s = pagination.Search.Trim().ToLower();
+                query = query.Where(c => c.Name.ToLower().Contains(s));
+            }
+
+            // 2. Module Filters
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+            {
+                var name = filter.Name.Trim().ToLower();
+                query = query.Where(c => c.Name.ToLower().Contains(name));
+            }
+
+            // 3. Dynamic Sorting
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "name" or "country" => isDesc
                     ? query.OrderByDescending(c => c.Name)
                     : query.OrderBy(c => c.Name),
-                "citycount" => sortOrder?.ToLower() == "desc"
+                "citycount" => isDesc
                     ? query.OrderByDescending(c => c.Cities.Count())
                     : query.OrderBy(c => c.Cities.Count()),
-                _ => query.OrderBy(c => c.Name)
+                "id" or "countryid" => isDesc
+                    ? query.OrderByDescending(c => c.CountryId)
+                    : query.OrderBy(c => c.CountryId),
+                _ => isDesc
+                    ? query.OrderByDescending(c => c.Name)
+                    : query.OrderBy(c => c.Name)
             };
 
+            // 4. Count
             var totalRecords = await query.CountAsync();
+            var totalPages   = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // Paginate and project country entities into response DTOs.
+            // 5. Pagination & Projection
             var data = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .Select(c => new CountryResponseDto
                 {
                     CountryId  = c.CountryId,
@@ -59,9 +78,9 @@ namespace MovieRental.Services.Services
             return new PaginatedResponseDto<CountryResponseDto>
             {
                 TotalRecords = totalRecords,
-                TotalPages   = (int)Math.Ceiling((double)totalRecords / pageSize),
-                CurrentPage  = page,
-                PageSize     = pageSize,
+                TotalPages   = totalPages,
+                CurrentPage  = pagination.Page,
+                PageSize     = pagination.PageSize,
                 Data         = data
             };
         }

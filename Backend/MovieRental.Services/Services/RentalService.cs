@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Rentals;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 using System.Security.Claims;
@@ -78,7 +77,9 @@ namespace MovieRental.Services.Services
         };
 
         // Gets a paginated list of rentals with role scoping and filters.
-        public async Task<PaginatedResponseDto<RentalResponseDto>> GetAllRentalsAsync(RentalQueryParametersDto queryParams)
+        public async Task<PaginatedResponseDto<RentalResponseDto>> GetAllRentalsAsync(
+            PaginationInputDto pagination,
+            RentalFilterDto filter)
         {
             var query = _rentalRepository.GetAllRentals();
 
@@ -100,8 +101,8 @@ namespace MovieRental.Services.Services
                     {
                         TotalRecords = 0,
                         TotalPages = 0,
-                        CurrentPage = queryParams.Page,
-                        PageSize = queryParams.PageSize,
+                        CurrentPage = pagination.Page,
+                        PageSize = pagination.PageSize,
                         Data = new List<RentalResponseDto>()
                     };
                 }
@@ -115,61 +116,69 @@ namespace MovieRental.Services.Services
                     query = query.Where(r => r.Staff.StoreId == storeId);
                 }
             }
-            else if (queryParams.CustomerId.HasValue)
+            else if (filter.CustomerId.HasValue)
             {
-                query = query.Where(r => r.CustomerId == queryParams.CustomerId.Value);
+                query = query.Where(r => r.CustomerId == filter.CustomerId.Value);
             }
 
-            if (role != "Staff" && queryParams.StaffId.HasValue)
-                query = query.Where(r => r.StaffId == queryParams.StaffId.Value);
-
-            if (queryParams.InventoryId.HasValue)
-                query = query.Where(r => r.InventoryId == queryParams.InventoryId.Value);
-
-            // Filter by return status (active vs returned rentals).
-            if (queryParams.IsReturned.HasValue)
-                query = queryParams.IsReturned.Value
-                    ? query.Where(r => r.ReturnDate != null)
-                    : query.Where(r => r.ReturnDate == null);
-
-            // Filter by payment status (whether a payment record exists).
-            if (queryParams.HasPayment.HasValue)
-                query = queryParams.HasPayment.Value
-                    ? query.Where(r => r.Payments.Any())
-                    : query.Where(r => !r.Payments.Any());
-
-            // Search by movie title, customer name, or rental ID.
-            if (!string.IsNullOrEmpty(queryParams.Search))
+            // 1. Search by movie title, customer name, or rental ID.
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var s = queryParams.Search.ToLower();
+                var s = pagination.Search.Trim().ToLower();
                 query = query.Where(r =>
                     r.Inventory.Movie.Title.ToLower().Contains(s) ||
                     (r.Customer.User != null && (r.Customer.User.FirstName + " " + r.Customer.User.LastName).ToLower().Contains(s)) ||
                     r.RentalId.ToString().Contains(s));
             }
 
-            // Apply dynamic sorting.
-            query = queryParams.SortField?.ToLower() switch
+            // 2. Module Filters
+            if (role != "Staff" && filter.StaffId.HasValue)
+                query = query.Where(r => r.StaffId == filter.StaffId.Value);
+
+            if (filter.InventoryId.HasValue)
+                query = query.Where(r => r.InventoryId == filter.InventoryId.Value);
+
+            // Filter by return status (active vs returned rentals).
+            if (filter.IsReturned.HasValue)
+                query = filter.IsReturned.Value
+                    ? query.Where(r => r.ReturnDate != null)
+                    : query.Where(r => r.ReturnDate == null);
+
+            // Filter by payment status (whether a payment record exists).
+            if (filter.HasPayment.HasValue)
+                query = filter.HasPayment.Value
+                    ? query.Where(r => r.Payments.Any())
+                    : query.Where(r => !r.Payments.Any());
+
+            // 3. Dynamic Sorting
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
             {
-                "rentaldate" => queryParams.SortOrder?.ToLower() == "desc"
+                "rentaldate" => isDesc
                     ? query.OrderByDescending(r => r.RentalDate)
                     : query.OrderBy(r => r.RentalDate),
-                "returndate" => queryParams.SortOrder?.ToLower() == "desc"
+                "returndate" => isDesc
                     ? query.OrderByDescending(r => r.ReturnDate)
                     : query.OrderBy(r => r.ReturnDate),
-                "movietitle" => queryParams.SortOrder?.ToLower() == "desc"
+                "movietitle" or "movie" => isDesc
                     ? query.OrderByDescending(r => r.Inventory.Movie.Title)
                     : query.OrderBy(r => r.Inventory.Movie.Title),
-                _ => query.OrderByDescending(r => r.RentalId)
+                "id" or "rentalid" => isDesc
+                    ? query.OrderByDescending(r => r.RentalId)
+                    : query.OrderBy(r => r.RentalId),
+                _ => isDesc
+                    ? query.OrderByDescending(r => r.RentalId)
+                    : query.OrderBy(r => r.RentalId)
             };
 
+            // 4. Count
             var totalRecords = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // Fetch page results and project to response DTOs with calculated suggested amounts.
+            // 5. Pagination & Projection
             var data = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .Select(r => new RentalResponseDto
                 {
                     RentalId = r.RentalId,
@@ -199,8 +208,8 @@ namespace MovieRental.Services.Services
             {
                 TotalRecords = totalRecords,
                 TotalPages = totalPages,
-                CurrentPage = queryParams.Page,
-                PageSize = queryParams.PageSize,
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = data
             };
         }

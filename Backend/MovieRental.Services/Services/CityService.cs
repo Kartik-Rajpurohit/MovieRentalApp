@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Cities;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -20,40 +19,56 @@ public class CityService : ICityService
     }
 
     // Retrieves a paginated and filtered list of cities with country and address statistics.
-    public async Task<PaginatedResponseDto<CityResponseDto>> GetAllCitiesAsync(CityQueryParametersDto queryParams)
+    public async Task<PaginatedResponseDto<CityResponseDto>> GetAllCitiesAsync(
+        PaginationInputDto pagination,
+        CityFilterDto filter)
     {
         // Get the base query from the repository.
         var query = _cityRepository.GetAllCities();
 
-        // Filter by specific country ID if provided.
-        if (queryParams.CountryId.HasValue)
-            query = query.Where(c => c.CountryId == queryParams.CountryId.Value);
-
-        // Filter by city name using case-insensitive search.
-        if (!string.IsNullOrEmpty(queryParams.Search))
-            query = query.Where(c => c.Name.ToLower().Contains(queryParams.Search.ToLower()));
-
-        // Apply sorting based on city name, country name, or address count.
-        query = queryParams.SortField?.ToLower() switch
+        // 1. General search across city name and country name
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
         {
-            "name" => queryParams.SortOrder?.ToLower() == "desc"
+            var s = pagination.Search.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(s) || c.Country.Name.ToLower().Contains(s));
+        }
+
+        // 2. Module Filters
+        if (filter.CountryId.HasValue)
+            query = query.Where(c => c.CountryId == filter.CountryId.Value);
+
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            query = query.Where(c => c.Name.ToLower().Contains(filter.Name.Trim().ToLower()));
+
+        // 3. Dynamic Sorting
+        var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = pagination.SortBy?.ToLower() switch
+        {
+            "name" or "city" => isDesc
                 ? query.OrderByDescending(c => c.Name)
                 : query.OrderBy(c => c.Name),
-            "country" => queryParams.SortOrder?.ToLower() == "desc"
+            "country" => isDesc
                 ? query.OrderByDescending(c => c.Country.Name)
                 : query.OrderBy(c => c.Country.Name),
-            "addresscount" => queryParams.SortOrder?.ToLower() == "desc"
+            "addresscount" => isDesc
                 ? query.OrderByDescending(c => c.Addresses.Count)
                 : query.OrderBy(c => c.Addresses.Count),
-            _ => query.OrderBy(c => c.CityId)
+            "id" or "cityid" => isDesc
+                ? query.OrderByDescending(c => c.CityId)
+                : query.OrderBy(c => c.CityId),
+            _ => isDesc
+                ? query.OrderByDescending(c => c.CityId)
+                : query.OrderBy(c => c.CityId)
         };
 
+        // 4. Count
         var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-        // Paginate and project city entities into response DTOs.
+        // 5. Pagination & Projection
         var data = await query
-            .Skip((queryParams.Page - 1) * queryParams.PageSize)
-            .Take(queryParams.PageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .Select(c => new CityResponseDto
             {
                 CityId = c.CityId,
@@ -68,9 +83,9 @@ public class CityService : ICityService
         return new PaginatedResponseDto<CityResponseDto>
         {
             TotalRecords = totalRecords,
-            TotalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize),
-            CurrentPage = queryParams.Page,
-            PageSize = queryParams.PageSize,
+            TotalPages = totalPages,
+            CurrentPage = pagination.Page,
+            PageSize = pagination.PageSize,
             Data = data
         };
     }

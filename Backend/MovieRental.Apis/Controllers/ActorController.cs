@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Actors;
-using MovieRental.Domain.QueryParameters;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ public class ActorController : ControllerBase
     }
 
     // Gets a paginated, sorted, and filtered list of actors.
-    // Query parameters: page, pageSize, search text, sort field, and sort order.
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] ActorQueryParametersDto queryParams)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PaginationInputDto pagination,
+        [FromQuery] ActorFilterDto filter)
     {
-        var result = await _actorService.GetAllActorsAsync(queryParams);
+        var result = await _actorService.GetAllActorsAsync(pagination, filter);
         return Ok(result);
     }
 
@@ -76,11 +77,10 @@ public class ActorController : ControllerBase
 
 
     // Gets a paginated list of movies featuring this actor.
-    // Supports optional title search within the actor's movies.
     [HttpGet("{id}/movies")]
-    public async Task<IActionResult> GetMovies(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
+    public async Task<IActionResult> GetMovies(int id, [FromQuery] PaginationInputDto pagination)
     {
-        var result = await _actorService.GetMoviesByActorAsync(id, page, pageSize, search);
+        var result = await _actorService.GetMoviesByActorAsync(id, pagination);
         return Ok(result);
     }
 }

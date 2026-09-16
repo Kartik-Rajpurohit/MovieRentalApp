@@ -7,7 +7,9 @@ namespace MovieRental.Services.Interfaces
     public interface ICountryService
     {
         // Retrieves a paginated and searchable list of countries with sorting.
-        Task<PaginatedResponseDto<CountryResponseDto>> GetAllCountriesAsync(int page, int pageSize, string? search, string? sortField, string? sortOrder);
+        Task<PaginatedResponseDto<CountryResponseDto>> GetAllCountriesAsync(
+            PaginationInputDto pagination,
+            CountryFilterDto filter);
 
         // Retrieves a single country by its ID.
         Task<CountryResponseDto?> GetCountryByIdAsync(int id);

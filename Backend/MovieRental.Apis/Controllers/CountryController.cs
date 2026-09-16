@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Countries;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
@@ -21,15 +22,11 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated and sorted list of countries.
-        // Query parameters: page, pageSize, search, sortField, and sortOrder.
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null,
-            [FromQuery] string? sortField = null,
-            [FromQuery] string? sortOrder = null)
-            => Ok(await _countryService.GetAllCountriesAsync(page, pageSize, search, sortField, sortOrder));
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] CountryFilterDto filter)
+            => Ok(await _countryService.GetAllCountriesAsync(pagination, filter));
 
         // Gets a country by CountryId with its associated cities.
         // Returns 404 NotFound if country does not exist.

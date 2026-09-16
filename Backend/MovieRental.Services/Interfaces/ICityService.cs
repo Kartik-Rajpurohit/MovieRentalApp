@@ -1,6 +1,5 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Cities;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces;
 
@@ -8,7 +7,9 @@ namespace MovieRental.Services.Interfaces;
 public interface ICityService
 {
     // Retrieves a paginated and filtered list of cities.
-    Task<PaginatedResponseDto<CityResponseDto>> GetAllCitiesAsync(CityQueryParametersDto queryParams);
+    Task<PaginatedResponseDto<CityResponseDto>> GetAllCitiesAsync(
+        PaginationInputDto pagination,
+        CityFilterDto filter);
 
     // Retrieves detailed city information by ID, including its country.
     Task<CityDetailDto?> GetCityByIdAsync(int id);

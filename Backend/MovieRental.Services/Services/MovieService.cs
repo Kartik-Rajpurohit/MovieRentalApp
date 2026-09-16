@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -20,45 +19,16 @@ namespace MovieRental.Services.Services
         }
 
         // Gets paginated movies with category, language, rating, and rental rate filters.
-        public async Task<PaginatedResponseDto<MovieResponseDto>> GetAllMoviesAsync(MovieQueryParametersDto queryParams)
+        public async Task<PaginatedResponseDto<MovieResponseDto>> GetAllMoviesAsync(
+            PaginationInputDto pagination, MovieFilterDto filter)
         {
+            // 1. Base query from repository
             var query = _movieRepository.GetAllMovies();
 
-            // Filter by language
-            if (queryParams.LanguageId.HasValue)
-                query = query.Where(m => m.LanguageId == queryParams.LanguageId.Value);
-
-            // Filter by category
-            if (queryParams.CategoryId.HasValue)
-                query = query.Where(m => m.MovieCategories
-                    .Any(mc => mc.CategoryId == queryParams.CategoryId.Value));
-
-            // Filter by MPAA rating
-            if (!string.IsNullOrEmpty(queryParams.Rating))
-                query = query.Where(m => m.Rating == queryParams.Rating);
-
-            // Filter by release year
-            if (queryParams.ReleaseYear.HasValue)
-                query = query.Where(m => m.ReleaseYear == queryParams.ReleaseYear.Value);
-
-            // Filter by rental rate range
-            if (queryParams.MinRentalRate.HasValue)
-                query = query.Where(m => m.RentalRate >= queryParams.MinRentalRate.Value);
-
-            if (queryParams.MaxRentalRate.HasValue)
-                query = query.Where(m => m.RentalRate <= queryParams.MaxRentalRate.Value);
-
-            // Filter by length range
-            if (queryParams.MinLength.HasValue)
-                query = query.Where(m => m.Length >= queryParams.MinLength.Value);
-
-            if (queryParams.MaxLength.HasValue)
-                query = query.Where(m => m.Length <= queryParams.MaxLength.Value);
-
-            // Global search — title, description, actor name, category name
-            if (!string.IsNullOrEmpty(queryParams.Search))
+            // 2. Search: title, description, actor name, category name
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var search = queryParams.Search.ToLower();
+                var search = pagination.Search.ToLower();
                 query = query.Where(m =>
                     m.Title.ToLower().Contains(search) ||
                     (m.Description != null && m.Description.ToLower().Contains(search)) ||
@@ -67,44 +37,64 @@ namespace MovieRental.Services.Services
                         (ma.Actor.FirstName + " " + ma.Actor.LastName).ToLower().Contains(search)));
             }
 
-            // Sorting
-            if (!string.IsNullOrEmpty(queryParams.SortField))
+            // 3. Module Filters
+            if (filter.LanguageId.HasValue)
+                query = query.Where(m => m.LanguageId == filter.LanguageId.Value);
+
+            if (filter.CategoryId.HasValue)
+                query = query.Where(m => m.MovieCategories
+                    .Any(mc => mc.CategoryId == filter.CategoryId.Value));
+
+            if (!string.IsNullOrEmpty(filter.Rating))
+                query = query.Where(m => m.Rating == filter.Rating);
+
+            if (filter.ReleaseYear.HasValue)
+                query = query.Where(m => m.ReleaseYear == filter.ReleaseYear.Value);
+
+            if (filter.MinRentalRate.HasValue)
+                query = query.Where(m => m.RentalRate >= filter.MinRentalRate.Value);
+
+            if (filter.MaxRentalRate.HasValue)
+                query = query.Where(m => m.RentalRate <= filter.MaxRentalRate.Value);
+
+            if (filter.MinLength.HasValue)
+                query = query.Where(m => m.Length >= filter.MinLength.Value);
+
+            if (filter.MaxLength.HasValue)
+                query = query.Where(m => m.Length <= filter.MaxLength.Value);
+
+            // 4. Sorting: dynamic sorting on allowed fields
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
             {
-                query = queryParams.SortField.ToLower() switch
-                {
-                    "title" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(m => m.Title)
-                        : query.OrderBy(m => m.Title),
+                "title" => isDesc
+                    ? query.OrderByDescending(m => m.Title)
+                    : query.OrderBy(m => m.Title),
+                "releaseyear" => isDesc
+                    ? query.OrderByDescending(m => m.ReleaseYear)
+                    : query.OrderBy(m => m.ReleaseYear),
+                "rentalrate" => isDesc
+                    ? query.OrderByDescending(m => m.RentalRate)
+                    : query.OrderBy(m => m.RentalRate),
+                "length" => isDesc
+                    ? query.OrderByDescending(m => m.Length)
+                    : query.OrderBy(m => m.Length),
+                "id" or "movieid" => isDesc
+                    ? query.OrderByDescending(m => m.MovieId)
+                    : query.OrderBy(m => m.MovieId),
+                _ => isDesc
+                    ? query.OrderByDescending(m => m.Title)
+                    : query.OrderBy(m => m.Title)
+            };
 
-                    "releaseyear" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(m => m.ReleaseYear)
-                        : query.OrderBy(m => m.ReleaseYear),
-
-                    "rentalrate" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(m => m.RentalRate)
-                        : query.OrderBy(m => m.RentalRate),
-
-                    "length" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(m => m.Length)
-                        : query.OrderBy(m => m.Length),
-
-                    _ => query.OrderBy(m => m.Title)
-                };
-            }
-            else
-            {
-                // Default sort by title
-                query = query.OrderBy(m => m.Title);
-            }
-
-            // Total count before pagination
+            // 5. Total count before pagination
             var totalRecords = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // Fetch current page — map in memory
+            // 6. Pagination & Materialization
             var entities = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .ToListAsync();
 
             var data = entities.Select(m => MapToResponseDto(m)).ToList();
@@ -113,8 +103,8 @@ namespace MovieRental.Services.Services
             {
                 TotalRecords = totalRecords,
                 TotalPages = totalPages,
-                CurrentPage = queryParams.Page,
-                PageSize = queryParams.PageSize,
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = data
             };
         }

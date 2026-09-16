@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -20,50 +19,67 @@ public class AddressService : IAddressService
     }
 
     // Retrieves addresses using the specified filtering, searching, sorting, and pagination options.
-    public async Task<PaginatedResponseDto<AddressResponseDto>> GetAllAddressesAsync(AddressQueryParametersDto queryParams)
+    public async Task<PaginatedResponseDto<AddressResponseDto>> GetAllAddressesAsync(
+        PaginationInputDto pagination,
+        AddressFilterDto filter)
     {
         // Get the base query from the repository.
         var query = _addressRepository.GetAllAddresses();
 
-        // Filter by specific city ID if provided.
-        if (queryParams.CityId.HasValue)
-            query = query.Where(a => a.CityId == queryParams.CityId.Value);
-
-        // Filter by city name containing the query string.
-        if (!string.IsNullOrEmpty(queryParams.City))
-            query = query.Where(a => a.City.Name.ToLower().Contains(queryParams.City.ToLower()));
-
-        // Filter by postal code.
-        if (!string.IsNullOrEmpty(queryParams.PostalCode))
-            query = query.Where(a => a.PostalCode != null && a.PostalCode.Contains(queryParams.PostalCode));
-
-        // General search across street and city name.
-        if (!string.IsNullOrEmpty(queryParams.Search))
+        // 1. General search across street and city name.
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
         {
-            var s = queryParams.Search.ToLower();
+            var s = pagination.Search.Trim().ToLower();
             query = query.Where(a =>
                 a.Street.ToLower().Contains(s) ||
                 a.City.Name.ToLower().Contains(s));
         }
 
-        // Apply dynamic sorting based on street or city name.
-        query = queryParams.SortField?.ToLower() switch
+        // 2. Module Filters
+        if (filter.CityId.HasValue)
+            query = query.Where(a => a.CityId == filter.CityId.Value);
+
+        if (!string.IsNullOrWhiteSpace(filter.City))
         {
-            "street" => queryParams.SortOrder?.ToLower() == "desc"
+            var city = filter.City.Trim().ToLower();
+            query = query.Where(a => a.City.Name.ToLower().Contains(city));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.PostalCode))
+        {
+            var postal = filter.PostalCode.Trim();
+            query = query.Where(a => a.PostalCode != null && a.PostalCode.Contains(postal));
+        }
+
+        // 3. Dynamic Sorting
+        var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = pagination.SortBy?.ToLower() switch
+        {
+            "street" => isDesc
                 ? query.OrderByDescending(a => a.Street)
                 : query.OrderBy(a => a.Street),
-            "city" => queryParams.SortOrder?.ToLower() == "desc"
+            "city" => isDesc
                 ? query.OrderByDescending(a => a.City.Name)
                 : query.OrderBy(a => a.City.Name),
-            _ => query.OrderBy(a => a.AddressId)
+            "postalcode" => isDesc
+                ? query.OrderByDescending(a => a.PostalCode)
+                : query.OrderBy(a => a.PostalCode),
+            "id" or "addressid" => isDesc
+                ? query.OrderByDescending(a => a.AddressId)
+                : query.OrderBy(a => a.AddressId),
+            _ => isDesc
+                ? query.OrderByDescending(a => a.AddressId)
+                : query.OrderBy(a => a.AddressId)
         };
 
+        // 4. Count
         var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-        // Paginate and project address entities into response DTOs.
+        // 5. Pagination & Projection
         var data = await query
-            .Skip((queryParams.Page - 1) * queryParams.PageSize)
-            .Take(queryParams.PageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .Select(a => new AddressResponseDto
             {
                 AddressId = a.AddressId,
@@ -80,9 +96,9 @@ public class AddressService : IAddressService
         return new PaginatedResponseDto<AddressResponseDto>
         {
             TotalRecords = totalRecords,
-            TotalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize),
-            CurrentPage = queryParams.Page,
-            PageSize = queryParams.PageSize,
+            TotalPages = totalPages,
+            CurrentPage = pagination.Page,
+            PageSize = pagination.PageSize,
             Data = data
         };
     }

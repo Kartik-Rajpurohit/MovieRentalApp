@@ -1,7 +1,6 @@
 using MovieRental.Domain.DTOs.Categories;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
@@ -9,7 +8,9 @@ namespace MovieRental.Services.Interfaces
     public interface ICategoryService
     {
         // Retrieves a paginated and filtered list of categories with movie counts.
-        Task<PaginatedResponseDto<CategoryResponseDto>> GetAllCategoriesAsync(CategoryQueryParametersDto queryParams);
+        Task<PaginatedResponseDto<CategoryResponseDto>> GetAllCategoriesAsync(
+            PaginationInputDto pagination,
+            CategoryFilterDto filter);
 
         // Retrieves a category by ID with its list of associated movies.
         Task<CategoryResponseDto?> GetCategoryByIdAsync(int id);
@@ -24,6 +25,8 @@ namespace MovieRental.Services.Interfaces
         Task<bool> DeleteCategoryAsync(int id);
 
         // Retrieves a paginated list of movies belonging to the specified category.
-        Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByCategoryAsync(int categoryId, int page, int pageSize, string? search);
+        Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByCategoryAsync(
+            int categoryId,
+            PaginationInputDto pagination);
     }
 }

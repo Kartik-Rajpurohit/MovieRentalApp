@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Payments;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of payments with amount, customer, staff, and date filters.
-        // Query parameters: page, pageSize, search, customerId, staffId, rentalId, minAmount, maxAmount, fromDate, toDate.
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] PaymentQueryParametersDto queryParams)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] PaymentFilterDto filter)
         {
-            var result = await _paymentService.GetAllPaymentsAsync(queryParams);
+            var result = await _paymentService.GetAllPaymentsAsync(pagination, filter);
             return Ok(result);
         }
 

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
+using MovieRental.Domain.DTOs.Staff;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -15,16 +17,12 @@ namespace MovieRental.Apis.Controllers
         private readonly IStaffService _staffService;
         public StaffController(IStaffService staffService) => _staffService = staffService;
 
-        // Gets a paginated list of staff members with active status, store, and name search filters.
-        // Query parameters: page, pageSize, search, isActive, storeId.
+        // Gets a paginated, filtered, and sorted list of staff members.
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null,
-            [FromQuery] int? storeId = null)
-            => Ok(await _staffService.GetAllStaffAsync(page, pageSize, search, isActive, storeId));
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] StaffFilterDto filter)
+            => Ok(await _staffService.GetAllStaffAsync(pagination, filter));
 
         // Gets a single staff member's details by StaffId (including store and user info).
         // Returns 404 NotFound if staff member does not exist.

@@ -15,17 +15,17 @@ namespace MovieRental.Services.Services
         // Receives the staff repository needed to access staff records.
         public StaffService(IStaffRepository staffRepository) => _staffRepository = staffRepository;
 
-        // Retrieves a paginated and filtered list of staff members with search and store filters.
+        // Retrieves a paginated, filtered, and sorted list of staff members.
         public async Task<PaginatedResponseDto<StaffResponseDto>> GetAllStaffAsync(
-            int page, int pageSize, string? search, bool? isActive, int? storeId = null)
+            PaginationInputDto pagination, StaffFilterDto filter)
         {
-            // Get the base query from the repository.
+            // 1. Get the base query from the repository.
             var query = _staffRepository.GetAllStaff();
 
-            // Filter by search matching staff full name, email, or numeric staff ID.
-            if (!string.IsNullOrWhiteSpace(search))
+            // 2. Search: matches staff full name, email, or numeric staff ID.
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var lower = search.ToLower();
+                var lower = pagination.Search.ToLower();
                 query = query.Where(s =>
                     s.User != null && (
                         (s.User.FirstName + " " + s.User.LastName).ToLower().Contains(lower) ||
@@ -34,21 +34,44 @@ namespace MovieRental.Services.Services
                 );
             }
 
-            // Filter by account active status if specified.
-            if (isActive.HasValue)
-                query = query.Where(s => s.User != null && s.User.IsActive == isActive.Value);
+            // 3. Module Filters: account active status and assigned store.
+            if (filter.IsActive.HasValue)
+                query = query.Where(s => s.User != null && s.User.IsActive == filter.IsActive.Value);
 
-            // Filter by assigned store ID if specified.
-            if (storeId.HasValue)
-                query = query.Where(s => s.StoreId == storeId.Value);
+            if (filter.StoreId.HasValue)
+                query = query.Where(s => s.StoreId == filter.StoreId.Value);
 
+            // 4. Sorting: dynamic sorting on allowed fields.
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "firstname" => isDesc
+                    ? query.OrderByDescending(s => s.User != null ? s.User.FirstName : "")
+                    : query.OrderBy(s => s.User != null ? s.User.FirstName : ""),
+                "lastname" => isDesc
+                    ? query.OrderByDescending(s => s.User != null ? s.User.LastName : "")
+                    : query.OrderBy(s => s.User != null ? s.User.LastName : ""),
+                "email" => isDesc
+                    ? query.OrderByDescending(s => s.User != null ? s.User.Email : "")
+                    : query.OrderBy(s => s.User != null ? s.User.Email : ""),
+                "store" or "storeid" => isDesc
+                    ? query.OrderByDescending(s => s.StoreId)
+                    : query.OrderBy(s => s.StoreId),
+                "active" or "isactive" => isDesc
+                    ? query.OrderByDescending(s => s.User != null && s.User.IsActive)
+                    : query.OrderBy(s => s.User != null && s.User.IsActive),
+                _ => isDesc
+                    ? query.OrderByDescending(s => s.StaffId)
+                    : query.OrderBy(s => s.StaffId)
+            };
+
+            // 5. Total Count: before pagination.
             var totalRecords = await query.CountAsync();
 
-            // Paginate and project staff entities to response DTOs.
+            // 6. Pagination & Projection: database-side execution.
             var data = await query
-                .OrderBy(s => s.StaffId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .Select(s => new StaffResponseDto
                 {
                     StaffId = s.StaffId,
@@ -62,9 +85,9 @@ namespace MovieRental.Services.Services
             return new PaginatedResponseDto<StaffResponseDto>
             {
                 TotalRecords = totalRecords,
-                TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
-                CurrentPage = page,
-                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize),
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = data
             };
         }

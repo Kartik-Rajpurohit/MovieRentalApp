@@ -1,6 +1,5 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Stores;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
@@ -8,7 +7,9 @@ namespace MovieRental.Services.Interfaces
     public interface IStoreService
     {
         // Retrieves a paginated and filtered list of stores.
-        Task<PaginatedResponseDto<StoreResponseDto>> GetAllStoresAsync(StoreQueryParametersDto queryParams);
+        Task<PaginatedResponseDto<StoreResponseDto>> GetAllStoresAsync(
+            PaginationInputDto pagination,
+            StoreFilterDto filter);
 
         // Retrieves detailed store information by ID, including address, manager, and staff count.
         Task<StoreDetailDto?> GetStoreByIdAsync(int id);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Roles;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
@@ -21,14 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of system roles (Admin, Staff, Customer).
-        // Query parameters: page, pageSize, search name.
         [HttpGet]
         public async Task<IActionResult> GetAllRoles(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null)
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] RoleFilterDto filter)
         {
-            var result = await _roleService.GetAllRolesAsync(page, pageSize, search);
+            var result = await _roleService.GetAllRolesAsync(pagination, filter);
             return Ok(result);
         }
 

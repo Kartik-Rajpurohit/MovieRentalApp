@@ -1,6 +1,5 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Payments;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
@@ -8,7 +7,9 @@ namespace MovieRental.Services.Interfaces
     public interface IPaymentService
     {
         // Retrieves a paginated and filtered history of payments.
-        Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(PaymentQueryParametersDto queryParams);
+        Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(
+            PaginationInputDto pagination,
+            PaymentFilterDto filter);
 
         // Retrieves payment information by ID.
         Task<PaymentResponseDto?> GetPaymentByIdAsync(int id);

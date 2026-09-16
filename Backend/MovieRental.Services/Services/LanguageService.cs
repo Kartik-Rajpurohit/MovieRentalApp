@@ -98,21 +98,37 @@ public class LanguageService : ILanguageService
 
     // Retrieves a paginated list of movies associated with a specific language.
     public async Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByLanguageAsync(
-        int languageId, int page, int pageSize, string? search)
+        int languageId,
+        PaginationInputDto pagination)
     {
         var query = _languageRepository.GetMoviesByLanguageId(languageId);
 
-        // Filter movies by title if search query is provided.
-        if (!string.IsNullOrEmpty(search))
-            query = query.Where(m => m.Title.ToLower().Contains(search.ToLower()));
+        // Filter movies by search term if provided.
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var s = pagination.Search.Trim().ToLower();
+            query = query.Where(m => m.Title.ToLower().Contains(s) || (m.Description != null && m.Description.ToLower().Contains(s)));
+        }
+
+        // Apply sorting
+        var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = pagination.SortBy?.ToLower() switch
+        {
+            "title" => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title),
+            "releaseyear" => isDesc ? query.OrderByDescending(m => m.ReleaseYear) : query.OrderBy(m => m.ReleaseYear),
+            "rentalrate" => isDesc ? query.OrderByDescending(m => m.RentalRate) : query.OrderBy(m => m.RentalRate),
+            "length" => isDesc ? query.OrderByDescending(m => m.Length) : query.OrderBy(m => m.Length),
+            "id" or "movieid" => isDesc ? query.OrderByDescending(m => m.MovieId) : query.OrderBy(m => m.MovieId),
+            _ => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title)
+        };
 
         var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
         // Paginate and project movie entities to response DTOs.
         var data = await query
-            .OrderBy(m => m.Title)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .Select(m => new MovieResponseDto
             {
                 MovieId = m.MovieId,
@@ -135,9 +151,9 @@ public class LanguageService : ILanguageService
         return new PaginatedResponseDto<MovieResponseDto>
         {
             TotalRecords = totalRecords,
-            TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
-            CurrentPage = page,
-            PageSize = pageSize,
+            TotalPages = totalPages,
+            CurrentPage = pagination.Page,
+            PageSize = pagination.PageSize,
             Data = data
         };
     }

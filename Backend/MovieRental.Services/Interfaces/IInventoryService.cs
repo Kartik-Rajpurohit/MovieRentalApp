@@ -1,6 +1,5 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Inventory;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
@@ -8,7 +7,9 @@ namespace MovieRental.Services.Interfaces
     public interface IInventoryService
     {
         // Retrieves a paginated and filtered list of inventory items.
-        Task<PaginatedResponseDto<InventoryResponseDto>> GetAllInventoryAsync(InventoryQueryParametersDto queryParams);
+        Task<PaginatedResponseDto<InventoryResponseDto>> GetAllInventoryAsync(
+            PaginationInputDto pagination,
+            InventoryFilterDto filter);
 
         // Retrieves detailed information for a specific inventory copy.
         Task<InventoryDetailDto?> GetInventoryByIdAsync(int id);

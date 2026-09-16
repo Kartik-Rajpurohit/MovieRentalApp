@@ -1,6 +1,5 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Rentals;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
@@ -8,7 +7,9 @@ namespace MovieRental.Services.Interfaces
     public interface IRentalService
     {
         // Retrieves a paginated and filtered list of rental transactions.
-        Task<PaginatedResponseDto<RentalResponseDto>> GetAllRentalsAsync(RentalQueryParametersDto queryParams);
+        Task<PaginatedResponseDto<RentalResponseDto>> GetAllRentalsAsync(
+            PaginationInputDto pagination,
+            RentalFilterDto filter);
 
         // Retrieves detailed rental information by ID, including payments and customer details.
         Task<RentalDetailDto?> GetRentalByIdAsync(int id);

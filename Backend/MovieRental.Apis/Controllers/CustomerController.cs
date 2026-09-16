@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
+using MovieRental.Domain.DTOs.Customers;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -15,16 +17,12 @@ namespace MovieRental.Apis.Controllers
         private readonly ICustomerService _customerService;
         public CustomerController(ICustomerService customerService) => _customerService = customerService;
 
-        // Gets a paginated list of customers with search, active status, and store filters.
-        // Query parameters: page, pageSize, search name, isActive, storeId.
+        // Gets a paginated, filtered, and sorted list of customers.
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null,
-            [FromQuery] bool? isActive = null,
-            [FromQuery] int? storeId = null)
-            => Ok(await _customerService.GetAllCustomersAsync(page, pageSize, search, isActive, storeId));
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] CustomerFilterDto filter)
+            => Ok(await _customerService.GetAllCustomersAsync(pagination, filter));
 
         // Gets detailed customer profile by CustomerId including address and rental counts.
         // Returns 404 NotFound if customer does not exist.

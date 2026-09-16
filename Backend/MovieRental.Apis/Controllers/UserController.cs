@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Users;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated, filtered, and sorted list of users.
-        // Query parameters: page, pageSize, sortField, sortOrder, name, email, roleId, search, isActive.
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers([FromQuery] UserQueryParametersDto queryParams)
+        public async Task<IActionResult> GetAllUsers(
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] UserFilterDto filter)
         {
-            var users = await _userService.GetAllUsersAsync(queryParams);
+            var users = await _userService.GetAllUsersAsync(pagination, filter);
             return Ok(users);
         }
 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Languages;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
@@ -75,15 +76,12 @@ public class LanguageController : ControllerBase
 
 
     // Gets a paginated list of movies released in this language.
-    // Supports optional title search within the language.
     [HttpGet("{id}/movies")]
     public async Task<IActionResult> GetMovies(
         int id,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] string? search = null)
+        [FromQuery] PaginationInputDto pagination)
     {
-        var result = await _languageService.GetMoviesByLanguageAsync(id, page, pageSize, search);
+        var result = await _languageService.GetMoviesByLanguageAsync(id, pagination);
         return Ok(result);
     }
 }

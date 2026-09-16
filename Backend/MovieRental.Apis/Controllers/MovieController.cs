@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -13,7 +13,7 @@ namespace MovieRental.Apis.Controllers
     [Authorize(Policy = Permissions.Movies.Read)] // All authorized users can browse the movie catalog; write actions require Admin
     public class MovieController : ControllerBase
     {
-        // Injected service handling movie database queries, joins, and mutations
+        // Injected service handling movie catalog operations
         private readonly IMovieService _movieService;
 
         public MovieController(IMovieService movieService)
@@ -22,11 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated, filtered, and sorted list of movies.
-        // Query parameters: page, pageSize, search, languageId, categoryId, rating, releaseYear, rentalRate, and length.
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] MovieQueryParametersDto queryParams)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] MovieFilterDto filter)
         {
-            var result = await _movieService.GetAllMoviesAsync(queryParams);
+            var result = await _movieService.GetAllMoviesAsync(pagination, filter);
             return Ok(result);
         }
 

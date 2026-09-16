@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Inventory;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of inventory copies with movie title, store, and dynamic availability filters.
-        // Query parameters: page, pageSize, search, storeId, isAvailable.
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] InventoryQueryParametersDto queryParams)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] InventoryFilterDto filter)
         {
-            var result = await _inventoryService.GetAllInventoryAsync(queryParams);
+            var result = await _inventoryService.GetAllInventoryAsync(pagination, filter);
             return Ok(result);
         }
 

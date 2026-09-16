@@ -20,25 +20,45 @@ namespace MovieRental.Services.Services
 
         // Retrieves a paginated and searchable list of system roles.
         public async Task<PaginatedResponseDto<RoleResponseDto>> GetAllRolesAsync(
-            int page, int pageSize, string? search)
+            PaginationInputDto pagination,
+            RoleFilterDto filter)
         {
             // Get the base query from the repository.
             var query = _roleRepository.GetAllRoles();
 
-            // Filter roles by name when search keyword is supplied.
-            if (!string.IsNullOrWhiteSpace(search))
+            // 1. Search - filter roles by name when search keyword is supplied.
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var lower = search.ToLower();
+                var lower = pagination.Search.Trim().ToLower();
                 query = query.Where(r => r.RoleName.ToLower().Contains(lower));
             }
 
-            var totalRecords = await query.CountAsync();
+            // 2. Sorting
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "rolename" or "name" => isDesc
+                    ? query.OrderByDescending(r => r.RoleName)
+                    : query.OrderBy(r => r.RoleName),
+                "createdat" => isDesc
+                    ? query.OrderByDescending(r => r.CreatedAt)
+                    : query.OrderBy(r => r.CreatedAt),
+                "id" or "roleid" => isDesc
+                    ? query.OrderByDescending(r => r.RoleId)
+                    : query.OrderBy(r => r.RoleId),
+                _ => isDesc
+                    ? query.OrderByDescending(r => r.RoleId)
+                    : query.OrderBy(r => r.RoleId)
+            };
 
-            // Paginate and project role entities into response DTOs.
+            // 3. Count
+            var totalRecords = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
+
+            // 4. Paginate and project role entities into response DTOs.
             var data = await query
-                .OrderBy(r => r.RoleId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .Select(r => new RoleResponseDto
                 {
                     RoleId = r.RoleId,
@@ -50,9 +70,9 @@ namespace MovieRental.Services.Services
             return new PaginatedResponseDto<RoleResponseDto>
             {
                 TotalRecords = totalRecords,
-                TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
-                CurrentPage = page,
-                PageSize = pageSize,
+                TotalPages = totalPages,
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = data
             };
         }

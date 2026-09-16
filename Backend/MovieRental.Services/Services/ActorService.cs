@@ -3,7 +3,6 @@ using MovieRental.Domain.DTOs.Actors;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -21,43 +20,50 @@ public class ActorService : IActorService
     }
 
     // Retrieves actors using the requested search filters, sorting, and pagination.
-    public async Task<PaginatedResponseDto<ActorResponseDto>> GetAllActorsAsync(ActorQueryParametersDto queryParams)
+    public async Task<PaginatedResponseDto<ActorResponseDto>> GetAllActorsAsync(
+        PaginationInputDto pagination, ActorFilterDto filter)
     {
-        // Get the base query from the repository.
+        // 1. Get the base query from the repository.
         var query = _actorRepository.GetAllActors();
 
-        // Apply case-insensitive search by actor full name when provided.
-        if (!string.IsNullOrEmpty(queryParams.Search))
+        // 2. Apply search by actor full name when provided.
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
             query = query.Where(a =>
                 (a.FirstName + " " + a.LastName).ToLower()
-                .Contains(queryParams.Search.ToLower()));
+                .Contains(pagination.Search.ToLower()));
 
-        // Apply dynamic sorting based on the requested field and direction.
-        query = queryParams.SortField?.ToLower() switch
+        // 3. Apply module filters.
+        if (filter.ActorId.HasValue)
+            query = query.Where(a => a.ActorId == filter.ActorId.Value);
+
+        // 4. Apply dynamic sorting based on the requested field and direction.
+        var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = pagination.SortBy?.ToLower() switch
         {
-            "fullname" => queryParams.SortOrder == "desc"
+            "fullname" => isDesc
                 ? query.OrderByDescending(a => a.FirstName).ThenByDescending(a => a.LastName)
                 : query.OrderBy(a => a.FirstName).ThenBy(a => a.LastName),
-            "firstname" => queryParams.SortOrder == "desc"
+            "firstname" => isDesc
                 ? query.OrderByDescending(a => a.FirstName)
                 : query.OrderBy(a => a.FirstName),
-            "lastname" => queryParams.SortOrder == "desc"
+            "lastname" => isDesc
                 ? query.OrderByDescending(a => a.LastName)
                 : query.OrderBy(a => a.LastName),
-            "moviecount" => queryParams.SortOrder == "desc"
+            "moviecount" => isDesc
                 ? query.OrderByDescending(a => a.MovieActors.Count)
                 : query.OrderBy(a => a.MovieActors.Count),
-            _ => query.OrderBy(a => a.ActorId)
+            _ => isDesc
+                ? query.OrderByDescending(a => a.ActorId)
+                : query.OrderBy(a => a.ActorId)
         };
 
-        // Calculate total count for pagination metadata.
+        // 5. Calculate total count for pagination metadata.
         var totalRecords = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
 
-        // Fetch the current page data and map entities to response DTOs.
+        // 6. Fetch current page data and project to response DTOs.
         var data = await query
-            .Skip((queryParams.Page - 1) * queryParams.PageSize)
-            .Take(queryParams.PageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .Select(a => new ActorResponseDto
             {
                 ActorId = a.ActorId,
@@ -71,9 +77,9 @@ public class ActorService : IActorService
         return new PaginatedResponseDto<ActorResponseDto>
         {
             TotalRecords = totalRecords,
-            TotalPages = totalPages,
-            CurrentPage = queryParams.Page,
-            PageSize = queryParams.PageSize,
+            TotalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize),
+            CurrentPage = pagination.Page,
+            PageSize = pagination.PageSize,
             Data = data
         };
     }
@@ -150,21 +156,36 @@ public class ActorService : IActorService
 
 
     // Retrieves a paginated list of movies starring the specified actor.
-    public async Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByActorAsync(int actorId, int page, int pageSize, string? search)
+    public async Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByActorAsync(int actorId, PaginationInputDto pagination)
     {
         var query = _actorRepository.GetMoviesByActorId(actorId);
 
-        // Apply title search filter if specified.
-        if (!string.IsNullOrEmpty(search))
-            query = query.Where(m => m.Title.ToLower().Contains(search.ToLower()));
+        // Apply search filter if specified.
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var search = pagination.Search.Trim().ToLower();
+            query = query.Where(m => m.Title.ToLower().Contains(search) || (m.Description != null && m.Description.ToLower().Contains(search)));
+        }
+
+        // Apply sorting
+        var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = pagination.SortBy?.ToLower() switch
+        {
+            "title" => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title),
+            "releaseyear" => isDesc ? query.OrderByDescending(m => m.ReleaseYear) : query.OrderBy(m => m.ReleaseYear),
+            "rentalrate" => isDesc ? query.OrderByDescending(m => m.RentalRate) : query.OrderBy(m => m.RentalRate),
+            "length" => isDesc ? query.OrderByDescending(m => m.Length) : query.OrderBy(m => m.Length),
+            "id" or "movieid" => isDesc ? query.OrderByDescending(m => m.MovieId) : query.OrderBy(m => m.MovieId),
+            _ => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title)
+        };
 
         var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
         // Paginate and project movie entities to response DTOs.
         var data = await query
-            .OrderBy(m => m.Title)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .Select(m => new MovieResponseDto
             {
                 MovieId = m.MovieId,
@@ -187,9 +208,9 @@ public class ActorService : IActorService
         return new PaginatedResponseDto<MovieResponseDto>
         {
             TotalRecords = totalRecords,
-            TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
-            CurrentPage = page,
-            PageSize = pageSize,
+            TotalPages = totalPages,
+            CurrentPage = pagination.Page,
+            PageSize = pagination.PageSize,
             Data = data
         };
     }

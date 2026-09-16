@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Categories;
-using MovieRental.Domain.QueryParameters;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,12 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of categories with movie counts.
-        // Query parameters: page, pageSize, search.
         [HttpGet]
         public async Task<IActionResult> GetAllCategories(
-            [FromQuery] CategoryQueryParametersDto queryParams)
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] CategoryFilterDto filter)
         {
-            var result = await _categoryService.GetAllCategoriesAsync(queryParams);
+            var result = await _categoryService.GetAllCategoriesAsync(pagination, filter);
             return Ok(result);
         }
 
@@ -76,11 +76,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of movies belonging to this category.
-        // Supports optional title search within the genre.
         [HttpGet("{id}/movies")]
-        public async Task<IActionResult> GetMovies(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
+        public async Task<IActionResult> GetMovies(
+            int id,
+            [FromQuery] PaginationInputDto pagination)
         {
-            var result = await _categoryService.GetMoviesByCategoryAsync(id, page, pageSize, search);
+            var result = await _categoryService.GetMoviesByCategoryAsync(id, pagination);
             return Ok(result);
         }
     }

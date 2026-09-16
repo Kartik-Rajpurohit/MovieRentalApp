@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Rentals;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of rentals with optional filters (returned status, overdue, date ranges).
-        // Query parameters: page, pageSize, search, customerId, staffId, inventoryId, isReturned, hasPayment.
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] RentalQueryParametersDto queryParams)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] RentalFilterDto filter)
         {
-            var result = await _rentalService.GetAllRentalsAsync(queryParams);
+            var result = await _rentalService.GetAllRentalsAsync(pagination, filter);
             return Ok(result);
         }
 

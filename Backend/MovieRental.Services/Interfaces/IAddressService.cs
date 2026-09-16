@@ -1,6 +1,5 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Addresses;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces;
 
@@ -8,7 +7,9 @@ namespace MovieRental.Services.Interfaces;
 public interface IAddressService
 {
     // Retrieves a paginated and filtered list of addresses.
-    Task<PaginatedResponseDto<AddressResponseDto>> GetAllAddressesAsync(AddressQueryParametersDto queryParams);
+    Task<PaginatedResponseDto<AddressResponseDto>> GetAllAddressesAsync(
+        PaginationInputDto pagination,
+        AddressFilterDto filter);
 
     // Retrieves full address details by ID, including city and country.
     Task<AddressDetailDto?> GetAddressByIdAsync(int id);

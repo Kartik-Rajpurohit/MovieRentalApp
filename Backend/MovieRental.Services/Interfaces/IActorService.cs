@@ -1,7 +1,6 @@
 using MovieRental.Domain.DTOs.Actors;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces;
 
@@ -9,7 +8,7 @@ namespace MovieRental.Services.Interfaces;
 public interface IActorService
 {
     // Retrieves a paginated, filtered, and sorted list of actors.
-    Task<PaginatedResponseDto<ActorResponseDto>> GetAllActorsAsync(ActorQueryParametersDto queryParams);
+    Task<PaginatedResponseDto<ActorResponseDto>> GetAllActorsAsync(PaginationInputDto pagination, ActorFilterDto filter);
 
     // Retrieves an actor by their ID and maps to a response DTO.
     Task<ActorResponseDto?> GetActorByIdAsync(int id);
@@ -25,5 +24,5 @@ public interface IActorService
 
 
     // Retrieves a paginated list of movies featuring the specified actor.
-    Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByActorAsync(int actorId, int page, int pageSize, string? search);
+    Task<PaginatedResponseDto<MovieResponseDto>> GetMoviesByActorAsync(int actorId, PaginationInputDto pagination);
 }

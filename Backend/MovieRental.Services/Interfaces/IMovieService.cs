@@ -1,14 +1,13 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
     // Defines business operations for movies, including search, details, and lookup options.
     public interface IMovieService
     {
-        // Retrieves a paginated and filtered catalog of movies.
-        Task<PaginatedResponseDto<MovieResponseDto>> GetAllMoviesAsync(MovieQueryParametersDto queryParams);
+        // Retrieves a paginated, filtered, and sorted catalog of movies.
+        Task<PaginatedResponseDto<MovieResponseDto>> GetAllMoviesAsync(PaginationInputDto pagination, MovieFilterDto filter);
 
         // Retrieves detailed movie information by ID, including actors and categories.
         Task<MovieDetailDto?> GetMovieByIdAsync(int id);

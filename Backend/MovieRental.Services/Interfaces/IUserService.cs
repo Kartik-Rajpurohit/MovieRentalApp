@@ -1,14 +1,13 @@
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Users;
-using MovieRental.Domain.QueryParameters;
 
 namespace MovieRental.Services.Interfaces
 {
     // Defines business operations for user accounts, status management, and dropdown options.
     public interface IUserService
     {
-        // Retrieves a paginated and filtered list of user accounts.
-        Task<PaginatedResponseDto<UserResponseDto>> GetAllUsersAsync(UserQueryParametersDto queryParams);
+        // Retrieves a paginated, filtered, and sorted list of user accounts.
+        Task<PaginatedResponseDto<UserResponseDto>> GetAllUsersAsync(PaginationInputDto pagination, UserFilterDto filter);
 
         // Retrieves a single user account by its ID.
         Task<UserResponseDto?> GetUserByIdAsync(int id);

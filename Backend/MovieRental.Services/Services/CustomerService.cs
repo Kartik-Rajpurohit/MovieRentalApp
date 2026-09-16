@@ -15,17 +15,17 @@ namespace MovieRental.Services.Services
         // Receives the customer repository needed to query customer data.
         public CustomerService(ICustomerRepository customerRepository) => _customerRepository = customerRepository;
 
-        // Retrieves a paginated and filtered list of customers with search and store filters.
+        // Retrieves a paginated, filtered, and sorted list of customers.
         public async Task<PaginatedResponseDto<CustomerResponseDto>> GetAllCustomersAsync(
-            int page, int pageSize, string? search, bool? isActive, int? storeId = null)
+            PaginationInputDto pagination, CustomerFilterDto filter)
         {
-            // Get the base query from the repository.
+            // 1. Get the base query from the repository.
             var query = _customerRepository.GetAllCustomers();
 
-            // Filter by search text matching customer full name, email, or numeric ID.
-            if (!string.IsNullOrWhiteSpace(search))
+            // 2. Search: matching customer full name, email, or numeric ID.
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var lower = search.ToLower();
+                var lower = pagination.Search.ToLower();
                 query = query.Where(c =>
                     c.User != null && (
                         (c.User.FirstName + " " + c.User.LastName).ToLower().Contains(lower) ||
@@ -34,21 +34,47 @@ namespace MovieRental.Services.Services
                 );
             }
 
-            // Filter by active account status if specified.
-            if (isActive.HasValue)
-                query = query.Where(c => c.User != null && c.User.IsActive == isActive.Value);
+            // 3. Module Filters: account active status and assigned store.
+            if (filter.IsActive.HasValue)
+                query = query.Where(c => c.User != null && c.User.IsActive == filter.IsActive.Value);
 
-            // Filter by assigned store location.
-            if (storeId.HasValue)
-                query = query.Where(c => c.StoreId == storeId.Value);
+            if (filter.StoreId.HasValue)
+                query = query.Where(c => c.StoreId == filter.StoreId.Value);
 
+            // 4. Sorting: dynamic sorting on allowed fields.
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "firstname" => isDesc
+                    ? query.OrderByDescending(c => c.User != null ? c.User.FirstName : "")
+                    : query.OrderBy(c => c.User != null ? c.User.FirstName : ""),
+                "lastname" => isDesc
+                    ? query.OrderByDescending(c => c.User != null ? c.User.LastName : "")
+                    : query.OrderBy(c => c.User != null ? c.User.LastName : ""),
+                "email" => isDesc
+                    ? query.OrderByDescending(c => c.User != null ? c.User.Email : "")
+                    : query.OrderBy(c => c.User != null ? c.User.Email : ""),
+                "store" or "storeid" => isDesc
+                    ? query.OrderByDescending(c => c.StoreId)
+                    : query.OrderBy(c => c.StoreId),
+                "active" or "isactive" => isDesc
+                    ? query.OrderByDescending(c => c.User != null && c.User.IsActive)
+                    : query.OrderBy(c => c.User != null && c.User.IsActive),
+                "createdate" => isDesc
+                    ? query.OrderByDescending(c => c.CreateDate)
+                    : query.OrderBy(c => c.CreateDate),
+                _ => isDesc
+                    ? query.OrderByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.CustomerId)
+            };
+
+            // 5. Total Count: before pagination.
             var totalRecords = await query.CountAsync();
 
-            // Paginate and project customer entities to response DTOs.
+            // 6. Pagination & Projection: database-side execution.
             var data = await query
-                .OrderBy(c => c.CustomerId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .Select(c => new CustomerResponseDto
                 {
                     CustomerId = c.CustomerId,
@@ -63,9 +89,9 @@ namespace MovieRental.Services.Services
             return new PaginatedResponseDto<CustomerResponseDto>
             {
                 TotalRecords = totalRecords,
-                TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
-                CurrentPage = page,
-                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize),
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = data
             };
         }

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Users;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -19,74 +18,70 @@ namespace MovieRental.Services.Services
             _userRepository = userRepository;
         }
 
-        // Gets a paginated list of users with search, role, email, and active status filters.
-        public async Task<PaginatedResponseDto<UserResponseDto>> GetAllUsersAsync(UserQueryParametersDto queryParams)
+        // Gets a paginated, filtered, and sorted list of users.
+        public async Task<PaginatedResponseDto<UserResponseDto>> GetAllUsersAsync(
+            PaginationInputDto pagination, UserFilterDto filter)
         {
+            // 1. Base query from repository
             var query = _userRepository.GetAllUsers();
 
-            // Filter by role ID if provided
-            if (queryParams.RoleId.HasValue)
-                query = query.Where(u => u.RoleId == queryParams.RoleId.Value);
-
-            // Filter by name — matches against FirstName + LastName combined
-            if (!string.IsNullOrEmpty(queryParams.Name))
-                query = query.Where(u =>
-                    (u.FirstName + " " + u.LastName).ToLower().Contains(queryParams.Name.ToLower()));
-
-            // Filter by email
-            if (!string.IsNullOrEmpty(queryParams.Email))
-                query = query.Where(u => u.Email.ToLower().Contains(queryParams.Email.ToLower()));
-
-            // Filter by active status
-            if (queryParams.IsActive.HasValue)
-                query = query.Where(u => u.IsActive == queryParams.IsActive.Value);
-
-            // Global search — checks full name, email, role name, and user ID
-            if (!string.IsNullOrEmpty(queryParams.Search))
-                query = query.Where(u =>
-                    (u.FirstName + " " + u.LastName).ToLower().Contains(queryParams.Search.ToLower()) ||
-                    u.Email.ToLower().Contains(queryParams.Search.ToLower()) ||
-                    (u.Role != null && u.Role.RoleName.ToLower().Contains(queryParams.Search.ToLower())) ||
-                    u.UserId.ToString().Contains(queryParams.Search));
-
-            // Sorting — applied per field, supports asc/desc
-            if (!string.IsNullOrEmpty(queryParams.SortField))
+            // 2. Search: checks full name, email, role name, and user ID
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                query = queryParams.SortField.ToLower() switch
-                {
-                    "email" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(u => u.Email)
-                        : query.OrderBy(u => u.Email),
-
-                    // Sort by role name, not role ID
-                    "role" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(u => u.Role != null ? u.Role.RoleName : "")
-                        : query.OrderBy(u => u.Role != null ? u.Role.RoleName : ""),
-
-                    "id" => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(u => u.UserId)
-                        : query.OrderBy(u => u.UserId),
-
-                    // Default — sort by first name
-                    _ => queryParams.SortOrder?.ToLower() == "desc"
-                        ? query.OrderByDescending(u => u.FirstName)
-                        : query.OrderBy(u => u.FirstName)
-                };
-            }
-            else
-            {
-                // No sort field provided — default to ascending UserId
-                query = query.OrderBy(u => u.UserId);
+                var lower = pagination.Search.ToLower();
+                query = query.Where(u =>
+                    (u.FirstName + " " + u.LastName).ToLower().Contains(lower) ||
+                    u.Email.ToLower().Contains(lower) ||
+                    (u.Role != null && u.Role.RoleName.ToLower().Contains(lower)) ||
+                    u.UserId.ToString().Contains(lower));
             }
 
-            // Total count before pagination — needed for frontend paginator
+            // 3. Module Filters: role ID, name, email, and active status
+            if (filter.RoleId.HasValue)
+                query = query.Where(u => u.RoleId == filter.RoleId.Value);
+
+            if (!string.IsNullOrEmpty(filter.Name))
+                query = query.Where(u =>
+                    (u.FirstName + " " + u.LastName).ToLower().Contains(filter.Name.ToLower()));
+
+            if (!string.IsNullOrEmpty(filter.Email))
+                query = query.Where(u => u.Email.ToLower().Contains(filter.Email.ToLower()));
+
+            if (filter.IsActive.HasValue)
+                query = query.Where(u => u.IsActive == filter.IsActive.Value);
+
+            // 4. Sorting: dynamic sorting on allowed fields
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "email" => isDesc
+                    ? query.OrderByDescending(u => u.Email)
+                    : query.OrderBy(u => u.Email),
+                "role" => isDesc
+                    ? query.OrderByDescending(u => u.Role != null ? u.Role.RoleName : "")
+                    : query.OrderBy(u => u.Role != null ? u.Role.RoleName : ""),
+                "id" or "userid" => isDesc
+                    ? query.OrderByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.UserId),
+                "active" or "isactive" => isDesc
+                    ? query.OrderByDescending(u => u.IsActive)
+                    : query.OrderBy(u => u.IsActive),
+                "lastname" => isDesc
+                    ? query.OrderByDescending(u => u.LastName)
+                    : query.OrderBy(u => u.LastName),
+                _ => isDesc
+                    ? query.OrderByDescending(u => u.FirstName)
+                    : query.OrderBy(u => u.FirstName)
+            };
+
+            // 5. Total count before pagination
             var totalRecords = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // Fetch only the current page entities first, then map to DTO in memory
+            // 6. Pagination & Materialization
             var users = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .ToListAsync();
 
             var data = users.Select(MapToDto).ToList();
@@ -95,8 +90,8 @@ namespace MovieRental.Services.Services
             {
                 TotalRecords = totalRecords,
                 TotalPages = totalPages,
-                CurrentPage = queryParams.Page,
-                PageSize = queryParams.PageSize,
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = data
             };
         }

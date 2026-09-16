@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Inventory;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -44,61 +43,68 @@ namespace MovieRental.Services.Services
 
         // Gets paginated inventory copies with store, movie, and availability filters.
         public async Task<PaginatedResponseDto<InventoryResponseDto>> GetAllInventoryAsync(
-            InventoryQueryParametersDto queryParams)
+            PaginationInputDto pagination,
+            InventoryFilterDto filter)
         {
             var query = _inventoryRepository.GetAllInventory();
 
-            // Filter by movie
-            if (queryParams.MovieId.HasValue)
-                query = query.Where(i => i.MovieId == queryParams.MovieId.Value);
-
-            // Filter by store
-            if (queryParams.StoreId.HasValue)
-                query = query.Where(i => i.StoreId == queryParams.StoreId.Value);
-
-            // Filter by availability in database query before pagination
-            if (queryParams.IsAvailable.HasValue)
+            // 1. Search — by movie title or inventory ID
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                query = queryParams.IsAvailable.Value
-                    ? query.Where(i => !i.Rentals.Any(r => r.ReturnDate == null))
-                    : query.Where(i => i.Rentals.Any(r => r.ReturnDate == null));
-            }
-
-            // Global search — by movie title or inventory ID
-            if (!string.IsNullOrEmpty(queryParams.Search))
-            {
-                var s = queryParams.Search.ToLower();
+                var s = pagination.Search.Trim().ToLower();
                 query = query.Where(i =>
                     i.Movie.Title.ToLower().Contains(s) ||
                     i.InventoryId.ToString().Contains(s));
             }
 
-            // Sorting
-            query = queryParams.SortField?.ToLower() switch
+            // 2. Module Filters
+            if (filter.MovieId.HasValue)
+                query = query.Where(i => i.MovieId == filter.MovieId.Value);
+
+            if (filter.StoreId.HasValue)
+                query = query.Where(i => i.StoreId == filter.StoreId.Value);
+
+            if (filter.IsAvailable.HasValue)
             {
-                "movietitle" => queryParams.SortOrder?.ToLower() == "desc"
+                query = filter.IsAvailable.Value
+                    ? query.Where(i => !i.Rentals.Any(r => r.ReturnDate == null))
+                    : query.Where(i => i.Rentals.Any(r => r.ReturnDate == null));
+            }
+
+            // 3. Sorting
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "movietitle" or "movie" => isDesc
                     ? query.OrderByDescending(i => i.Movie.Title)
                     : query.OrderBy(i => i.Movie.Title),
-                "storeid" => queryParams.SortOrder?.ToLower() == "desc"
+                "storeid" or "store" => isDesc
                     ? query.OrderByDescending(i => i.StoreId)
                     : query.OrderBy(i => i.StoreId),
-                _ => query.OrderBy(i => i.InventoryId)
+                "id" or "inventoryid" => isDesc
+                    ? query.OrderByDescending(i => i.InventoryId)
+                    : query.OrderBy(i => i.InventoryId),
+                _ => isDesc
+                    ? query.OrderByDescending(i => i.InventoryId)
+                    : query.OrderBy(i => i.InventoryId)
             };
 
+            // 4. Count
             var totalRecords = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
+            // 5. Pagination & Materialization
             var entities = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .ToListAsync();
 
             return new PaginatedResponseDto<InventoryResponseDto>
             {
                 TotalRecords = totalRecords,
                 TotalPages = totalPages,
-                CurrentPage = queryParams.Page,
-                PageSize = queryParams.PageSize,
+                CurrentPage = pagination.Page,
+                PageSize = pagination.PageSize,
                 Data = entities.Select(MapToResponse).ToList()
             };
         }

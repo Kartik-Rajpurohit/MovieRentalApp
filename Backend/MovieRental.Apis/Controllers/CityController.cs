@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.DTOs.Locations.Cities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -26,11 +26,12 @@ public class CityController : ControllerBase
     }
 
     // Gets a paginated list of cities with country information.
-    // Query parameters: page, pageSize, search, countryId.
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] CityQueryParametersDto queryParams)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PaginationInputDto pagination,
+        [FromQuery] CityFilterDto filter)
     {
-        var result = await _cityService.GetAllCitiesAsync(queryParams);
+        var result = await _cityService.GetAllCitiesAsync(pagination, filter);
         return Ok(result);
     }
 
@@ -49,17 +50,11 @@ public class CityController : ControllerBase
     [HttpGet("{id}/addresses")]
     public async Task<IActionResult> GetAddresses(
         int id,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] string? search = null)
+        [FromQuery] PaginationInputDto pagination)
     {
-        var result = await _addressService.GetAllAddressesAsync(new AddressQueryParametersDto
-        {
-            CityId = id,
-            Page = page,
-            PageSize = pageSize,
-            Search = search
-        });
+        var result = await _addressService.GetAllAddressesAsync(
+            pagination,
+            new AddressFilterDto { CityId = id });
         return Ok(result);
     }
 

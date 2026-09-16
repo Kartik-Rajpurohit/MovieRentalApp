@@ -11,10 +11,18 @@ const api = axios.create({
   withCredentials: true, // Automatically sends HttpOnly cookies (like refresh token) with requests
 });
 
-// Request Interceptor: Automatically attaches the JWT access token to every outgoing request
+// Request Interceptor: Automatically attaches the JWT access token and standardizes query parameters
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  if (config.params) {
+    if (config.params.sortField !== undefined && config.params.sortBy === undefined) {
+      config.params.sortBy = config.params.sortField;
+      delete config.params.sortField;
+    }
+  }
+
   return config;
 });
 

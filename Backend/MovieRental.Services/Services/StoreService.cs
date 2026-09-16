@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Stores;
 using MovieRental.Domain.Entities;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Interfaces;
 
@@ -20,25 +19,17 @@ namespace MovieRental.Services.Services
         }
 
         // Retrieves a paginated and filtered list of stores with aggregated counts.
-        public async Task<PaginatedResponseDto<StoreResponseDto>> GetAllStoresAsync(StoreQueryParametersDto queryParams)
+        public async Task<PaginatedResponseDto<StoreResponseDto>> GetAllStoresAsync(
+            PaginationInputDto pagination,
+            StoreFilterDto filter)
         {
             // Get the base query from the repository.
             var query = _storeRepository.GetAllStores();
 
-            // Filter by city name if provided.
-            if (!string.IsNullOrWhiteSpace(queryParams.City))
-                query = query.Where(s =>
-                    s.Address.City.Name.ToLower().Contains(queryParams.City.ToLower()));
-
-            // Filter by country name if provided.
-            if (!string.IsNullOrWhiteSpace(queryParams.Country))
-                query = query.Where(s =>
-                    s.Address.City.Country.Name.ToLower().Contains(queryParams.Country.ToLower()));
-
-            // Search by store ID, city, country, or manager name.
-            if (!string.IsNullOrWhiteSpace(queryParams.Search))
+            // 1. Search by store ID, city, country, or manager name.
+            if (!string.IsNullOrWhiteSpace(pagination.Search))
             {
-                var s = queryParams.Search.ToLower();
+                var s = pagination.Search.Trim().ToLower();
                 query = query.Where(st =>
                     st.StoreId.ToString().Contains(s) ||
                     st.Address.City.Name.ToLower().Contains(s) ||
@@ -48,28 +39,45 @@ namespace MovieRental.Services.Services
                         : "").Contains(s));
             }
 
-            // Apply dynamic sorting.
-            query = queryParams.SortField?.ToLower() switch
+            // 2. Module Filters
+            if (!string.IsNullOrWhiteSpace(filter.City))
             {
-                "storeid" => queryParams.SortOrder?.ToLower() == "desc"
-                    ? query.OrderByDescending(s => s.StoreId)
-                    : query.OrderBy(s => s.StoreId),
-                "city" => queryParams.SortOrder?.ToLower() == "desc"
+                var city = filter.City.Trim().ToLower();
+                query = query.Where(s => s.Address.City.Name.ToLower().Contains(city));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Country))
+            {
+                var country = filter.Country.Trim().ToLower();
+                query = query.Where(s => s.Address.City.Country.Name.ToLower().Contains(country));
+            }
+
+            // 3. Dynamic Sorting
+            var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+            query = pagination.SortBy?.ToLower() switch
+            {
+                "city" => isDesc
                     ? query.OrderByDescending(s => s.Address.City.Name)
                     : query.OrderBy(s => s.Address.City.Name),
-                "country" => queryParams.SortOrder?.ToLower() == "desc"
+                "country" => isDesc
                     ? query.OrderByDescending(s => s.Address.City.Country.Name)
                     : query.OrderBy(s => s.Address.City.Country.Name),
-                _ => query.OrderBy(s => s.StoreId)
+                "id" or "storeid" => isDesc
+                    ? query.OrderByDescending(s => s.StoreId)
+                    : query.OrderBy(s => s.StoreId),
+                _ => isDesc
+                    ? query.OrderByDescending(s => s.StoreId)
+                    : query.OrderBy(s => s.StoreId)
             };
 
+            // 4. Count
             var totalRecords = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalRecords / queryParams.PageSize);
+            var totalPages   = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // Paginate and project store entities to response DTOs with aggregated counts.
+            // 5. Pagination & Projection
             var data = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
+                .Skip((pagination.Page - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
                 .Select(s => new StoreResponseDto
                 {
                     StoreId        = s.StoreId,
@@ -93,8 +101,8 @@ namespace MovieRental.Services.Services
             {
                 TotalRecords = totalRecords,
                 TotalPages   = totalPages,
-                CurrentPage  = queryParams.Page,
-                PageSize     = queryParams.PageSize,
+                CurrentPage  = pagination.Page,
+                PageSize     = pagination.PageSize,
                 Data         = data
             };
         }

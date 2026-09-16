@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Addresses;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ public class AddressController : ControllerBase
     }
 
     // Gets a paginated list of addresses with city and postal code filters.
-    // Query parameters: page, pageSize, search, cityId.
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] AddressQueryParametersDto queryParams)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PaginationInputDto pagination,
+        [FromQuery] AddressFilterDto filter)
     {
-        var result = await _addressService.GetAllAddressesAsync(queryParams);
+        var result = await _addressService.GetAllAddressesAsync(pagination, filter);
         return Ok(result);
     }
 

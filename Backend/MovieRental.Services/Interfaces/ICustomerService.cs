@@ -6,8 +6,8 @@ namespace MovieRental.Services.Interfaces
     // Defines business operations for customer querying and rental history inspection.
     public interface ICustomerService
     {
-        // Retrieves a paginated and filtered list of customers.
-        Task<PaginatedResponseDto<CustomerResponseDto>> GetAllCustomersAsync(int page, int pageSize, string? search, bool? isActive, int? storeId = null);
+        // Retrieves a paginated, filtered, and sorted list of customers.
+        Task<PaginatedResponseDto<CustomerResponseDto>> GetAllCustomersAsync(PaginationInputDto pagination, CustomerFilterDto filter);
 
         // Retrieves detailed customer information by ID including rental and payment history.
         Task<CustomerDetailDto?> GetCustomerByIdAsync(int id);

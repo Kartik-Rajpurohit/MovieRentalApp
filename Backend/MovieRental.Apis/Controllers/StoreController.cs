@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Stores;
-using MovieRental.Domain.QueryParameters;
 using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
@@ -22,11 +22,12 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Gets a paginated list of stores with manager, address, and copy count summaries.
-        // Query parameters: page, pageSize, search.
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] StoreQueryParametersDto queryParams)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] PaginationInputDto pagination,
+            [FromQuery] StoreFilterDto filter)
         {
-            var result = await _storeService.GetAllStoresAsync(queryParams);
+            var result = await _storeService.GetAllStoresAsync(pagination, filter);
             return Ok(result);
         }
 

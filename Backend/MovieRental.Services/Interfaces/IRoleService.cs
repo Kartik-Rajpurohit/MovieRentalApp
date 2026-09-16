@@ -7,7 +7,9 @@ namespace MovieRental.Services.Interfaces
     public interface IRoleService
     {
         // Retrieves a paginated and searchable list of system roles.
-        Task<PaginatedResponseDto<RoleResponseDto>> GetAllRolesAsync(int page, int pageSize, string? search);
+        Task<PaginatedResponseDto<RoleResponseDto>> GetAllRolesAsync(
+            PaginationInputDto pagination,
+            RoleFilterDto filter);
 
         // Creates a new role in the system.
         Task<RoleResponseDto> CreateRoleAsync(CreateRoleDto dto);
