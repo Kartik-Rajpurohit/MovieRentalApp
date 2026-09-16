@@ -87,7 +87,7 @@ public class AuthController : ControllerBase
         }
     }
 
-    // Logout — reads token from HttpOnly cookie (or JWT claim), clears it, revokes refresh token
+    // Logout — clears session state via AuthService and deletes the refresh token cookie
     // Uses [AllowAnonymous] to bypass the global RequireRole policy so Unassigned users can also log out
     [HttpPost("logout")]
     [AllowAnonymous]
@@ -103,24 +103,10 @@ public class AuthController : ControllerBase
             userId = id;
         }
 
-        try
-        {
-            if (!string.IsNullOrEmpty(cookieToken))
-            {
-                await _authService.LogoutAsync(cookieToken, userId);
-            }
-            else if (userId.HasValue)
-            {
-                // Fallback: If the browser omitted the cookie (e.g. cross-origin/cross-port restriction in dev),
-                // revoke the refresh token directly using the authenticated UserId from the JWT bearer token
-                await _authService.LogoutByUserIdAsync(userId.Value);
-            }
-        }
-        catch
-        {
-            // Silently proceed so cookie is always cleared
-        }
+        // Delegate all session revocation and cleanup business logic to AuthService
+        await _authService.ClearSessionAsync(cookieToken, userId);
 
+        // Clear HTTP cookie transport header
         ClearRefreshTokenCookie();
         return Ok();
     }

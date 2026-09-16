@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Inventory;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles inventory copy tracking, availability queries, and store assignments.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can manage physical copies
+    [Authorize(Policy = Permissions.Inventory.Read)] // Only authorized staff and admins can manage physical copies
     public class InventoryController : ControllerBase
     {
         // Injected service for inventory business logic
@@ -42,6 +43,7 @@ namespace MovieRental.Apis.Controllers
         // Adds a new physical copy of a movie to a specific store.
         // Receives MovieId and StoreId in request body.
         [HttpPost]
+        [Authorize(Policy = Permissions.Inventory.Create)]
         public async Task<IActionResult> Create([FromBody] CreateInventoryDto dto)
         {
             var result = await _inventoryService.CreateInventoryAsync(dto);
@@ -51,6 +53,7 @@ namespace MovieRental.Apis.Controllers
         // Updates an inventory item's store assignment.
         // Returns 404 NotFound if inventory copy does not exist.
         [HttpPatch]
+        [Authorize(Policy = Permissions.Inventory.Update)]
         public async Task<IActionResult> Update([FromBody] UpdateInventoryDto dto)
         {
             var result = await _inventoryService.UpdateInventoryAsync(dto);
@@ -61,6 +64,7 @@ namespace MovieRental.Apis.Controllers
         // Deletes an inventory copy by ID.
         // Returns 204 NoContent on success, or 404 NotFound if copy does not exist.
         [HttpDelete("{id}")]
+        [Authorize(Policy = Permissions.Inventory.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _inventoryService.DeleteInventoryAsync(id);

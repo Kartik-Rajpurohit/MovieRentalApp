@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles movie catalog queries, creation, updates, and associated lookup data.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")] // All users can browse the movie catalog; write actions require Admin
+    [Authorize(Policy = Permissions.Movies.Read)] // All authorized users can browse the movie catalog; write actions require Admin
     public class MovieController : ControllerBase
     {
         // Injected service handling movie database queries, joins, and mutations
@@ -39,9 +40,9 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Creates a new movie with category and actor associations.
-        // Restricted to Admin role.
+        // Restricted to Movies.Create permission.
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Movies.Create)]
         public async Task<IActionResult> Create([FromBody] CreateMovieDto dto)
         {
             var result = await _movieService.CreateMovieAsync(dto);
@@ -49,10 +50,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Partially updates an existing movie (only fields provided in the request body are modified).
-        // Restricted to Admin role.
+        // Restricted to Movies.Update permission.
         // Returns 404 NotFound if the movie does not exist.
         [HttpPatch]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Movies.Update)]
         public async Task<IActionResult> Update([FromBody] UpdateMovieDto dto)
         {
             var result = await _movieService.UpdateMovieAsync(dto);
@@ -60,10 +61,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Deletes a movie by ID.
-        // Restricted to Admin role.
+        // Restricted to Movies.Delete permission.
         // Returns 200 OK on success, or 404 NotFound if movie does not exist.
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Movies.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _movieService.DeleteMovieAsync(id);

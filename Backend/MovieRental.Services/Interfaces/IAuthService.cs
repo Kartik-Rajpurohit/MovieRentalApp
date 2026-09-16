@@ -19,4 +19,7 @@ public interface IAuthService
 
     // Revokes active tokens directly using the authenticated user's ID.
     Task LogoutByUserIdAsync(int userId);
+
+    // Clears and revokes the active authentication session by refresh token and/or user ID.
+    Task ClearSessionAsync(string? refreshToken, int? userId = null);
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Users;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles administrative user account management, role assignments, and status toggles.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")] // Protected by Admin role by default; specific dropdown lookups allow anonymous
+    [Authorize(Policy = Permissions.Users.Read)] // Protected by Admin role by default; specific dropdown lookups allow anonymous
     public class UserController : ControllerBase
     {
         // Injected service handling user business logic and cascading lookups
@@ -42,6 +43,7 @@ namespace MovieRental.Apis.Controllers
         // Creates a new user with hashed password and role assignment.
         // Returns 409 Conflict if email is already registered in the system.
         [HttpPost]
+        [Authorize(Policy = Permissions.Users.Create)]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
         {
             try
@@ -59,6 +61,7 @@ namespace MovieRental.Apis.Controllers
         // Safely handles foreign key unlinking if role changes between Customer and Staff.
         // Returns 404 NotFound if user does not exist.
         [HttpPatch]
+        [Authorize(Policy = Permissions.Users.Update)]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto)
         {
             var updatedUser = await _userService.UpdateUserAsync(dto);
@@ -69,6 +72,7 @@ namespace MovieRental.Apis.Controllers
         // Toggles a user's active status between active (true) and inactive (false).
         // Returns 404 NotFound if user does not exist.
         [HttpPatch("{id}/toggle-status")]
+        [Authorize(Policy = Permissions.Users.Update)]
         public async Task<IActionResult> ToggleUserStatus(int id)
         {
             var result = await _userService.ToggleUserStatusAsync(id);
@@ -104,7 +108,7 @@ namespace MovieRental.Apis.Controllers
 
         // Admin and Staff lookup: Gets available store branches for user/staff assignment.
         [HttpGet("stores")]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Users.ManageStores)]
         public async Task<IActionResult> GetStores([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             var stores = await _userService.GetAllStoresAsync(page, pageSize);

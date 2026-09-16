@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -7,7 +8,7 @@ namespace MovieRental.Apis.Controllers
     // Handles customer profile and rental history queries for staff and administrators.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can view full customer listings
+    [Authorize(Policy = Permissions.Customers.Read)] // Only Admin and Staff can view full customer listings
     public class CustomerController : ControllerBase
     {
         // Injected service for customer lookups and profile retrieval

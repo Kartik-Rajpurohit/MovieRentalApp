@@ -301,4 +301,27 @@ public class AuthService : IAuthService
         await _userRepository.RevokeRefreshTokenByUserIdAsync(userId);
         _logger.LogInformation("User {UserId} logged out by UserId and refresh token revoked", userId);
     }
+
+    // Clears and revokes the active authentication session by refresh token or fallback user ID.
+    public async Task ClearSessionAsync(string? refreshToken, int? userId = null)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await LogoutAsync(refreshToken, userId);
+            }
+            else if (userId.HasValue)
+            {
+                // Fallback: If the browser omitted the cookie (e.g. cross-origin/cross-port restriction in dev),
+                // revoke the refresh token directly using the authenticated UserId from the JWT bearer token
+                await LogoutByUserIdAsync(userId.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error occurred during session clearance for UserId {UserId}", userId);
+            // Silently proceed so session cleanup is resilient
+        }
+    }
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Roles;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -8,7 +9,7 @@ namespace MovieRental.Apis.Controllers
     // Handles role queries and role creation for administrators.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")] // Only Admin can manage system roles
+    [Authorize(Policy = Permissions.Roles.Read)] // Only Admin can manage system roles
     public class RoleController : ControllerBase
     {
         // Injected service for role management
@@ -34,6 +35,7 @@ namespace MovieRental.Apis.Controllers
         // Creates a new user role in the system.
         // Returns 409 Conflict if a role with the same name already exists.
         [HttpPost]
+        [Authorize(Policy = Permissions.Roles.Create)]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto dto)
         {
             try

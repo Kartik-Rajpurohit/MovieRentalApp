@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers;
 // Handles address creation, retrieval, and updates for stores, staff, and customers.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can manage addresses
+[Authorize(Policy = Permissions.Addresses.Read)] // Only Admin and Staff can manage addresses
 public class AddressController : ControllerBase
 {
     // Injected service handling address database operations
@@ -42,6 +43,7 @@ public class AddressController : ControllerBase
     // Creates a new address record.
     // Receives street address, cityId, postalCode, and phone in request body.
     [HttpPost]
+    [Authorize(Policy = Permissions.Addresses.Create)]
     public async Task<IActionResult> Create([FromBody] CreateAddressDto dto)
     {
         var result = await _addressService.CreateAddressAsync(dto);
@@ -51,6 +53,7 @@ public class AddressController : ControllerBase
     // Updates an existing address.
     // Returns 404 NotFound if the address does not exist.
     [HttpPatch]
+    [Authorize(Policy = Permissions.Addresses.Update)]
     public async Task<IActionResult> Update([FromBody] UpdateAddressDto dto)
     {
         var result = await _addressService.UpdateAddressAsync(dto);
@@ -62,7 +65,7 @@ public class AddressController : ControllerBase
     // Restricted to Admin role only.
     // Returns 204 NoContent on success, or 404 NotFound if address not found.
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Addresses.Delete)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _addressService.DeleteAddressAsync(id);

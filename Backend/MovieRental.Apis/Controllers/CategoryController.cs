@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Categories;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles movie genres/categories and their movie counts.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")] // All users can browse categories; only Admin and Staff can modify
+    [Authorize(Policy = Permissions.Categories.Read)] // All users can browse categories; only Admin and Staff can modify
     public class CategoryController : ControllerBase
     {
         // Injected service for category business logic
@@ -41,9 +42,9 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Creates a new movie category/genre.
-        // Restricted to Admin and Staff roles.
+        // Restricted to Categories.Create permission.
         [HttpPost]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Categories.Create)]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
         {
             var result = await _categoryService.CreateCategoryAsync(dto);
@@ -51,9 +52,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Updates an existing category's name.
+        // Restricted to Categories.Update permission.
         // Returns 404 NotFound if the category is not found.
         [HttpPatch]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Categories.Update)]
         public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryDto dto)
         {
             var result = await _categoryService.UpdateCategoryAsync(dto);
@@ -62,9 +64,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Deletes a category by ID.
+        // Restricted to Categories.Delete permission.
         // Returns 204 NoContent on success, or 404 NotFound if category does not exist.
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Categories.Delete)]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var result = await _categoryService.DeleteCategoryAsync(id);

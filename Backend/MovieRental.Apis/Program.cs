@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MovieRental.Repository.Data;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Repository.Permissions;
 using MovieRental.Repository.Repositories;
 using MovieRental.Services.Interfaces;
 using MovieRental.Services.Services;
@@ -197,6 +198,13 @@ builder.Services.AddAuthorization(options =>
     // Unassigned users must be able to log out and have their refresh token revoked.
     options.AddPolicy("AuthenticatedOnly", policy =>
         policy.RequireAuthenticatedUser());
+
+    // Permission-based authorization policies mapped from Repository-layer definitions
+    foreach (var (permission, roles) in Permissions.RoleMap)
+    {
+        options.AddPolicy(permission, policy =>
+            policy.RequireAuthenticatedUser().RequireRole(roles));
+    }
 });
 
 // ── Build App ─────────────────────────────────────────────────

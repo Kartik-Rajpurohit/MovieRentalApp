@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MovieRental.Repository\MovieRental.Repository.csproj" />
     <ProjectReference Include="..\MovieRental.Services\MovieRental.Services.csproj" />
   </ItemGroup>
 

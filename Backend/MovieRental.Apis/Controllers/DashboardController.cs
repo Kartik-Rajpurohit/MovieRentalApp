@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 using System.Security.Claims;
 
@@ -8,7 +9,7 @@ namespace MovieRental.Apis.Controllers;
 // Handles role-based dashboard metric requests.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff,Customer")] // All roles have custom dashboard metrics
+[Authorize(Policy = Permissions.Dashboard.Read)] // All roles have custom dashboard metrics
 public class DashboardController : ControllerBase
 {
     // Injected service for computing dashboard KPI metrics

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -7,7 +8,7 @@ namespace MovieRental.Apis.Controllers
     // Handles staff profile and store assignment queries.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Admin and Staff can view staff records
+    [Authorize(Policy = Permissions.Staff.Read)] // Admin and Staff can view staff records
     public class StaffController : ControllerBase
     {
         // Injected service for staff lookups and store assignment info

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Payments;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles rental payment records and ledger queries.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")] // Customers can view payment records; only Admin/Staff can record payments
+    [Authorize(Policy = Permissions.Payments.Read)] // Customers can view payment records; only Admin/Staff can record payments
     public class PaymentController : ControllerBase
     {
         // Injected service for payment ledger logic
@@ -40,10 +41,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Records a new payment transaction against a returned rental.
-        // Restricted to Admin and Staff roles.
+        // Restricted to Payments.Create permission.
         // Returns 400 BadRequest if payment amount is invalid or rental is not eligible.
         [HttpPost]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Payments.Create)]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDto dto)
         {
             try

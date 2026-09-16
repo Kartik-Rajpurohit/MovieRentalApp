@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Locations.Countries;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -8,7 +9,7 @@ namespace MovieRental.Apis.Controllers
     // Handles country records for address configurations.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can manage countries
+    [Authorize(Policy = Permissions.Countries.Read)] // Only Admin and Staff can manage countries
     public class CountryController : ControllerBase
     {
         // Injected service for country database queries
@@ -42,7 +43,7 @@ namespace MovieRental.Apis.Controllers
         // Adds a new country name.
         // Restricted to Admin role only.
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Countries.Create)]
         public async Task<IActionResult> Create([FromBody] CreateCountryDto dto)
             => Ok(await _countryService.CreateCountryAsync(dto));
 
@@ -50,7 +51,7 @@ namespace MovieRental.Apis.Controllers
         // Restricted to Admin role only.
         // Returns 404 NotFound if country does not exist.
         [HttpPut]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Countries.Update)]
         public async Task<IActionResult> Update([FromBody] UpdateCountryDto dto)
         {
             var result = await _countryService.UpdateCountryAsync(dto);
@@ -61,7 +62,7 @@ namespace MovieRental.Apis.Controllers
         // Restricted to Admin role only.
         // Returns 200 OK on success, or 404 NotFound if country does not exist.
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Countries.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _countryService.DeleteCountryAsync(id);

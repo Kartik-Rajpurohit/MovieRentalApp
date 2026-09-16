@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Languages;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
@@ -8,7 +9,7 @@ namespace MovieRental.Apis.Controllers;
 // Handles movie language options and language lookup data.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff,Customer")] // All users can read languages; Admin can modify
+[Authorize(Policy = Permissions.Languages.Read)] // All users can read languages; Admin can modify
 public class LanguageController : ControllerBase
 {
     // Injected service for language operations
@@ -38,10 +39,10 @@ public class LanguageController : ControllerBase
     }
 
     // Creates a new language.
-    // Restricted to Admin role only.
+    // Restricted to Languages.Create permission.
     // Returns 201 Created with the new language ID and location header.
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Languages.Create)]
     public async Task<IActionResult> Create([FromBody] CreateLanguageDto dto)
     {
         var result = await _languageService.CreateLanguageAsync(dto);
@@ -49,10 +50,10 @@ public class LanguageController : ControllerBase
     }
 
     // Updates an existing language's name.
-    // Restricted to Admin role only.
+    // Restricted to Languages.Update permission.
     // Returns 404 NotFound if language does not exist.
     [HttpPatch]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Languages.Update)]
     public async Task<IActionResult> Update([FromBody] UpdateLanguageDto dto)
     {
         var result = await _languageService.UpdateLanguageAsync(dto);
@@ -61,10 +62,10 @@ public class LanguageController : ControllerBase
     }
 
     // Deletes a language by ID.
-    // Restricted to Admin role only.
+    // Restricted to Languages.Delete permission.
     // Returns 204 NoContent on success, or 404 NotFound if language does not exist.
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Languages.Delete)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _languageService.DeleteLanguageAsync(id);

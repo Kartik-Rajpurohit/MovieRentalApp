@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.DTOs.Locations.Cities;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
@@ -10,7 +11,7 @@ namespace MovieRental.Apis.Controllers;
 // Handles city records linked to countries.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff")] // Only Admin and Staff can manage cities
+[Authorize(Policy = Permissions.Cities.Read)] // Only Admin and Staff can manage cities
 public class CityController : ControllerBase
 {
     // Injected service for city operations
@@ -65,7 +66,7 @@ public class CityController : ControllerBase
     // Creates a new city under a country.
     // Restricted to Admin role.
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Cities.Create)]
     public async Task<IActionResult> Create([FromBody] CreateCityDto dto)
     {
         var result = await _cityService.CreateCityAsync(dto);
@@ -76,7 +77,7 @@ public class CityController : ControllerBase
     // Restricted to Admin role.
     // Returns 404 NotFound if city does not exist.
     [HttpPatch]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Cities.Update)]
     public async Task<IActionResult> Update([FromBody] UpdateCityDto dto)
     {
         var result = await _cityService.UpdateCityAsync(dto);
@@ -88,7 +89,7 @@ public class CityController : ControllerBase
     // Restricted to Admin role.
     // Returns 204 NoContent on success, or 404 NotFound if city does not exist.
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.Cities.Delete)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _cityService.DeleteCityAsync(id);

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Actors;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers;
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers;
 // Handles actor management and movie queries.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Staff,Customer")] // All authenticated users can read actors; write operations require Admin/Staff
+[Authorize(Policy = Permissions.Actors.Read)] // All authenticated users can read actors; write operations require Admin/Staff
 public class ActorController : ControllerBase
 {
     // Injected service for actor business logic and database queries
@@ -40,10 +41,10 @@ public class ActorController : ControllerBase
     }
 
     // Adds a new actor to the database.
-    // Restricted to Admin and Staff; customers have read-only access.
+    // Restricted to Actors.Create permission.
     // Returns 201 Created with the new actor's ID and location header.
     [HttpPost]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Policy = Permissions.Actors.Create)]
     public async Task<IActionResult> Create([FromBody] CreateActorDto dto)
     {
         var result = await _actorService.CreateActorAsync(dto);
@@ -54,7 +55,7 @@ public class ActorController : ControllerBase
     // Receives UpdateActorDto with ActorId and new names.
     // Returns 404 NotFound if actor does not exist.
     [HttpPatch]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Policy = Permissions.Actors.Update)]
     public async Task<IActionResult> Update([FromBody] UpdateActorDto dto)
     {
         var result = await _actorService.UpdateActorAsync(dto);
@@ -65,7 +66,7 @@ public class ActorController : ControllerBase
     // Deletes an actor by ID.
     // Returns 204 NoContent on success, or 404 NotFound if the actor does not exist.
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Policy = Permissions.Actors.Delete)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _actorService.DeleteActorAsync(id);

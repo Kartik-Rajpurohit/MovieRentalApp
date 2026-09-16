@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Rentals;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles rental bookings, queries, and return operations.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Customer")] // Customers can view their own rentals; Admin and Staff can manage all
+    [Authorize(Policy = Permissions.Rentals.Read)] // Customers can view their own rentals; Admin and Staff can manage all
     public class RentalController : ControllerBase
     {
         // Injected service for rental operations and business rules
@@ -40,10 +41,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Creates a new rental booking for an available movie copy.
-        // Restricted to Admin and Staff roles.
+        // Restricted to Rentals.Create permission.
         // Returns 400 BadRequest if inventory copy is currently rented or customer is invalid.
         [HttpPost]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Rentals.Create)]
         public async Task<IActionResult> Create([FromBody] CreateRentalDto dto)
         {
             try
@@ -58,10 +59,10 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Marks a rental copy as returned and automatically restores inventory availability.
-        // Restricted to Admin and Staff roles.
+        // Restricted to Rentals.Return permission.
         // Returns 404 NotFound if rental does not exist, or 400 BadRequest if already returned.
         [HttpPatch("{id}/return")]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.Rentals.Return)]
         public async Task<IActionResult> Return(int id)//TODO- Correc tthe naming convention of the method to be more descriptive, e.g., ReturnRental
         {
             try

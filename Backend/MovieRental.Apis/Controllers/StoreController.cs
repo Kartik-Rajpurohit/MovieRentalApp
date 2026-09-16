@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRental.Domain.DTOs.Stores;
 using MovieRental.Domain.QueryParameters;
+using MovieRental.Repository.Permissions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Apis.Controllers
@@ -9,7 +10,7 @@ namespace MovieRental.Apis.Controllers
     // Handles physical store locations, managers, and store-level metrics.
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff")] // Admin and Staff can view stores; only Admin can create
+    [Authorize(Policy = Permissions.Stores.Read)] // Admin and Staff can view stores; only Admin can create
     public class StoreController : ControllerBase
     {
         // Injected service for store operations and metrics
@@ -39,9 +40,9 @@ namespace MovieRental.Apis.Controllers
         }
 
         // Creates a new store branch with manager and address.
-        // Restricted to Admin role only.
+        // Restricted to Stores.Create permission.
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.Stores.Create)]
         public async Task<IActionResult> Create([FromBody] CreateStoreDto dto)
         {
             var result = await _storeService.CreateStoreAsync(dto);
