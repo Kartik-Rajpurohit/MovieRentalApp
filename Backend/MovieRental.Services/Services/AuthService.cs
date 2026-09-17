@@ -17,13 +17,22 @@ namespace MovieRental.Services.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly ICountryRepository _countryRepository;
+    private readonly ICityRepository _cityRepository;
     private readonly IConfiguration _config;
     private readonly ILogger<AuthService> _logger;
 
-    // Receives repository for user queries, configuration for JWT keys, and logger for security audits.
-    public AuthService(IUserRepository userRepository, IConfiguration config, ILogger<AuthService> logger)
+    // Receives repositories for user and location queries, configuration for JWT keys, and logger for security audits.
+    public AuthService(
+        IUserRepository userRepository,
+        ICountryRepository countryRepository,
+        ICityRepository cityRepository,
+        IConfiguration config,
+        ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
+        _countryRepository = countryRepository;
+        _cityRepository = cityRepository;
         _config = config;
         _logger = logger;
     }
@@ -103,7 +112,7 @@ public class AuthService : IAuthService
         };
     }
 
-    // Registers a new user account with hashed password and generates initial session tokens.
+    // Registers a new user account with resolved Country/City, created Address, and session tokens.
     public async Task<AuthResponseDto> SignUpAsync(SignUpDto dto)
     {
         // Ensure email is unique across all user accounts.
@@ -113,38 +122,60 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("Email already registered");
         }
 
-        // Determine AddressId — use existing address if chosen or create a new address record.
-        int? addressId = null;
-
-        if (dto.ExistingAddressId.HasValue)
+        // 1. Resolve or create active Country (case-insensitive deduplication)
+        var countryName = dto.Country.Trim();
+        var country = await _countryRepository.GetCountryByNameAsync(countryName);
+        if (country == null)
         {
-            addressId = dto.ExistingAddressId.Value;
-        }
-        else if (!string.IsNullOrWhiteSpace(dto.Street) && dto.CityId.HasValue)
-        {
-            var newAddress = new Address
+            country = await _countryRepository.CreateCountryAsync(new Country
             {
-                Street = dto.Street,
-                PostalCode = dto.PostalCode,
-                Phone = dto.Phone ?? string.Empty,
-                CityId = dto.CityId.Value,
-                LastUpdate = DateTime.UtcNow
-            };
-            addressId = await _userRepository.CreateAddressAsync(newAddress);
+                Name = countryName,
+                LastUpdate = DateTime.UtcNow,
+                IsDeleted = false
+            });
+            _logger.LogInformation("Created new country: {Country} (CountryId: {CountryId})", country.Name, country.CountryId);
         }
 
-        // Hash the plain text password before saving to the database.
+        // 2. Resolve or create active City under the resolved Country (case-insensitive deduplication)
+        var cityName = dto.City.Trim();
+        var city = await _cityRepository.GetCityByNameAndCountryIdAsync(cityName, country.CountryId);
+        if (city == null)
+        {
+            city = await _cityRepository.CreateCityAsync(new City
+            {
+                Name = cityName,
+                CountryId = country.CountryId,
+                LastUpdate = DateTime.UtcNow,
+                IsDeleted = false
+            });
+            _logger.LogInformation("Created new city: {City} (CityId: {CityId}, CountryId: {CountryId})", city.Name, city.CityId, country.CountryId);
+        }
+
+        // 3. Create Address record linked to the resolved City
+        var newAddress = new Address
+        {
+            Street = dto.Street.Trim(),
+            PostalCode = string.IsNullOrWhiteSpace(dto.PostalCode) ? null : dto.PostalCode.Trim(),
+            Phone = dto.Phone.Trim(),
+            CityId = city.CityId,
+            LastUpdate = DateTime.UtcNow,
+            IsDeleted = false
+        };
+        var addressId = await _userRepository.CreateAddressAsync(newAddress);
+
+        // 4. Create User linked to the newly created Address
         var user = new User
         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
+            FirstName = dto.FirstName.Trim(),
+            LastName = dto.LastName.Trim(),
+            Email = dto.Email.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             RoleId = null,
             AddressId = addressId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            IsDeleted = false
         };
 
         // Create the user record through repository.

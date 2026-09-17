@@ -6,13 +6,10 @@ import { InputNumber } from "primereact/inputnumber";
 import { Dropdown } from "primereact/dropdown";
 import { MultiSelect } from "primereact/multiselect";
 import { Button } from "primereact/button";
-import {
-  createMovie,
-  updateMovie,
-  getLanguages,
-  getCategories,
-  getActors,
-} from "../../services/movieService";
+import { createMovie, updateMovie } from "../../services/movieService";
+import { getLanguages } from "../../services/languageService";
+import { getCategories } from "../../services/categoryService";
+import { getActors } from "../../services/actorService";
 
 // MPAA rating options
 const RATING_OPTIONS = [
@@ -100,14 +97,18 @@ export default function MovieDialog({
 
   // Load languages, categories, and actors for the form dropdowns/selects
   const fetchDropdowns = async () => {
-    const [langs, cats, acts] = await Promise.all([
+    const [langsRes, catsRes, actsRes] = await Promise.all([
       getLanguages(),
-      getCategories(),
-      getActors(),
+      getCategories(1, 100),
+      getActors(1, 100),
     ]);
-    setLanguages(langs.map((l) => ({ label: l.name, value: l.id })));
-    setCategories(cats.map((c) => ({ label: c.name, value: c.id })));
-    setActors(acts.map((a) => ({ label: a.name, value: a.id })));
+    const langList = langsRes?.data ?? (Array.isArray(langsRes) ? langsRes : []);
+    const catList = catsRes?.data ?? (Array.isArray(catsRes) ? catsRes : []);
+    const actList = actsRes?.data ?? (Array.isArray(actsRes) ? actsRes : []);
+
+    setLanguages(langList.map((l) => ({ label: l.name, value: l.languageId ?? l.id })));
+    setCategories(catList.map((c) => ({ label: c.name, value: c.categoryId ?? c.id })));
+    setActors(actList.map((a) => ({ label: a.fullName ?? a.name, value: a.actorId ?? a.id })));
   };
 
   // Generic input change handler that updates state and clears field errors

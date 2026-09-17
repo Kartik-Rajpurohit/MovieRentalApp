@@ -50,27 +50,4 @@ public class AddressController : ControllerBase
         var result = await _addressService.CreateAddressAsync(dto);
         return Ok(result);
     }
-
-    // Updates an existing address.
-    // Returns 404 NotFound if the address does not exist.
-    [HttpPatch]
-    [Authorize(Policy = Permissions.Addresses.Update)]
-    public async Task<IActionResult> Update([FromBody] UpdateAddressDto dto)
-    {
-        var result = await _addressService.UpdateAddressAsync(dto);
-        if (result == null) return NotFound();
-        return Ok(result);
-    }
-
-    // Deletes an address by ID.
-    // Restricted to Admin role only.
-    // Returns 204 NoContent on success, or 404 NotFound if address not found.
-    [HttpDelete("{id}")]
-    [Authorize(Policy = Permissions.Addresses.Delete)]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var deleted = await _addressService.DeleteAddressAsync(id);
-        if (!deleted) return NotFound();
-        return NoContent();
-    }
 }

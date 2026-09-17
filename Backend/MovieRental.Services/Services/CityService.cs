@@ -123,25 +123,4 @@ public class CityService : ICityService
         // Map the created entity to the response DTO.
         return created.ToResponseDto();
     }
-
-    // Updates an existing city record with the new name and country assignment.
-    public async Task<CityResponseDto?> UpdateCityAsync(UpdateCityDto dto)
-    {
-        if (!await _cityRepository.CountryExistsAsync(dto.CountryId))
-        {
-            throw new InvalidOperationException($"Country with ID {dto.CountryId} does not exist or has been deleted.");
-        }
-
-        var city = new City { CityId = dto.CityId, Name = dto.Name, CountryId = dto.CountryId };
-
-        // Save updates via the repository.
-        var updated = await _cityRepository.UpdateCityAsync(city);
-        if (updated == null) return null;
-
-        return updated.ToResponseDto();
-    }
-
-    // Deletes a city record by ID through the repository.
-    public async Task<bool> DeleteCityAsync(int id)
-        => await _cityRepository.DeleteCityAsync(id);
 }

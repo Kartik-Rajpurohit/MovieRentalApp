@@ -26,6 +26,14 @@ namespace MovieRental.Repository.Repositories
                 .Include(c => c.Cities.Where(ct => !ct.IsDeleted))
                 .FirstOrDefaultAsync(c => c.CountryId == id && !c.IsDeleted);
 
+        // Finds an active country by name with case-insensitive matching.
+        public async Task<Country?> GetCountryByNameAsync(string name)
+        {
+            var trimmed = name.Trim();
+            return await _context.Countries
+                .FirstOrDefaultAsync(c => !c.IsDeleted && EF.Functions.ILike(c.Name, trimmed));
+        }
+
         // Adds a new country record to the database and saves changes.
         public async Task<Country> CreateCountryAsync(Country country)
         {

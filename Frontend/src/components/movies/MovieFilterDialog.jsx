@@ -3,7 +3,8 @@ import FilterDialog from "../common/FilterDialog";
 import { Dropdown } from "primereact/dropdown";
 import { InputNumber } from "primereact/inputnumber";
 import useFilters from "../../hooks/useFilters";
-import { getLanguages, getCategories } from "../../services/movieService";
+import { getLanguages } from "../../services/languageService";
+import { getCategories } from "../../services/categoryService";
 
 // MPAA rating filter options
 const RATING_OPTIONS = [
@@ -59,16 +60,18 @@ export default function MovieFilterDialog({
     fetchDropdowns();
   }, [visible]);
 
-  // Load available languages and categories from movieService
+  // Load available languages and categories from languageService and categoryService
   const fetchDropdowns = async () => {
-    const [langs, cats] = await Promise.all([getLanguages(), getCategories()]);
+    const [langs, catsRes] = await Promise.all([getLanguages(), getCategories(1, 100)]);
+    const langList = langs?.data ?? (Array.isArray(langs) ? langs : []);
+    const catList = catsRes?.data ?? (Array.isArray(catsRes) ? catsRes : []);
     setLanguages([
       { label: "All", value: null },
-      ...langs.map((l) => ({ label: l.name, value: l.id })),
+      ...langList.map((l) => ({ label: l.name, value: l.languageId ?? l.id })),
     ]);
     setCategories([
       { label: "All", value: null },
-      ...cats.map((c) => ({ label: c.name, value: c.id })),
+      ...catList.map((c) => ({ label: c.name, value: c.categoryId ?? c.id })),
     ]);
   };
 

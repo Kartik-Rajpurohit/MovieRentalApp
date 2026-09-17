@@ -11,6 +11,9 @@ namespace MovieRental.Repository.Interfaces
         // Finds a country by its ID, including its cities.
         Task<Country?> GetCountryByIdAsync(int id);
 
+        // Finds an active country by its name (case-insensitive).
+        Task<Country?> GetCountryByNameAsync(string name);
+
         // Adds a new country record to the database.
         Task<Country> CreateCountryAsync(Country country);
 

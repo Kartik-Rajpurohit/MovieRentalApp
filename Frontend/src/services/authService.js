@@ -10,10 +10,21 @@ export const loginUser = async (email, password) => {
   return res.data;
 };
 
+// Fetches reference country list from backend lookup endpoint for registration
+export const getLookupCountries = async () => {
+  const res = await api.get(`${AUTH}/countries`);
+  return res.data;
+};
+
+// Fetches reference city list for a specific country from backend lookup endpoint for registration
+export const getLookupCities = async (country) => {
+  const res = await api.get(`${AUTH}/cities`, { params: { country } });
+  return res.data;
+};
+
 // Sends new user registration details via POST and returns registered user data and token
 export const signUpUser = async (payload) => {
-  // payload contains: firstName, lastName, email, password, cityId,
-  // district, postalCode, phone, and either existingAddressId OR street
+  // payload contains: firstName, lastName, email, password, country, city, street, postalCode, phone
   const res = await api.post(`${AUTH}/signup`, payload);
   return res.data;
 };

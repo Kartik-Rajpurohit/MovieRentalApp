@@ -138,32 +138,4 @@ public class AddressService : IAddressService
         // Map the created entity to the response DTO.
         return created.ToResponseDto();
     }
-
-    // Updates an existing address record with the provided information.
-    public async Task<AddressResponseDto?> UpdateAddressAsync(UpdateAddressDto dto)
-    {
-        if (!await _addressRepository.CityExistsAsync(dto.CityId))
-        {
-            throw new InvalidOperationException($"City with ID {dto.CityId} does not exist or has been deleted.");
-        }
-
-        var address = new Address
-        {
-            AddressId = dto.AddressId,
-            Street = dto.Street,
-            PostalCode = dto.PostalCode,
-            Phone = dto.Phone,
-            CityId = dto.CityId,
-        };
-
-        // Save updates via the repository.
-        var updated = await _addressRepository.UpdateAddressAsync(address);
-        if (updated == null) return null;
-
-        return updated.ToResponseDto();
-    }
-
-    // Deletes an address record by ID.
-    public async Task<bool> DeleteAddressAsync(int id)
-        => await _addressRepository.DeleteAddressAsync(id);
 }

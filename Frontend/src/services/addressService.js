@@ -21,15 +21,3 @@ export const createAddress = async (dto) => {
   const res = await api.post(API, dto);
   return res.data;
 };
-
-// PATCH request to update an existing address record
-export const updateAddress = async (dto) => {
-  const res = await api.patch(API, dto);
-  return res.data;
-};
-
-// DELETE request to delete an address by its ID
-export const deleteAddress = async (id) => {
-  const res = await api.delete(`${API}/${id}`);
-  return res.data;
-};

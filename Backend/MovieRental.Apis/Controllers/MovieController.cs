@@ -71,35 +71,5 @@ namespace MovieRental.Apis.Controllers
             var deleted = await _movieService.DeleteMovieAsync(id);
             return deleted ? Ok() : NotFound($"Movie with id {id} not found");
         }
-
-        // Gets a list of languages for dropdown selection in the Add/Edit Movie form.
-        [HttpGet("languages")]
-        public async Task<IActionResult> GetLanguages(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 100)
-        {
-            var result = await _movieService.GetAllLanguagesAsync(page, pageSize);
-            return Ok(result);
-        }
-
-        // Gets a list of categories/genres for multi-select in the Add/Edit Movie form.
-        [HttpGet("categories")]
-        public async Task<IActionResult> GetCategories(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 100)
-        {
-            var result = await _movieService.GetAllCategoriesAsync(page, pageSize);
-            return Ok(result);
-        }
-
-        // Gets a list of actors for multi-select in the Add/Edit Movie form.
-        [HttpGet("actors")]
-        public async Task<IActionResult> GetActors(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 100)
-        {
-            var result = await _movieService.GetAllActorsAsync(page, pageSize);
-            return Ok(result);
-        }
     }
 }

@@ -4,154 +4,130 @@ import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
 import { Dropdown } from "primereact/dropdown";
-import { AutoComplete } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { Message } from "primereact/message";
 import { AuthContext } from "../../context/AuthContext";
-import { signUpUser } from "../../services/authService";
-import { getErrorMessage } from "../../utils/errorUtils";
 import {
-  getCountries,
-  getCitiesByCountry,
-  getAddressesByCity,
-} from "../../services/userService";
+  signUpUser,
+  getLookupCountries,
+  getLookupCities,
+} from "../../services/authService";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 const labelStyle = { display: "block", marginBottom: "6px", fontWeight: 500 };
 
-// Provides user registration with personal info, country/city selection, and address autocomplete
+// Provides user registration with personal info, CountriesNow reference country/city selection, and address inputs
 export default function SignUpPage() {
   const navigate = useNavigate();
-  // Access login function to immediately authenticate the user upon successful registration
   const { login } = useContext(AuthContext);
 
-  // Basic user registration fields
+  // User credentials and identity state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Location dropdown states for cascading country-to-city selection
+  // Location reference dropdown states
   const [countries, setCountries] = useState([]);
-  const [countriesPage, setCountriesPage] = useState(1);
-  const [countriesHasMore, setCountriesHasMore] = useState(true);
-  const [selectedCountryId, setSelectedCountryId] = useState(null);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("");
 
   const [cities, setCities] = useState([]);
-  const [citiesPage, setCitiesPage] = useState(1);
-  const [citiesHasMore, setCitiesHasMore] = useState(true);
   const [citiesLoading, setCitiesLoading] = useState(false);
-  const [selectedCityId, setSelectedCityId] = useState(null);
+  const [selectedCity, setSelectedCity] = useState("");
 
-  // Address states — supports selecting existing addresses or typing a new street address
-  const [addressSuggestions, setAddressSuggestions] = useState([]);
-  const [addressInput, setAddressInput] = useState(""); // what user typed
-  const [selectedAddressId, setSelectedAddressId] = useState(null); // if user picked existing
+  // Address text inputs
+  const [street, setStreet] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [phone, setPhone] = useState("");
+
+  // Form states
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [lookupError, setLookupError] = useState(null);
 
-  // Load initial countries list when the component mounts
+  // Load country reference list on component mount
   useEffect(() => {
-    fetchCountries(1);
+    fetchCountries();
   }, []);
 
-  // ─── Fetchers ──────────────────────────────────────────────────────────────
-
-  // Fetch paginated countries from the backend
-  const fetchCountries = async (page = 1) => {
-    const data = await getCountries(page, 10);
-    const mapped = data.map((c) => ({ label: c.name, value: c.id }));
-    setCountries((prev) => (page === 1 ? mapped : [...prev, ...mapped]));
-    setCountriesHasMore(data.length === 10);
-    setCountriesPage(page);
+  const fetchCountries = async () => {
+    setCountriesLoading(true);
+    setLookupError(null);
+    try {
+      const data = await getLookupCountries();
+      const mapped = data.map((c) => ({ label: c.name, value: c.name }));
+      setCountries(mapped);
+    } catch (err) {
+      console.error("Failed to load countries:", err);
+      setLookupError("Unable to load countries. Please try again.");
+    } finally {
+      setCountriesLoading(false);
+    }
   };
 
-  // Fetch paginated cities for the currently selected country
-  const fetchCities = async (countryId, page = 1) => {
+  const fetchCities = async (countryName) => {
+    if (!countryName) {
+      setCities([]);
+      return;
+    }
     setCitiesLoading(true);
+    setLookupError(null);
     try {
-      const data = await getCitiesByCountry(countryId, page, 10);
-      const mapped = data.map((c) => ({ label: c.name, value: c.id }));
-      setCities((prev) => (page === 1 ? mapped : [...prev, ...mapped]));
-      setCitiesHasMore(data.length === 10);
-      setCitiesPage(page);
+      const data = await getLookupCities(countryName);
+      const mapped = data.map((c) => ({ label: c.name, value: c.name }));
+      setCities(mapped);
+    } catch (err) {
+      console.error(`Failed to load cities for ${countryName}:`, err);
+      setLookupError("Unable to load cities. Please try again.");
+      setCities([]);
     } finally {
       setCitiesLoading(false);
     }
   };
 
-  // Search existing addresses in the selected city for autocomplete suggestions
-  const searchAddresses = async (event) => {
-    if (!selectedCityId) {
-      setAddressSuggestions([]);
-      return;
-    }
-    const data = await getAddressesByCity(selectedCityId, 1, 50);
-    const query = event.query.toLowerCase();
-    const filtered = data
-      .filter((a) => a.name?.toLowerCase().includes(query))
-      .map((a) => ({ label: a.name, value: a.id }));
-    setAddressSuggestions(filtered);
-  };
-
-  // ─── Handlers ──────────────────────────────────────────────────────────────
-
-  // Handle country selection and reset downstream city and address selections
-  const handleCountryChange = (countryId) => {
-    setSelectedCountryId(countryId);
-    setSelectedCityId(null);
+  // When country changes, immediately reset selected city, clear city options, and fetch cities for new country
+  const handleCountryChange = (countryName) => {
+    setSelectedCountry(countryName || "");
+    setSelectedCity("");
     setCities([]);
-    setAddressInput("");
-    setSelectedAddressId(null);
-    setErrors((prev) => ({
-      ...prev,
-      country: undefined,
-      city: undefined,
-      address: undefined,
-    }));
-    if (countryId) fetchCities(countryId, 1);
-  };
+    setErrors((prev) => ({ ...prev, country: undefined, city: undefined }));
 
-  // Handle city selection and reset dependent address fields
-  const handleCityChange = (cityId) => {
-    setSelectedCityId(cityId);
-    setAddressInput("");
-    setSelectedAddressId(null);
-    setErrors((prev) => ({ ...prev, city: undefined, address: undefined }));
-  };
-
-  // Handle selection of an existing address suggestion
-  const handleAddressSelect = (item) => {
-    // User picked an existing address from suggestions
-    setSelectedAddressId(item.value);
-    setAddressInput(item.label);
-  };
-
-  // Handle user manual input for a new street address
-  const handleAddressChange = (val) => {
-    // User is typing — clear existing selection
-    setAddressInput(val);
-    setSelectedAddressId(null);
-    setErrors((prev) => ({ ...prev, address: undefined }));
+    if (countryName) {
+      fetchCities(countryName);
+    }
   };
 
   // ─── Validation ────────────────────────────────────────────────────────────
 
-  // Validates registration form fields and password complexity requirements
   const validate = () => {
     const e = {};
-    if (!firstName.trim()) e.firstName = "First name is required";
-    if (!lastName.trim()) e.lastName = "Last name is required";
+    if (!firstName.trim()) {
+      e.firstName = "First name is required";
+    } else if (firstName.trim().length > 50) {
+      e.firstName = "First name must not exceed 50 characters";
+    }
+
+    if (!lastName.trim()) {
+      e.lastName = "Last name is required";
+    } else if (lastName.trim().length > 50) {
+      e.lastName = "Last name must not exceed 50 characters";
+    }
+
     if (!email.trim()) {
       e.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       e.email = "Invalid email format";
+    } else if (email.trim().length > 255) {
+      e.email = "Email must not exceed 255 characters";
     }
+
     if (!password.trim()) {
       e.password = "Password is required";
     } else if (password.length < 8) {
       e.password = "Password must be at least 8 characters";
+    } else if (password.length > 100) {
+      e.password = "Password must not exceed 100 characters";
     } else if (!/[A-Z]/.test(password)) {
       e.password = "Password must contain at least one uppercase letter";
     } else if (!/[0-9]/.test(password)) {
@@ -159,16 +135,40 @@ export default function SignUpPage() {
     } else if (!/[^A-Za-z0-9]/.test(password)) {
       e.password = "Password must contain at least one special character";
     }
-    if (!selectedCountryId) e.country = "Country is required";
-    if (!selectedCityId) e.city = "City is required";
-    if (!addressInput.trim()) e.address = "Address (street) is required";
-    if (!phone.trim()) e.phone = "Phone number is required";
+
+    if (!selectedCountry.trim()) {
+      e.country = "Country is required";
+    } else if (selectedCountry.trim().length > 50) {
+      e.country = "Country must not exceed 50 characters";
+    }
+
+    if (!selectedCity.trim()) {
+      e.city = "City is required";
+    } else if (selectedCity.trim().length > 50) {
+      e.city = "City must not exceed 50 characters";
+    }
+
+    if (!street.trim()) {
+      e.street = "Street address is required";
+    } else if (street.trim().length > 50) {
+      e.street = "Street address must not exceed 50 characters";
+    }
+
+    if (postalCode && postalCode.trim().length > 10) {
+      e.postalCode = "Postal code must not exceed 10 characters";
+    }
+
+    if (!phone.trim()) {
+      e.phone = "Phone number is required";
+    } else if (phone.trim().length > 20) {
+      e.phone = "Phone number must not exceed 20 characters";
+    }
+
     return e;
   };
 
   // ─── Submit ────────────────────────────────────────────────────────────────
 
-  // Submits the registration payload, logs in the new user, and navigates
   const handleSignUp = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -179,22 +179,16 @@ export default function SignUpPage() {
     setLoading(true);
     try {
       const payload = {
-        firstName,
-        lastName,
-        email,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
         password,
-        cityId: selectedCityId,
-        postalCode,
-        phone,
+        country: selectedCountry.trim(),
+        city: selectedCity.trim(),
+        street: street.trim(),
+        postalCode: postalCode.trim() || null,
+        phone: phone.trim(),
       };
-
-      if (selectedAddressId) {
-        // User selected existing address
-        payload.existingAddressId = selectedAddressId;
-      } else {
-        // User typed new address — backend will create it
-        payload.street = addressInput;
-      }
 
       const response = await signUpUser(payload);
       login(response);
@@ -207,7 +201,6 @@ export default function SignUpPage() {
     }
   };
 
-
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -218,16 +211,29 @@ export default function SignUpPage() {
         justifyContent: "center",
         minHeight: "100vh",
         background: "#f5f6fa",
+        padding: "24px 0",
       }}
     >
-      <Card style={{ width: "460px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
+      <Card
+        style={{
+          width: "480px",
+          maxWidth: "95vw",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        }}
+      >
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
           <i
             className="pi pi-video"
             style={{ fontSize: "2.5rem", color: "#6366f1" }}
           />
-          <h1 style={{ margin: "12px 0 0 0", color: "#111827" }}>
+          <h1
+            style={{
+              margin: "12px 0 0 0",
+              color: "#111827",
+              fontSize: "1.75rem",
+            }}
+          >
             Movie Rental
           </h1>
           <p style={{ margin: "4px 0 0 0", color: "#6b7280" }}>
@@ -239,18 +245,33 @@ export default function SignUpPage() {
           <Message
             severity="error"
             text={errors.submit}
-            style={{ marginBottom: "16px" }}
+            style={{ marginBottom: "16px", width: "100%" }}
+          />
+        )}
+
+        {lookupError && (
+          <Message
+            severity="warn"
+            text={lookupError}
+            style={{ marginBottom: "16px", width: "100%" }}
           />
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {/* First Name */}
           <div>
-            <label style={labelStyle}>First Name</label>
+            <label htmlFor="signup-firstname" style={labelStyle}>
+              First Name
+            </label>
             <InputText
+              id="signup-firstname"
               value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              onChange={(e) => {
+                setFirstName(e.target.value);
+                setErrors((prev) => ({ ...prev, firstName: undefined }));
+              }}
               placeholder="First name"
+              maxLength={50}
               style={{ width: "100%" }}
               className={errors.firstName ? "p-invalid" : ""}
             />
@@ -261,11 +282,18 @@ export default function SignUpPage() {
 
           {/* Last Name */}
           <div>
-            <label style={labelStyle}>Last Name</label>
+            <label htmlFor="signup-lastname" style={labelStyle}>
+              Last Name
+            </label>
             <InputText
+              id="signup-lastname"
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              onChange={(e) => {
+                setLastName(e.target.value);
+                setErrors((prev) => ({ ...prev, lastName: undefined }));
+              }}
               placeholder="Last name"
+              maxLength={50}
               style={{ width: "100%" }}
               className={errors.lastName ? "p-invalid" : ""}
             />
@@ -276,12 +304,19 @@ export default function SignUpPage() {
 
           {/* Email */}
           <div>
-            <label style={labelStyle}>Email</label>
+            <label htmlFor="signup-email" style={labelStyle}>
+              Email
+            </label>
             <InputText
+              id="signup-email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrors((prev) => ({ ...prev, email: undefined }));
+              }}
               placeholder="Enter your email"
               type="email"
+              maxLength={255}
               style={{ width: "100%" }}
               className={errors.email ? "p-invalid" : ""}
             />
@@ -290,13 +325,20 @@ export default function SignUpPage() {
 
           {/* Password */}
           <div>
-            <label style={labelStyle}>Password</label>
+            <label htmlFor="signup-password" style={labelStyle}>
+              Password
+            </label>
             <Password
+              inputId="signup-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrors((prev) => ({ ...prev, password: undefined }));
+              }}
               placeholder="Create a password"
               toggleMask
               feedback={false}
+              maxLength={100}
               style={{ width: "100%" }}
               inputStyle={{ width: "100%" }}
               className={errors.password ? "p-invalid" : ""}
@@ -315,131 +357,139 @@ export default function SignUpPage() {
             <p
               style={{
                 margin: "0 0 4px 0",
-                fontSize: "13px",
+                fontSize: "14px",
                 fontWeight: 600,
                 color: "#374151",
               }}
             >
-              Address
+              Address Details
             </p>
           </div>
 
-          {/* Country */}
+          {/* Country Dropdown */}
           <div>
-            <label style={labelStyle}>Country</label>
+            <label htmlFor="signup-country" style={labelStyle}>
+              Country
+            </label>
             <Dropdown
-              value={selectedCountryId}
+              inputId="signup-country"
+              value={selectedCountry}
               options={countries}
               onChange={(e) => handleCountryChange(e.value)}
-              placeholder="Select country"
-              style={{ width: "100%" }}
+              placeholder={countriesLoading ? "Loading countries..." : "Select Country"}
               filter
+              showClear={!!selectedCountry}
+              disabled={countriesLoading}
+              style={{ width: "100%" }}
               className={errors.country ? "p-invalid" : ""}
-              virtualScrollerOptions={{
-                lazy: true,
-                itemSize: 38,
-                onLazyLoad: (e) => {
-                  if (countriesHasMore && e.last >= countries.length - 2)
-                    fetchCountries(countriesPage + 1);
-                },
-              }}
             />
             {errors.country && (
               <small className="p-error">{errors.country}</small>
             )}
           </div>
 
-          {/* City */}
+          {/* City Dropdown */}
           <div>
-            <label style={labelStyle}>City</label>
+            <label htmlFor="signup-city" style={labelStyle}>
+              City
+            </label>
             <Dropdown
-              value={selectedCityId}
+              inputId="signup-city"
+              value={selectedCity}
               options={cities}
-              onChange={(e) => handleCityChange(e.value)}
+              onChange={(e) => {
+                setSelectedCity(e.value || "");
+                setErrors((prev) => ({ ...prev, city: undefined }));
+              }}
               placeholder={
-                !selectedCountryId
+                !selectedCountry
                   ? "Select country first"
                   : citiesLoading
-                    ? "Loading..."
-                    : "Select city"
+                    ? "Loading cities..."
+                    : "Select City"
               }
-              style={{ width: "100%" }}
-              disabled={!selectedCountryId || citiesLoading}
               filter
+              showClear={!!selectedCity}
+              disabled={!selectedCountry || citiesLoading}
+              style={{ width: "100%" }}
               className={errors.city ? "p-invalid" : ""}
-              virtualScrollerOptions={{
-                lazy: true,
-                itemSize: 38,
-                onLazyLoad: (e) => {
-                  if (citiesHasMore && e.last >= cities.length - 2)
-                    fetchCities(selectedCountryId, citiesPage + 1);
-                },
-              }}
             />
             {errors.city && <small className="p-error">{errors.city}</small>}
           </div>
 
-          {/* Street / Address — AutoComplete with DB suggestions */}
+          {/* Street Address */}
           <div>
-            <label style={labelStyle}>Street Address</label>
-            <AutoComplete
-              value={addressInput}
-              suggestions={addressSuggestions}
-              completeMethod={searchAddresses}
-              onSelect={(e) => handleAddressSelect(e.value)}
-              onChange={(e) => handleAddressChange(e.value)}
-              placeholder={
-                !selectedCityId ? "Select city first" : "Type or select address"
-              }
-              disabled={!selectedCityId}
-              field="label"
+            <label htmlFor="signup-street" style={labelStyle}>
+              Street Address
+            </label>
+            <InputText
+              id="signup-street"
+              value={street}
+              onChange={(e) => {
+                setStreet(e.target.value);
+                setErrors((prev) => ({ ...prev, street: undefined }));
+              }}
+              placeholder="Street address"
+              maxLength={50}
               style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
-              className={errors.address ? "p-invalid" : ""}
-              forceSelection={false}
+              className={errors.street ? "p-invalid" : ""}
             />
-            {errors.address && (
-              <small className="p-error">{errors.address}</small>
-            )}
-            {selectedCityId && !selectedAddressId && (
-              <small style={{ color: "#6b7280" }}>
-                Type a new address or select from suggestions
-              </small>
+            {errors.street && (
+              <small className="p-error">{errors.street}</small>
             )}
           </div>
 
           {/* Postal Code */}
           <div>
-            <label style={labelStyle}>
+            <label htmlFor="signup-postalcode" style={labelStyle}>
               Postal Code{" "}
               <span style={{ color: "#9ca3af", fontWeight: 400 }}>
                 (optional)
               </span>
             </label>
             <InputText
+              id="signup-postalcode"
               value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
+              onChange={(e) => {
+                setPostalCode(e.target.value);
+                setErrors((prev) => ({ ...prev, postalCode: undefined }));
+              }}
               placeholder="Postal code"
+              maxLength={10}
               style={{ width: "100%" }}
+              className={errors.postalCode ? "p-invalid" : ""}
             />
+            {errors.postalCode && (
+              <small className="p-error">{errors.postalCode}</small>
+            )}
           </div>
 
           {/* Phone */}
           <div>
-            <label style={labelStyle}>Phone</label>
+            <label htmlFor="signup-phone" style={labelStyle}>
+              Phone
+            </label>
             <InputText
+              id="signup-phone"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setErrors((prev) => ({ ...prev, phone: undefined }));
+              }}
               placeholder="Phone number"
+              maxLength={20}
               style={{ width: "100%" }}
+              className={errors.phone ? "p-invalid" : ""}
             />
+            {errors.phone && <small className="p-error">{errors.phone}</small>}
           </div>
 
           <Button
+            id="signup-submit-btn"
             label="Sign Up"
             onClick={handleSignUp}
             loading={loading}
-            style={{ width: "100%" }}
+            style={{ width: "100%", marginTop: "8px" }}
           />
 
           <div

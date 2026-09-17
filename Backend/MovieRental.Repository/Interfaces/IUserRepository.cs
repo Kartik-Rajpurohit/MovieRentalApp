@@ -33,21 +33,6 @@ namespace MovieRental.Repository.Interfaces
         // Creates a customer record linked to the given user account.
         Task CreateCustomerAsync(int userId, int storeId);
 
-        // Returns all countries for dropdown lists.
-        IQueryable<Country> GetAllCountries();
-
-        // Returns all cities in the specified country.
-        IQueryable<City> GetCitiesByCountry(int countryId);
-
-        // Returns all available system roles.
-        IQueryable<Role> GetAllRoles();
-
-        // Returns all physical stores for store assignment dropdowns.
-        IQueryable<Store> GetAllStores();
-
-        // Returns all addresses in the specified city.
-        IQueryable<Address> GetAddressesByCity(int cityId);
-
         // Finds a user account by email address (used during login).
         Task<User?> GetUserByEmailAsync(string email);
 

@@ -53,21 +53,3 @@ export const updateMovie = (dto) => api.patch(MOVIE, dto).then((r) => r.data);
 // DELETE request to remove a movie by ID
 export const deleteMovie = (id) =>
   api.delete(`${MOVIE}/${id}`).then((r) => r.data);
-
-// GET request to fetch languages for dropdown selection
-export const getLanguages = (page = 1, pageSize = 100) =>
-  api
-    .get(`${MOVIE}/languages`, { params: { page, pageSize } })
-    .then((r) => r.data);
-
-// GET request to fetch categories for dropdown selection
-export const getCategories = (page = 1, pageSize = 100) =>
-  api
-    .get(`${MOVIE}/categories`, { params: { page, pageSize } })
-    .then((r) => r.data);
-
-// GET request to fetch actors for dropdown selection
-export const getActors = (page = 1, pageSize = 100) =>
-  api
-    .get(`${MOVIE}/actors`, { params: { page, pageSize } })
-    .then((r) => r.data);

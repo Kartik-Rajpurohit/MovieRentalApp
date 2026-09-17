@@ -17,6 +17,7 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Add Services ──────────────────────────────────────────────
+builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers(options =>
 {
@@ -91,6 +92,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ── Repository & Service Registration ─────────────────────────
+
+// External APIs - CountriesNow
+builder.Services.AddHttpClient<ICountriesNowService, CountriesNowService>(client =>
+{
+    var baseUrl = builder.Configuration["ExternalApis:CountriesNow:BaseUrl"] ?? "https://countriesnow.space/api/v0.1/";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 // Auth
 builder.Services.AddScoped<IAuthService, AuthService>();

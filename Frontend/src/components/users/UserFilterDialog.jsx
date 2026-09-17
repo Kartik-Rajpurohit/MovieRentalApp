@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import FilterDialog from "../common/FilterDialog";
 import UserFilters from "./UserFilters";
 import useFilters from "../../hooks/useFilters";
-import { getRoles } from "../../services/userService";
+import { getRoles } from "../../services/roleService";
 
 // Default filter values for users list
 const INIT_FILTERS = { name: "", email: "", role: null, isActive: null };
@@ -29,10 +29,11 @@ export default function UserFilterDialog({
 
 
   const fetchRoles = async () => {
-    const data = await getRoles(1, 100);
+    const res = await getRoles(1, 100);
+    const data = res?.data ?? (Array.isArray(res) ? res : []);
     setRoles([
       { label: "All", value: null },
-      ...data.map((r) => ({ label: r.name, value: r.id })),
+      ...data.map((r) => ({ label: r.roleName ?? r.name, value: r.roleId ?? r.id })),
     ]);
   };
 

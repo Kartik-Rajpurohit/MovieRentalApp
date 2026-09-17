@@ -1,7 +1,5 @@
-// Manages global authentication state, token storage, and user session lifecycle
 import { createContext, useState, useEffect, useCallback } from "react";
-import { refreshToken as refreshTokenApi } from "../services/authService";
-import api from "../services/api";
+import { refreshToken as refreshTokenApi, logoutUser } from "../services/authService";
 
 // Context providing authentication state and operations to the application
 export const AuthContext = createContext();
@@ -41,7 +39,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       // HttpOnly cookie is sent automatically; backend revokes it and clears the cookie
-      await api.post("/Auth/logout", {});
+      await logoutUser();
     } catch (e) {
       console.error("Logout error:", e);
     }

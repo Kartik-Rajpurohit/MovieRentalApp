@@ -16,10 +16,4 @@ public interface IAddressService
 
     // Creates a new address record in the database.
     Task<AddressResponseDto> CreateAddressAsync(CreateAddressDto dto);
-
-    // Updates an existing address record.
-    Task<AddressResponseDto?> UpdateAddressAsync(UpdateAddressDto dto);
-
-    // Deletes an address by ID.
-    Task<bool> DeleteAddressAsync(int id);
 }

@@ -33,6 +33,14 @@ public class CityRepository : ICityRepository
             .Include(c => c.Addresses.Where(a => !a.IsDeleted))
             .FirstOrDefaultAsync(c => c.CityId == id);
 
+    // Finds an active city by name and country ID with case-insensitive matching.
+    public async Task<City?> GetCityByNameAndCountryIdAsync(string name, int countryId)
+    {
+        var trimmed = name.Trim();
+        return await _context.Cities
+            .FirstOrDefaultAsync(c => !c.IsDeleted && c.CountryId == countryId && EF.Functions.ILike(c.Name, trimmed));
+    }
+
     // Adds a new city to the database and re-fetches it with related entities.
     public async Task<City> CreateCityAsync(City city)
     {

@@ -67,28 +67,4 @@ public class CityController : ControllerBase
         var result = await _cityService.CreateCityAsync(dto);
         return Ok(result);
     }
-
-    // Updates an existing city's name or country.
-    // Restricted to Admin role.
-    // Returns 404 NotFound if city does not exist.
-    [HttpPatch]
-    [Authorize(Policy = Permissions.Cities.Update)]
-    public async Task<IActionResult> Update([FromBody] UpdateCityDto dto)
-    {
-        var result = await _cityService.UpdateCityAsync(dto);
-        if (result == null) return NotFound();
-        return Ok(result);
-    }
-
-    // Deletes a city by ID.
-    // Restricted to Admin role.
-    // Returns 204 NoContent on success, or 404 NotFound if city does not exist.
-    [HttpDelete("{id}")]
-    [Authorize(Policy = Permissions.Cities.Delete)]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var deleted = await _cityService.DeleteCityAsync(id);
-        if (!deleted) return NotFound();
-        return NoContent();
-    }
 }

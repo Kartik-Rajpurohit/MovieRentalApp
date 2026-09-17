@@ -298,38 +298,5 @@ namespace MovieRental.Services.Services
         {
             return await _movieRepository.DeleteMovieAsync(id);
         }
-
-        // Retrieves a paginated list of languages formatted for dropdown selectors.
-        public async Task<IEnumerable<DropdownDto>> GetAllLanguagesAsync(int page, int pageSize)
-        {
-            return await _movieRepository.GetAllLanguages()
-                .ToDropdownListAsync(
-                    l => l.Name,
-                    l => new DropdownDto { Id = l.LanguageId, Name = l.Name },
-                    page,
-                    pageSize);
-        }
-
-        // Retrieves a paginated list of categories formatted for dropdown selectors.
-        public async Task<IEnumerable<DropdownDto>> GetAllCategoriesAsync(int page, int pageSize)
-        {
-            return await _movieRepository.GetAllCategories()
-                .ToDropdownListAsync(
-                    c => c.Name,
-                    c => new DropdownDto { Id = c.CategoryId, Name = c.Name },
-                    page,
-                    pageSize);
-        }
-
-        // Retrieves a paginated list of actors formatted for dropdown selectors.
-        public async Task<IEnumerable<DropdownDto>> GetAllActorsAsync(int page, int pageSize)
-        {
-            return await _movieRepository.GetAllActors()
-                .ToDropdownListAsync(
-                    a => a.FirstName,
-                    a => new DropdownDto { Id = a.ActorId, Name = a.FirstName + " " + a.LastName },
-                    page,
-                    pageSize);
-        }
     }
 }

@@ -105,47 +105,6 @@ namespace MovieRental.Services.Services
             return user.ToResponseDto();
         }
 
-        // Creates a new user with hashed password and associated staff/customer profile.
-        public async Task<UserResponseDto> CreateUserAsync(CreateUserDto dto)
-        {
-            // Business logic — reject duplicate email before hitting DB
-            if (await _userRepository.EmailExistsAsync(dto.Email))
-                throw new InvalidOperationException("Email already exists");
-
-            // RoleId is required — validated here before building entity
-            if (!dto.RoleId.HasValue)
-                throw new InvalidOperationException("RoleId is required");
-
-            // Build entity from DTO — service responsibility
-            var user = new User
-            {
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                RoleId = dto.RoleId.Value,
-                AddressId = dto.AddressId,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            // Repository handles insert only
-            var created = await _userRepository.CreateUserAsync(user);
-
-            // Business logic — auto-create staff/customer record based on role
-            // RoleId.Value is safe here — already validated above
-            var roleName = await _userRepository.GetRoleNameAsync(dto.RoleId.Value);
-
-            if (roleName?.Equals("Staff", StringComparison.OrdinalIgnoreCase) == true && dto.StoreId.HasValue)
-                await _userRepository.CreateStaffAsync(created.UserId, dto.StoreId.Value);
-            else if (roleName?.Equals("Customer", StringComparison.OrdinalIgnoreCase) == true && dto.StoreId.HasValue)
-                await _userRepository.CreateCustomerAsync(created.UserId, dto.StoreId.Value);
-
-            var fullUser = await _userRepository.GetUserByIdAsync(created.UserId);
-            return (fullUser ?? created).ToResponseDto();
-        }
-
         // Updates user profile and handles role transitions without foreign key constraint violations.
         public async Task<UserResponseDto?> UpdateUserAsync(UpdateUserDto dto)
         {
@@ -201,61 +160,6 @@ namespace MovieRental.Services.Services
             var user = await _userRepository.ToggleUserStatusAsync(id);
             if (user == null) return null;
             return user.ToResponseDto();
-        }
-
-        // Retrieves countries formatted as dropdown options for user registration and address forms.
-        public async Task<IEnumerable<DropdownDto>> GetAllCountriesAsync(int page, int pageSize)
-        {
-            return await _userRepository.GetAllCountries()
-                .ToDropdownListAsync(
-                    c => c.Name,
-                    c => new DropdownDto { Id = c.CountryId, Name = c.Name },
-                    page,
-                    pageSize);
-        }
-
-        // Retrieves cities belonging to a selected country for cascading dropdowns.
-        public async Task<IEnumerable<DropdownDto>> GetCitiesByCountryAsync(int countryId, int page, int pageSize)
-        {
-            return await _userRepository.GetCitiesByCountry(countryId)
-                .ToDropdownListAsync(
-                    c => c.Name,
-                    c => new DropdownDto { Id = c.CityId, Name = c.Name },
-                    page,
-                    pageSize);
-        }
-
-        // Retrieves all user roles formatted as dropdown options.
-        public async Task<IEnumerable<DropdownDto>> GetAllRolesAsync(int page, int pageSize)
-        {
-            return await _userRepository.GetAllRoles()
-                .ToDropdownListAsync(
-                    r => r.RoleName,
-                    r => new DropdownDto { Id = r.RoleId, Name = r.RoleName },
-                    page,
-                    pageSize);
-        }
-
-        // Retrieves all stores formatted as dropdown options.
-        public async Task<IEnumerable<DropdownDto>> GetAllStoresAsync(int page, int pageSize)
-        {
-            return await _userRepository.GetAllStores()
-                .ToDropdownListAsync(
-                    s => s.StoreId,
-                    s => new DropdownDto { Id = s.StoreId, Name = $"Store {s.StoreId}" },
-                    page,
-                    pageSize);
-        }
-
-        // Retrieves addresses within a city for cascading address dropdowns.
-        public async Task<IEnumerable<DropdownDto>> GetAddressesByCityAsync(int cityId, int page, int pageSize)
-        {
-            return await _userRepository.GetAddressesByCity(cityId)
-                .ToDropdownListAsync(
-                    a => a.Street,
-                    a => new DropdownDto { Id = a.AddressId, Name = a.Street },
-                    page,
-                    pageSize);
         }
     }
 }

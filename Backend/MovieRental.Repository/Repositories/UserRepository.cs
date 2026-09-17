@@ -129,26 +129,6 @@ namespace MovieRental.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // Returns all countries without tracking for address dropdowns.
-        public IQueryable<Country> GetAllCountries()
-            => _context.Countries.Where(c => !c.IsDeleted).AsQueryable();
-
-        // Returns cities filtered by country ID for dependent dropdowns.
-        public IQueryable<City> GetCitiesByCountry(int countryId)
-            => _context.Cities.Where(c => c.CountryId == countryId && !c.IsDeleted);
-
-        // Returns all available system roles.
-        public IQueryable<Role> GetAllRoles()
-            => _context.Roles.Where(r => !r.IsDeleted).AsQueryable();
-
-        // Returns all stores for branch selection.
-        public IQueryable<Store> GetAllStores()
-            => _context.Stores.Where(s => !s.IsDeleted).AsQueryable();
-
-        // Returns addresses in a city for existing address reuse.
-        public IQueryable<Address> GetAddressesByCity(int cityId)
-            => _context.Addresses.Where(a => a.CityId == cityId && !a.IsDeleted);
-
         // Finds a user by email with full profile, role, and address details.
         public async Task<User?> GetUserByEmailAsync(string email)
         {

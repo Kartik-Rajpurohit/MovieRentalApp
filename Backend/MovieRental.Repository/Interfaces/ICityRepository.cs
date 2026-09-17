@@ -11,6 +11,9 @@ public interface ICityRepository
     // Finds a city by its ID.
     Task<City?> GetCityByIdAsync(int id);
 
+    // Finds an active city by its name and parent country ID (case-insensitive).
+    Task<City?> GetCityByNameAndCountryIdAsync(string name, int countryId);
+
     // Adds a new city to the database.
     Task<City> CreateCityAsync(City city);
 

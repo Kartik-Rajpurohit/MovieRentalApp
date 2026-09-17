@@ -3,11 +3,9 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import {
-  updateUser,
-  getRoles,
-  getStores,
-} from "../../services/userService";
+import { updateUser } from "../../services/userService";
+import { getRoles } from "../../services/roleService";
+import { getStores } from "../../services/storeService";
 
 const labelStyle = {
   display: "block",
@@ -58,8 +56,13 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
   // ─── Fetchers ──────────────────────────────────────────────────────────────
 
   const fetchRoles = async () => {
-    const data = await getRoles(1, 100);
-    const mapped = data.map((r) => ({ label: r.name, value: r.id, name: r.name }));
+    const res = await getRoles(1, 100);
+    const data = res?.data ?? (Array.isArray(res) ? res : []);
+    const mapped = data.map((r) => {
+      const name = r.roleName ?? r.name;
+      const id = r.roleId ?? r.id;
+      return { label: name, value: id, name };
+    });
     setRoles(mapped);
 
     // Pre-fill selectedRoleName from current user role — for store dropdown visibility
@@ -70,8 +73,14 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
   };
 
   const fetchStores = async () => {
-    const data = await getStores(1, 100);
-    setStores(data.map((s) => ({ label: s.name, value: s.id })));
+    const res = await getStores(1, 100);
+    const data = res?.data ?? (Array.isArray(res) ? res : []);
+    setStores(
+      data.map((s) => ({
+        label: s.name ?? `${s.cityName || s.street || "Store"} (#${s.storeId ?? s.id})`,
+        value: s.storeId ?? s.id,
+      }))
+    );
   };
 
   // ─── Handlers ──────────────────────────────────────────────────────────────

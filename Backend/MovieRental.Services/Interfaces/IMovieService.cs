@@ -20,14 +20,5 @@ namespace MovieRental.Services.Interfaces
 
         // Deletes a movie record by ID.
         Task<bool> DeleteMovieAsync(int id);
-
-        // Retrieves languages formatted as dropdown options for movie forms.
-        Task<IEnumerable<DropdownDto>> GetAllLanguagesAsync(int page, int pageSize);
-
-        // Retrieves categories formatted as dropdown options for movie forms.
-        Task<IEnumerable<DropdownDto>> GetAllCategoriesAsync(int page, int pageSize);
-
-        // Retrieves actors formatted as dropdown options for movie forms.
-        Task<IEnumerable<DropdownDto>> GetAllActorsAsync(int page, int pageSize);
     }
 }

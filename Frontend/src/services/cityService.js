@@ -32,15 +32,3 @@ export const createCity = async (dto) => {
   const res = await api.post(API, dto);
   return res.data;
 };
-
-// PATCH request to update an existing city
-export const updateCity = async (dto) => {
-  const res = await api.patch(API, dto);
-  return res.data;
-};
-
-// DELETE request to remove a city by its ID
-export const deleteCity = async (id) => {
-  const res = await api.delete(`${API}/${id}`);
-  return res.data;
-};
