@@ -4,6 +4,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Rentals;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 using System.Security.Claims;
 
@@ -31,50 +32,6 @@ namespace MovieRental.Services.Services
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
-
-        // Converts raw Rental entity into standard response DTO with formatted customer and staff names.
-        private static RentalResponseDto MapToResponse(Rental r) => new()
-        {
-            RentalId = r.RentalId,
-            RentalDate = r.RentalDate,
-            ReturnDate = r.ReturnDate,
-            InventoryId = r.InventoryId,
-            MovieId = r.Inventory?.MovieId ?? 0,
-            MovieTitle = r.Inventory?.Movie?.Title ?? "",
-            CustomerId = r.CustomerId,
-            CustomerName = r.Customer?.User != null
-                ? $"{r.Customer.User.FirstName} {r.Customer.User.LastName}".Trim()
-                : $"Customer {r.CustomerId}",
-            StaffId = r.StaffId,
-            StaffName = r.Staff?.User != null
-                ? $"{r.Staff.User.FirstName} {r.Staff.User.LastName}".Trim()
-                : $"Staff {r.StaffId}",
-            LastUpdate = r.LastUpdate,
-            RentalRate = r.Inventory?.Movie?.RentalRate ?? 0,
-            SuggestedAmount = r.Inventory?.Movie?.RentalRate ?? 0,
-        };
-
-        // Converts raw Rental entity into detailed response DTO including payment aggregation.
-        private static RentalDetailDto MapToDetail(Rental r) => new()
-        {
-            RentalId = r.RentalId,
-            RentalDate = r.RentalDate,
-            ReturnDate = r.ReturnDate,
-            InventoryId = r.InventoryId,
-            MovieId = r.Inventory?.MovieId ?? 0,
-            MovieTitle = r.Inventory?.Movie?.Title ?? "",
-            CustomerId = r.CustomerId,
-            CustomerName = r.Customer?.User != null
-                ? $"{r.Customer.User.FirstName} {r.Customer.User.LastName}".Trim()
-                : $"Customer {r.CustomerId}",
-            StaffId = r.StaffId,
-            StaffName = r.Staff?.User != null
-                ? $"{r.Staff.User.FirstName} {r.Staff.User.LastName}".Trim()
-                : $"Staff {r.StaffId}",
-            TotalPaid = r.Payments.Sum(p => p.Amount),
-            PaymentCount = r.Payments.Count,
-            LastUpdate = r.LastUpdate,
-        };
 
         // Gets a paginated list of rentals with role scoping and filters.
         public async Task<PaginatedResponseDto<RentalResponseDto>> GetAllRentalsAsync(
@@ -238,7 +195,7 @@ namespace MovieRental.Services.Services
                     return null;
             }
 
-            return MapToDetail(rental);
+            return rental.ToDetailDto();
         }
 
         // Validates copy availability and staff store assignment, then creates the rental.
@@ -319,7 +276,7 @@ namespace MovieRental.Services.Services
             _logger.LogInformation("Rental created successfully: RentalId #{RentalId}, InventoryId #{InventoryId}, CustomerId #{CustomerId}, StaffId #{StaffId}",
                 created.RentalId, created.InventoryId, created.CustomerId, created.StaffId);
 
-            return MapToResponse(created);
+            return created.ToResponseDto();
         }
 
         // Marks a rental as returned and updates return timestamp.
@@ -360,7 +317,7 @@ namespace MovieRental.Services.Services
 
             _logger.LogInformation("Rental returned successfully: RentalId #{RentalId}", rentalId);
 
-            return MapToResponse(updated);
+            return updated.ToResponseDto();
         }
     }
 }

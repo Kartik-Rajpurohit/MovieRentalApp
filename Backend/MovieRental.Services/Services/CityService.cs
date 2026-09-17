@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Cities;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
@@ -97,15 +98,7 @@ public class CityService : ICityService
         if (city == null) return null;
 
         // Convert the database entity into the detailed response DTO.
-        return new CityDetailDto
-        {
-            CityId = city.CityId,
-            Name = city.Name,
-            CountryId = city.CountryId,
-            CountryName = city.Country.Name,
-            AddressCount = city.Addresses.Count,
-            LastUpdate = city.LastUpdate,
-        };
+        return city.ToDetailDto();
     }
 
     // Creates a new city record associated with the specified country.
@@ -128,15 +121,7 @@ public class CityService : ICityService
         var created = await _cityRepository.CreateCityAsync(city);
 
         // Map the created entity to the response DTO.
-        return new CityResponseDto
-        {
-            CityId = created.CityId,
-            Name = created.Name,
-            CountryId = created.CountryId,
-            CountryName = created.Country.Name,
-            AddressCount = 0,
-            LastUpdate = created.LastUpdate,
-        };
+        return created.ToResponseDto();
     }
 
     // Updates an existing city record with the new name and country assignment.
@@ -153,15 +138,7 @@ public class CityService : ICityService
         var updated = await _cityRepository.UpdateCityAsync(city);
         if (updated == null) return null;
 
-        return new CityResponseDto
-        {
-            CityId = updated.CityId,
-            Name = updated.Name,
-            CountryId = updated.CountryId,
-            CountryName = updated.Country.Name,
-            AddressCount = updated.Addresses.Count,
-            LastUpdate = updated.LastUpdate,
-        };
+        return updated.ToResponseDto();
     }
 
     // Deletes a city record by ID through the repository.

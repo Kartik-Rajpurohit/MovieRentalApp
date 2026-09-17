@@ -4,6 +4,7 @@ using MovieRental.Domain.DTOs.Languages;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
@@ -27,13 +28,7 @@ public class LanguageService : ILanguageService
             .OrderBy(l => l.Name)
             .ToListAsync();
 
-        return entities.Select(l => new LanguageResponseDto
-        {
-            LanguageId = l.LanguageId,
-            Name = l.Name,
-            LastUpdate = l.LastUpdate,
-            MovieCount = l.Movies.Count
-        }).ToList();
+        return entities.Select(l => l.ToResponseDto()).ToList();
     }
 
     // Retrieves a single language by ID.
@@ -42,13 +37,7 @@ public class LanguageService : ILanguageService
         var language = await _languageRepository.GetLanguageByIdAsync(id);
         if (language == null) return null;
 
-        return new LanguageResponseDto
-        {
-            LanguageId = language.LanguageId,
-            Name = language.Name,
-            LastUpdate = language.LastUpdate,
-            MovieCount = language.Movies.Count
-        };
+        return language.ToResponseDto();
     }
 
     // Creates a new language entry in the database.
@@ -61,13 +50,7 @@ public class LanguageService : ILanguageService
         };
 
         var created = await _languageRepository.CreateLanguageAsync(language);
-        return new LanguageResponseDto
-        {
-            LanguageId = created.LanguageId,
-            Name = created.Name,
-            LastUpdate = created.LastUpdate,
-            MovieCount = 0
-        };
+        return created.ToResponseDto();
     }
 
     // Updates an existing language name.
@@ -82,13 +65,7 @@ public class LanguageService : ILanguageService
         var updated = await _languageRepository.UpdateLanguageAsync(language);
         if (updated == null) return null;
 
-        return new LanguageResponseDto
-        {
-            LanguageId = updated.LanguageId,
-            Name = updated.Name,
-            LastUpdate = updated.LastUpdate,
-            MovieCount = updated.Movies.Count
-        };
+        return updated.ToResponseDto();
     }
 
     // Deletes a language by ID through repository.
@@ -129,23 +106,7 @@ public class LanguageService : ILanguageService
         var data = await query
             .Skip((pagination.Page - 1) * pagination.PageSize)
             .Take(pagination.PageSize)
-            .Select(m => new MovieResponseDto
-            {
-                MovieId = m.MovieId,
-                Title = m.Title,
-                Description = m.Description,
-                ReleaseYear = m.ReleaseYear,
-                LanguageId = m.LanguageId,
-                LanguageName = m.Language.Name,
-                RentalDuration = m.RentalDuration,
-                RentalRate = m.RentalRate,
-                Length = m.Length,
-                ReplacementCost = m.ReplacementCost,
-                Rating = m.Rating,
-                Categories = m.MovieCategories
-                    .Select(mc => mc.Category.Name)
-                    .ToList()
-            })
+            .ProjectToMovieResponseDto()
             .ToListAsync();
 
         return new PaginatedResponseDto<MovieResponseDto>

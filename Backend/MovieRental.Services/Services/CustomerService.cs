@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Customers;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -102,21 +103,7 @@ namespace MovieRental.Services.Services
             var c = await _customerRepository.GetCustomerByIdAsync(id);
             if (c == null) return null;
 
-            // Map database entity and nested user/address navigation properties to DTO.
-            return new CustomerDetailDto
-            {
-                CustomerId = c.CustomerId,
-                FullName = c.User != null ? (c.User.FirstName + " " + c.User.LastName).Trim() : "—",
-                Email = c.User?.Email,
-                IsActive = c.User?.IsActive ?? false,
-                StoreId = c.StoreId,
-                CreateDate = c.CreateDate,
-                Street = c.User?.Address?.Street,
-                PostalCode = c.User?.Address?.PostalCode,
-                Phone = c.User?.Address?.Phone,
-                CityName = c.User?.Address?.City?.Name,
-                CountryName = c.User?.Address?.City?.Country?.Name,
-            };
+            return c.ToDetailDto();
         }
     }
 }

@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Countries;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -91,14 +92,7 @@ namespace MovieRental.Services.Services
             var country = await _countryRepository.GetCountryByIdAsync(id);
             if (country == null) return null;
 
-            // Map entity to response DTO.
-            return new CountryResponseDto
-            {
-                CountryId  = country.CountryId,
-                Name       = country.Name,
-                CityCount  = country.Cities.Count,
-                LastUpdate = country.LastUpdate,
-            };
+            return country.ToResponseDto();
         }
 
         // Validates and saves a new country record.
@@ -114,13 +108,7 @@ namespace MovieRental.Services.Services
             // Save the country using the repository.
             var created = await _countryRepository.CreateCountryAsync(country);
 
-            return new CountryResponseDto
-            {
-                CountryId  = created.CountryId,
-                Name       = created.Name,
-                CityCount  = 0,
-                LastUpdate = created.LastUpdate,
-            };
+            return created.ToResponseDto();
         }
 
         // Updates an existing country's name.
@@ -136,13 +124,7 @@ namespace MovieRental.Services.Services
             var updated = await _countryRepository.UpdateCountryAsync(country);
             if (updated == null) return null;
 
-            return new CountryResponseDto
-            {
-                CountryId  = updated.CountryId,
-                Name       = updated.Name,
-                CityCount  = updated.Cities.Count,
-                LastUpdate = updated.LastUpdate,
-            };
+            return updated.ToResponseDto();
         }
 
         // Deletes a country record by ID through the repository.

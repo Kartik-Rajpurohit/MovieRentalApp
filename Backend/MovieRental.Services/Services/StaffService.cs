@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Staff;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -98,20 +99,7 @@ namespace MovieRental.Services.Services
             var s = await _staffRepository.GetStaffByIdAsync(id);
             if (s == null) return null;
 
-            // Map database entity and nested user/address navigation properties to DTO.
-            return new StaffDetailDto
-            {
-                StaffId = s.StaffId,
-                FullName = s.User != null ? (s.User.FirstName + " " + s.User.LastName).Trim() : "—",
-                Email = s.User?.Email,
-                IsActive = s.User?.IsActive ?? false,
-                StoreId = s.StoreId,
-                Street = s.User?.Address?.Street,
-                PostalCode = s.User?.Address?.PostalCode,
-                Phone = s.User?.Address?.Phone,
-                CityName = s.User?.Address?.City?.Name,
-                CountryName = s.User?.Address?.City?.Country?.Name,
-            };
+            return s.ToDetailDto();
         }
     }
 }

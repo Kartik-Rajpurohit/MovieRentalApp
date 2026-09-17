@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Stores;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -144,25 +145,7 @@ namespace MovieRental.Services.Services
                 LastUpdate = DateTime.UtcNow,
             };
             var created = await _storeRepository.CreateStoreAsync(store);
-            return MapToDto(created);
+            return created.ToResponseDto();
         }
-
-        // Maps raw Store entity to StoreResponseDto for in-memory created results.
-        private static StoreResponseDto MapToDto(Store s) => new StoreResponseDto
-        {
-            StoreId        = s.StoreId,
-            ManagerStaffId = s.ManagerStaffId,
-            ManagerName    = s.ManagerStaff?.User != null
-                ? (s.ManagerStaff.User.FirstName + " " + s.ManagerStaff.User.LastName).Trim()
-                : "Unassigned",
-            Street      = s.Address?.Street ?? "",
-            PostalCode  = s.Address?.PostalCode,
-            Phone       = s.Address?.Phone ?? "",
-            CityName    = s.Address?.City?.Name ?? "",
-            CountryName = s.Address?.City?.Country?.Name ?? "",
-            TotalStaff     = 0,
-            TotalCustomers = 0,
-            TotalInventory = 0,
-        };
     }
 }

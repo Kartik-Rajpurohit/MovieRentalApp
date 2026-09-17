@@ -4,6 +4,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Payments;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 using System.Security.Claims;
 
@@ -31,25 +32,6 @@ namespace MovieRental.Services.Services
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
-
-        // Converts raw Payment entity into standard response DTO with formatted names.
-        private static PaymentResponseDto MapToResponse(Payment p) => new()
-        {
-            PaymentId = p.PaymentId,
-            CustomerId = p.CustomerId,
-            CustomerName = p.Customer?.User != null
-                ? $"{p.Customer.User.FirstName} {p.Customer.User.LastName}".Trim()
-                : $"Customer {p.CustomerId}",
-            StaffId = p.StaffId,
-            StaffName = p.Staff?.User != null
-                ? $"{p.Staff.User.FirstName} {p.Staff.User.LastName}".Trim()
-                : $"Staff {p.StaffId}",
-            RentalId = p.RentalId,
-            MovieTitle = p.Rental?.Inventory?.Movie?.Title ?? "",
-            Amount = p.Amount,
-            PaymentDate = p.PaymentDate,
-        };
-
 
         // Gets a paginated list of payments with amount, date filters, and role-based data scoping.
         public async Task<PaginatedResponseDto<PaymentResponseDto>> GetAllPaymentsAsync(
@@ -214,7 +196,7 @@ namespace MovieRental.Services.Services
                     return null;
             }
 
-            return MapToResponse(payment);
+            return payment.ToResponseDto();
         }
 
         // Validates payment amount, rental existence, and customer match before creating record.
@@ -297,7 +279,7 @@ namespace MovieRental.Services.Services
             _logger.LogInformation("Payment created successfully: PaymentId #{PaymentId}, Amount: {Amount}, RentalId #{RentalId}, CustomerId #{CustomerId}, StaffId #{StaffId}",
                 created.PaymentId, created.Amount, created.RentalId, created.CustomerId, created.StaffId);
 
-            return MapToResponse(created);
+            return created.ToResponseDto();
         }
     }
 }

@@ -4,6 +4,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
@@ -91,14 +92,7 @@ public class ActorService : IActorService
         if (actor == null) return null;
 
         // Convert the database entity into the response DTO.
-        return new ActorResponseDto
-        {
-            ActorId = actor.ActorId,
-            FirstName = actor.FirstName,
-            LastName = actor.LastName,
-            LastUpdate = actor.LastUpdate,
-            MovieCount = actor.MovieActors.Count
-        };
+        return actor.ToResponseDto();
     }
 
     // Normalizes actor names to uppercase and saves a new actor record.
@@ -116,14 +110,7 @@ public class ActorService : IActorService
         var created = await _actorRepository.CreateActorAsync(actor);
 
         // Map the saved entity to a response DTO.
-        return new ActorResponseDto
-        {
-            ActorId = created.ActorId,
-            FirstName = created.FirstName,
-            LastName = created.LastName,
-            LastUpdate = created.LastUpdate,
-            MovieCount = 0
-        };
+        return created.ToResponseDto();
     }
 
     // Updates an existing actor's name and saves the changes.
@@ -140,14 +127,7 @@ public class ActorService : IActorService
         var updated = await _actorRepository.UpdateActorAsync(actor);
         if (updated == null) return null;
 
-        return new ActorResponseDto
-        {
-            ActorId = updated.ActorId,
-            FirstName = updated.FirstName,
-            LastName = updated.LastName,
-            LastUpdate = updated.LastUpdate,
-            MovieCount = updated.MovieActors.Count
-        };
+        return updated.ToResponseDto();
     }
 
     // Deletes an actor record using the repository.
@@ -186,23 +166,7 @@ public class ActorService : IActorService
         var data = await query
             .Skip((pagination.Page - 1) * pagination.PageSize)
             .Take(pagination.PageSize)
-            .Select(m => new MovieResponseDto
-            {
-                MovieId = m.MovieId,
-                Title = m.Title,
-                Description = m.Description,
-                ReleaseYear = m.ReleaseYear,
-                LanguageId = m.LanguageId,
-                LanguageName = m.Language.Name,
-                RentalDuration = m.RentalDuration,
-                RentalRate = m.RentalRate,
-                Length = m.Length,
-                ReplacementCost = m.ReplacementCost,
-                Rating = m.Rating,
-                Categories = m.MovieCategories
-                    .Select(mc => mc.Category.Name)
-                    .ToList()
-            })
+            .ProjectToMovieResponseDto()
             .ToListAsync();
 
         return new PaginatedResponseDto<MovieResponseDto>

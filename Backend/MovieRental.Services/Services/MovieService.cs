@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -97,7 +98,7 @@ namespace MovieRental.Services.Services
                 .Take(pagination.PageSize)
                 .ToListAsync();
 
-            var data = entities.Select(m => MapToResponseDto(m)).ToList();
+            var data = entities.Select(m => m.ToResponseDto()).ToList();
 
             return new PaginatedResponseDto<MovieResponseDto>
             {
@@ -114,7 +115,7 @@ namespace MovieRental.Services.Services
         {
             var movie = await _movieRepository.GetMovieByIdAsync(id);
             if (movie == null) return null;
-            return MapToDetailDto(movie);
+            return movie.ToDetailDto();
         }
 
         // Creates a new movie and links associated category and actor relationships.
@@ -196,7 +197,7 @@ namespace MovieRental.Services.Services
             };
 
             var created = await _movieRepository.CreateMovieAsync(movie);
-            return MapToResponseDto(created);
+            return created.ToResponseDto();
         }
 
         // Updates an existing movie and refreshes category/actor links.
@@ -289,7 +290,7 @@ namespace MovieRental.Services.Services
             }
 
             var updated = await _movieRepository.UpdateMovieAsync(movie);
-            return updated == null ? null : MapToResponseDto(updated);
+            return updated == null ? null : updated.ToResponseDto();
         }
 
         // Deletes a movie record.
@@ -302,91 +303,33 @@ namespace MovieRental.Services.Services
         public async Task<IEnumerable<DropdownDto>> GetAllLanguagesAsync(int page, int pageSize)
         {
             return await _movieRepository.GetAllLanguages()
-                .OrderBy(l => l.Name)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(l => new DropdownDto { Id = l.LanguageId, Name = l.Name })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    l => l.Name,
+                    l => new DropdownDto { Id = l.LanguageId, Name = l.Name },
+                    page,
+                    pageSize);
         }
 
         // Retrieves a paginated list of categories formatted for dropdown selectors.
         public async Task<IEnumerable<DropdownDto>> GetAllCategoriesAsync(int page, int pageSize)
         {
             return await _movieRepository.GetAllCategories()
-                .OrderBy(c => c.Name)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(c => new DropdownDto { Id = c.CategoryId, Name = c.Name })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    c => c.Name,
+                    c => new DropdownDto { Id = c.CategoryId, Name = c.Name },
+                    page,
+                    pageSize);
         }
 
         // Retrieves a paginated list of actors formatted for dropdown selectors.
         public async Task<IEnumerable<DropdownDto>> GetAllActorsAsync(int page, int pageSize)
         {
             return await _movieRepository.GetAllActors()
-                .OrderBy(a => a.FirstName)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(a => new DropdownDto
-                {
-                    Id = a.ActorId,
-                    Name = a.FirstName + " " + a.LastName
-                })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    a => a.FirstName,
+                    a => new DropdownDto { Id = a.ActorId, Name = a.FirstName + " " + a.LastName },
+                    page,
+                    pageSize);
         }
-
-        // Private helpers — maps Movie entity to DTOs
-
-        private static MovieResponseDto MapToResponseDto(Movie m) => new MovieResponseDto
-        {
-            MovieId = m.MovieId,
-            Title = m.Title,
-            Description = m.Description,
-            ReleaseYear = m.ReleaseYear,
-            LanguageId = m.LanguageId,
-            LanguageName = m.Language?.Name ?? "",
-            RentalDuration = m.RentalDuration,
-            RentalRate = m.RentalRate,
-            Length = m.Length,
-            ReplacementCost = m.ReplacementCost,
-            Rating = m.Rating,
-            Categories = m.MovieCategories
-                .Select(mc => mc.Category?.Name ?? "")
-                .Where(n => n != "")
-                .ToList(),
-            Actors = m.MovieActors
-                .Select(ma => $"{ma.Actor?.FirstName} {ma.Actor?.LastName}".Trim())
-                .Where(n => n != "")
-                .ToList()
-        };
-
-        private static MovieDetailDto MapToDetailDto(Movie m) => new MovieDetailDto
-        {
-            MovieId = m.MovieId,
-            Title = m.Title,
-            Description = m.Description,
-            ReleaseYear = m.ReleaseYear,
-            LanguageId = m.LanguageId,
-            LanguageName = m.Language?.Name ?? "",
-            OriginalLanguageId = m.OriginalLanguageId,
-            OriginalLanguageName = m.OriginalLanguage?.Name,
-            RentalDuration = m.RentalDuration,
-            RentalRate = m.RentalRate,
-            Length = m.Length,
-            ReplacementCost = m.ReplacementCost,
-            Rating = m.Rating,
-            SpecialFeatures = m.SpecialFeatures,
-            Categories = m.MovieCategories.Select(mc => new CategoryDto
-            {
-                CategoryId = mc.CategoryId,
-                Name = mc.Category?.Name ?? ""
-            }).ToList(),
-            Actors = m.MovieActors.Select(ma => new ActorDto
-            {
-                ActorId = ma.ActorId,
-                FullName = $"{ma.Actor?.FirstName} {ma.Actor?.LastName}".Trim()
-            }).ToList(),
-            TotalInventory = m.Inventories?.Count ?? 0
-        };
     }
 }

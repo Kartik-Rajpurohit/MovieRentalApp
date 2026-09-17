@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Locations.Addresses;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services;
@@ -110,19 +111,7 @@ public class AddressService : IAddressService
         if (a == null) return null;
 
         // Convert the database entity into the detailed response DTO.
-        return new AddressDetailDto
-        {
-            AddressId = a.AddressId,
-            Street = a.Street,
-            PostalCode = a.PostalCode,
-            Phone = a.Phone,
-            CityId = a.CityId,
-            CityName = a.City.Name,
-            CountryName = a.City.Country.Name,
-            UserCount = a.Users.Count,
-            StoreCount = a.Stores.Count,
-            LastUpdate = a.LastUpdate,
-        };
+        return a.ToDetailDto();
     }
 
     // Validates request data and creates a new address record.
@@ -147,17 +136,7 @@ public class AddressService : IAddressService
         var created = await _addressRepository.CreateAddressAsync(address);
 
         // Map the created entity to the response DTO.
-        return new AddressResponseDto
-        {
-            AddressId = created.AddressId,
-            Street = created.Street,
-            PostalCode = created.PostalCode,
-            Phone = created.Phone,
-            CityId = created.CityId,
-            CityName = created.City.Name,
-            CountryName = created.City.Country.Name,
-            LastUpdate = created.LastUpdate,
-        };
+        return created.ToResponseDto();
     }
 
     // Updates an existing address record with the provided information.
@@ -181,17 +160,7 @@ public class AddressService : IAddressService
         var updated = await _addressRepository.UpdateAddressAsync(address);
         if (updated == null) return null;
 
-        return new AddressResponseDto
-        {
-            AddressId = updated.AddressId,
-            Street = updated.Street,
-            PostalCode = updated.PostalCode,
-            Phone = updated.Phone,
-            CityId = updated.CityId,
-            CityName = updated.City.Name,
-            CountryName = updated.City.Country.Name,
-            LastUpdate = updated.LastUpdate,
-        };
+        return updated.ToResponseDto();
     }
 
     // Deletes an address record by ID.

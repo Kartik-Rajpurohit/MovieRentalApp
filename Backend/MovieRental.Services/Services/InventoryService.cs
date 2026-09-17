@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Inventory;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -17,29 +18,6 @@ namespace MovieRental.Services.Services
         {
             _inventoryRepository = inventoryRepository;
         }
-
-        // Maps raw entity to response DTO — item is marked available if it has no active unreturned rentals.
-        private static InventoryResponseDto MapToResponse(Inventory i) => new()
-        {
-            InventoryId = i.InventoryId,
-            MovieId = i.MovieId,
-            MovieTitle = i.Movie?.Title ?? "",
-            StoreId = i.StoreId,
-            IsAvailable = !i.Rentals.Any(r => r.ReturnDate == null),
-            LastUpdate = i.LastUpdate,
-        };
-
-        // Maps raw entity to detail DTO with lifetime rental count and availability status.
-        private static InventoryDetailDto MapToDetail(Inventory i) => new()
-        {
-            InventoryId = i.InventoryId,
-            MovieId = i.MovieId,
-            MovieTitle = i.Movie?.Title ?? "",
-            StoreId = i.StoreId,
-            IsAvailable = !i.Rentals.Any(r => r.ReturnDate == null),
-            TotalRentals = i.Rentals.Count,
-            LastUpdate = i.LastUpdate,
-        };
 
         // Gets paginated inventory copies with store, movie, and availability filters.
         public async Task<PaginatedResponseDto<InventoryResponseDto>> GetAllInventoryAsync(
@@ -105,7 +83,7 @@ namespace MovieRental.Services.Services
                 TotalPages = totalPages,
                 CurrentPage = pagination.Page,
                 PageSize = pagination.PageSize,
-                Data = entities.Select(MapToResponse).ToList()
+                Data = entities.Select(i => i.ToResponseDto()).ToList()
             };
         }
 
@@ -114,7 +92,7 @@ namespace MovieRental.Services.Services
         {
             var inventory = await _inventoryRepository.GetInventoryByIdAsync(id);
             if (inventory == null) return null;
-            return MapToDetail(inventory);
+            return inventory.ToDetailDto();
         }
 
         // Adds a new movie inventory copy to a store.
@@ -137,7 +115,7 @@ namespace MovieRental.Services.Services
                 LastUpdate = DateTime.UtcNow
             };
             var inventory = await _inventoryRepository.CreateInventoryAsync(entity);
-            return MapToResponse(inventory);
+            return inventory.ToResponseDto();
         }
 
         // Updates the store assignment of an inventory copy.
@@ -156,7 +134,7 @@ namespace MovieRental.Services.Services
             };
             var inventory = await _inventoryRepository.UpdateInventoryAsync(entity);
             if (inventory == null) return null;
-            return MapToResponse(inventory);
+            return inventory.ToResponseDto();
         }
 
         // Deletes an inventory copy record by ID through repository.

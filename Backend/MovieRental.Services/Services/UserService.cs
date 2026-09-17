@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Users;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -84,7 +85,7 @@ namespace MovieRental.Services.Services
                 .Take(pagination.PageSize)
                 .ToListAsync();
 
-            var data = users.Select(MapToDto).ToList();
+            var data = users.Select(u => u.ToResponseDto()).ToList();
 
             return new PaginatedResponseDto<UserResponseDto>
             {
@@ -101,7 +102,7 @@ namespace MovieRental.Services.Services
         {
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null) return null;
-            return MapToDto(user);
+            return user.ToResponseDto();
         }
 
         // Creates a new user with hashed password and associated staff/customer profile.
@@ -142,7 +143,7 @@ namespace MovieRental.Services.Services
                 await _userRepository.CreateCustomerAsync(created.UserId, dto.StoreId.Value);
 
             var fullUser = await _userRepository.GetUserByIdAsync(created.UserId);
-            return MapToDto(fullUser ?? created);
+            return (fullUser ?? created).ToResponseDto();
         }
 
         // Updates user profile and handles role transitions without foreign key constraint violations.
@@ -191,7 +192,7 @@ namespace MovieRental.Services.Services
 
             // Reload relations after update for accurate DTO mapping
             var reloaded = await _userRepository.GetUserByIdAsync(updated.UserId);
-            return reloaded == null ? null : MapToDto(reloaded);
+            return reloaded?.ToResponseDto();
         }
 
         // Toggles a user's active status between enabled and disabled.
@@ -199,80 +200,62 @@ namespace MovieRental.Services.Services
         {
             var user = await _userRepository.ToggleUserStatusAsync(id);
             if (user == null) return null;
-            return MapToDto(user);
+            return user.ToResponseDto();
         }
 
         // Retrieves countries formatted as dropdown options for user registration and address forms.
         public async Task<IEnumerable<DropdownDto>> GetAllCountriesAsync(int page, int pageSize)
         {
             return await _userRepository.GetAllCountries()
-                .OrderBy(c => c.Name)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(c => new DropdownDto { Id = c.CountryId, Name = c.Name })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    c => c.Name,
+                    c => new DropdownDto { Id = c.CountryId, Name = c.Name },
+                    page,
+                    pageSize);
         }
 
         // Retrieves cities belonging to a selected country for cascading dropdowns.
         public async Task<IEnumerable<DropdownDto>> GetCitiesByCountryAsync(int countryId, int page, int pageSize)
         {
             return await _userRepository.GetCitiesByCountry(countryId)
-                .OrderBy(c => c.Name)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(c => new DropdownDto { Id = c.CityId, Name = c.Name })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    c => c.Name,
+                    c => new DropdownDto { Id = c.CityId, Name = c.Name },
+                    page,
+                    pageSize);
         }
 
         // Retrieves all user roles formatted as dropdown options.
         public async Task<IEnumerable<DropdownDto>> GetAllRolesAsync(int page, int pageSize)
         {
             return await _userRepository.GetAllRoles()
-                .OrderBy(r => r.RoleName)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(r => new DropdownDto { Id = r.RoleId, Name = r.RoleName })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    r => r.RoleName,
+                    r => new DropdownDto { Id = r.RoleId, Name = r.RoleName },
+                    page,
+                    pageSize);
         }
 
         // Retrieves all stores formatted as dropdown options.
         public async Task<IEnumerable<DropdownDto>> GetAllStoresAsync(int page, int pageSize)
         {
             return await _userRepository.GetAllStores()
-                .OrderBy(s => s.StoreId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(s => new DropdownDto { Id = s.StoreId, Name = $"Store {s.StoreId}" })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    s => s.StoreId,
+                    s => new DropdownDto { Id = s.StoreId, Name = $"Store {s.StoreId}" },
+                    page,
+                    pageSize);
         }
 
         // Retrieves addresses within a city for cascading address dropdowns.
         public async Task<IEnumerable<DropdownDto>> GetAddressesByCityAsync(int cityId, int page, int pageSize)
         {
             return await _userRepository.GetAddressesByCity(cityId)
-                .OrderBy(a => a.Street)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(a => new DropdownDto { Id = a.AddressId, Name = a.Street })
-                .ToListAsync();
+                .ToDropdownListAsync(
+                    a => a.Street,
+                    a => new DropdownDto { Id = a.AddressId, Name = a.Street },
+                    page,
+                    pageSize);
         }
-
-        // Private helper — maps User entity to UserResponseDto
-        private static UserResponseDto MapToDto(User u) => new UserResponseDto
-        {
-            UserId = u.UserId,
-            FirstName = u.FirstName,
-            LastName = u.LastName,
-            Email = u.Email,
-            IsActive = u.IsActive,
-            RoleId = u.RoleId,
-            RoleName = u.Role?.RoleName ?? "Unassigned",
-            AddressId = u.AddressId,
-            Street = u.Address?.Street,   
-            PostalCode = u.Address?.PostalCode,
-            Phone = u.Address?.Phone,
-            CityName = u.Address?.City?.Name,
-            CountryName = u.Address?.City?.Country?.Name,
-        };
     }
 }

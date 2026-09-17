@@ -4,6 +4,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Movies;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -59,13 +60,7 @@ namespace MovieRental.Services.Services
                 .ToListAsync();
 
             // Map each category entity to its response DTO with movie count.
-            var data = entities.Select(c => new CategoryResponseDto
-            {
-                CategoryId = c.CategoryId,
-                Name = c.Name,
-                LastUpdate = c.LastUpdate,
-                MovieCount = c.MovieCategories.Count
-            }).ToList();
+            var data = entities.Select(c => c.ToResponseDto()).ToList();
 
             return new PaginatedResponseDto<CategoryResponseDto>
             {
@@ -84,13 +79,7 @@ namespace MovieRental.Services.Services
             if (category == null) return null;
 
             // Convert entity into response DTO.
-            return new CategoryResponseDto
-            {
-                CategoryId = category.CategoryId,
-                Name = category.Name,
-                LastUpdate = category.LastUpdate,
-                MovieCount = category.MovieCategories.Count
-            };
+            return category.ToResponseDto();
         }
 
         // Validates and saves a new movie category record.
@@ -107,13 +96,7 @@ namespace MovieRental.Services.Services
             var created = await _categoryRepository.CreateCategoryAsync(category);
 
             // Return the created category response DTO.
-            return new CategoryResponseDto
-            {
-                CategoryId = created.CategoryId,
-                Name = created.Name,
-                LastUpdate = created.LastUpdate,
-                MovieCount = 0
-            };
+            return created.ToResponseDto();
         }
 
         // Updates an existing category's name.
@@ -127,13 +110,7 @@ namespace MovieRental.Services.Services
             var updated = await _categoryRepository.UpdateCategoryAsync(category);
             if (updated == null) return null;
 
-            return new CategoryResponseDto
-            {
-                CategoryId = updated.CategoryId,
-                Name = updated.Name,
-                LastUpdate = updated.LastUpdate,
-                MovieCount = updated.MovieCategories.Count
-            };
+            return updated.ToResponseDto();
         }
 
         // Removes a category by its ID through the repository.
@@ -173,23 +150,7 @@ namespace MovieRental.Services.Services
             var data = await query
                 .Skip((pagination.Page - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
-                .Select(m => new MovieResponseDto
-                {
-                    MovieId = m.MovieId,
-                    Title = m.Title,
-                    Description = m.Description,
-                    ReleaseYear = m.ReleaseYear,
-                    LanguageId = m.LanguageId,
-                    LanguageName = m.Language.Name,
-                    RentalDuration = m.RentalDuration,
-                    RentalRate = m.RentalRate,
-                    Length = m.Length,
-                    ReplacementCost = m.ReplacementCost,
-                    Rating = m.Rating,
-                    Categories = m.MovieCategories
-                        .Select(mc => mc.Category.Name)
-                        .ToList()
-                })
+                .ProjectToMovieResponseDto()
                 .ToListAsync();
 
             return new PaginatedResponseDto<MovieResponseDto>

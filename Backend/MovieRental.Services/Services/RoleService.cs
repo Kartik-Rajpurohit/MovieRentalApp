@@ -3,6 +3,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Roles;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
 
 namespace MovieRental.Services.Services
@@ -96,12 +97,7 @@ namespace MovieRental.Services.Services
             var created = await _roleRepository.CreateRoleAsync(role);
 
             // Convert created entity to response DTO.
-            return new RoleResponseDto
-            {
-                RoleId = created.RoleId,
-                RoleName = created.RoleName,
-                CreatedAt = created.CreatedAt
-            };
+            return created.ToResponseDto();
         }
     }
 }
