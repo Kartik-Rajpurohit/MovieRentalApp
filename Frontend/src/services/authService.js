@@ -10,15 +10,11 @@ export const loginUser = async (email, password) => {
   return res.data;
 };
 
-// Fetches reference country list from backend lookup endpoint for registration
-export const getLookupCountries = async () => {
-  const res = await api.get(`${AUTH}/countries`);
-  return res.data;
-};
-
-// Fetches reference city list for a specific country from backend lookup endpoint for registration
-export const getLookupCities = async (country) => {
-  const res = await api.get(`${AUTH}/cities`, { params: { country } });
+// Fetches global address autocomplete suggestions from backend endpoint for registration
+export const getAddressAutocomplete = async (text) => {
+  const res = await api.get(`${AUTH}/address-autocomplete`, {
+    params: { text },
+  });
   return res.data;
 };
 

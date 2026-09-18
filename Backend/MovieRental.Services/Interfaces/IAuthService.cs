@@ -22,4 +22,7 @@ public interface IAuthService
 
     // Clears and revokes the active authentication session by refresh token and/or user ID.
     Task ClearSessionAsync(string? refreshToken, int? userId = null);
+
+    // Queries global address autocomplete suggestions for registration
+    Task<IReadOnlyList<AddressAutocompleteDto>> GetAddressAutocompleteAsync(string searchText);
 }

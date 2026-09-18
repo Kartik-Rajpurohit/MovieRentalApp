@@ -15,7 +15,7 @@ namespace MovieRental.Domain.DTOs.Common
         // Field name to sort by
         public string? SortBy { get; set; }
 
-        // Sort direction: "asc" or "desc" (default is "asc")
-        public string? SortOrder { get; set; } = "asc";
+        // Sort direction: "asc" or "desc" (default is "desc")
+        public string? SortOrder { get; set; } = "desc";
     }
 }

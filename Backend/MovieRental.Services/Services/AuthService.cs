@@ -19,20 +19,23 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly ICountryRepository _countryRepository;
     private readonly ICityRepository _cityRepository;
+    private readonly IGeoapifyService _geoapifyService;
     private readonly IConfiguration _config;
     private readonly ILogger<AuthService> _logger;
 
-    // Receives repositories for user and location queries, configuration for JWT keys, and logger for security audits.
+    // Receives repositories for user and location queries, geoapify service for address lookup, configuration for JWT keys, and logger for security audits.
     public AuthService(
         IUserRepository userRepository,
         ICountryRepository countryRepository,
         ICityRepository cityRepository,
+        IGeoapifyService geoapifyService,
         IConfiguration config,
         ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _countryRepository = countryRepository;
         _cityRepository = cityRepository;
+        _geoapifyService = geoapifyService;
         _config = config;
         _logger = logger;
     }
@@ -354,5 +357,11 @@ public class AuthService : IAuthService
             _logger.LogWarning(ex, "Error occurred during session clearance for UserId {UserId}", userId);
             // Silently proceed so session cleanup is resilient
         }
+    }
+
+    // Queries global address autocomplete suggestions for registration
+    public async Task<IReadOnlyList<AddressAutocompleteDto>> GetAddressAutocompleteAsync(string searchText)
+    {
+        return await _geoapifyService.AutocompleteAsync(searchText);
     }
 }

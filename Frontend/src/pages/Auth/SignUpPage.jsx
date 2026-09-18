@@ -1,22 +1,18 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
-import { Dropdown } from "primereact/dropdown";
+import { AutoComplete } from "primereact/autocomplete";
 import { Button } from "primereact/button";
 import { Message } from "primereact/message";
 import { AuthContext } from "../../context/AuthContext";
-import {
-  signUpUser,
-  getLookupCountries,
-  getLookupCities,
-} from "../../services/authService";
+import { signUpUser, getAddressAutocomplete } from "../../services/authService";
 import { getErrorMessage } from "../../utils/errorUtils";
 
 const labelStyle = { display: "block", marginBottom: "6px", fontWeight: 500 };
 
-// Provides user registration with personal info, CountriesNow reference country/city selection, and address inputs
+// Provides user registration with personal info, global Geoapify address autocomplete, and editable address inputs
 export default function SignUpPage() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
@@ -27,75 +23,94 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Location reference dropdown states
-  const [countries, setCountries] = useState([]);
-  const [countriesLoading, setCountriesLoading] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState("");
+  // Address search and autocomplete state
+  const [addressQuery, setAddressQuery] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
-  const [cities, setCities] = useState([]);
-  const [citiesLoading, setCitiesLoading] = useState(false);
-  const [selectedCity, setSelectedCity] = useState("");
-
-  // Address text inputs
+  // Auto-populated and editable address fields
   const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [phone, setPhone] = useState("");
 
   // Form states
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [lookupError, setLookupError] = useState(null);
 
-  // Load country reference list on component mount
-  useEffect(() => {
-    fetchCountries();
-  }, []);
+  // ─── Address Autocomplete Handlers ──────────────────────────────────────────
 
-  const fetchCountries = async () => {
-    setCountriesLoading(true);
-    setLookupError(null);
-    try {
-      const data = await getLookupCountries();
-      const mapped = data.map((c) => ({ label: c.name, value: c.name }));
-      setCountries(mapped);
-    } catch (err) {
-      console.error("Failed to load countries:", err);
-      setLookupError("Unable to load countries. Please try again.");
-    } finally {
-      setCountriesLoading(false);
-    }
-  };
-
-  const fetchCities = async (countryName) => {
-    if (!countryName) {
-      setCities([]);
+  const searchAddress = async (event) => {
+    const query = event.query?.trim();
+    if (!query || query.length < 3) {
+      setAddressSuggestions([]);
       return;
     }
-    setCitiesLoading(true);
-    setLookupError(null);
+
+    setIsSearchingAddress(true);
     try {
-      const data = await getLookupCities(countryName);
-      const mapped = data.map((c) => ({ label: c.name, value: c.name }));
-      setCities(mapped);
+      const results = await getAddressAutocomplete(query);
+      setAddressSuggestions(results || []);
     } catch (err) {
-      console.error(`Failed to load cities for ${countryName}:`, err);
-      setLookupError("Unable to load cities. Please try again.");
-      setCities([]);
+      console.error("Address autocomplete error:", err);
+      setAddressSuggestions([]);
     } finally {
-      setCitiesLoading(false);
+      setIsSearchingAddress(false);
     }
   };
 
-  // When country changes, immediately reset selected city, clear city options, and fetch cities for new country
-  const handleCountryChange = (countryName) => {
-    setSelectedCountry(countryName || "");
-    setSelectedCity("");
-    setCities([]);
-    setErrors((prev) => ({ ...prev, country: undefined, city: undefined }));
+  const handleSelectAddress = (selected) => {
+    if (!selected) return;
 
-    if (countryName) {
-      fetchCities(countryName);
-    }
+    // Combine houseNumber and street (e.g. "12 Residency Road")
+    const streetValue = selected.houseNumber
+      ? `${selected.houseNumber} ${selected.street || ""}`.trim()
+      : selected.street || "";
+
+    setStreet(streetValue.slice(0, 50));
+    setCity((selected.city || "").slice(0, 50));
+    setCountry((selected.country || "").slice(0, 50));
+    setPostalCode((selected.postalCode || "").slice(0, 10));
+
+    // Display formatted address in search bar
+    setAddressQuery(selected.formattedAddress || streetValue);
+
+    // Clear field-level validation errors upon auto-fill
+    setErrors((prev) => ({
+      ...prev,
+      street: undefined,
+      city: undefined,
+      country: undefined,
+      postalCode: undefined,
+    }));
+  };
+
+  const addressItemTemplate = (item) => {
+    const title = item.houseNumber
+      ? `${item.houseNumber} ${item.street || ""}`.trim()
+      : item.street || item.city || item.country || item.formattedAddress;
+
+    return (
+      <div style={{ padding: "4px 0", maxWidth: "420px" }}>
+        <div style={{ fontWeight: 600, fontSize: "14px", color: "#1f2937" }}>
+          {title}
+        </div>
+        {item.formattedAddress && (
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#6b7280",
+              marginTop: "2px",
+              whiteSpace: "normal",
+              wordBreak: "break-word",
+            }}
+          >
+            {item.formattedAddress}
+          </div>
+        )}
+      </div>
+    );
   };
 
   // ─── Validation ────────────────────────────────────────────────────────────
@@ -136,15 +151,15 @@ export default function SignUpPage() {
       e.password = "Password must contain at least one special character";
     }
 
-    if (!selectedCountry.trim()) {
+    if (!country.trim()) {
       e.country = "Country is required";
-    } else if (selectedCountry.trim().length > 50) {
+    } else if (country.trim().length > 50) {
       e.country = "Country must not exceed 50 characters";
     }
 
-    if (!selectedCity.trim()) {
+    if (!city.trim()) {
       e.city = "City is required";
-    } else if (selectedCity.trim().length > 50) {
+    } else if (city.trim().length > 50) {
       e.city = "City must not exceed 50 characters";
     }
 
@@ -183,8 +198,8 @@ export default function SignUpPage() {
         lastName: lastName.trim(),
         email: email.trim(),
         password,
-        country: selectedCountry.trim(),
-        city: selectedCity.trim(),
+        country: country.trim(),
+        city: city.trim(),
         street: street.trim(),
         postalCode: postalCode.trim() || null,
         phone: phone.trim(),
@@ -245,14 +260,6 @@ export default function SignUpPage() {
           <Message
             severity="error"
             text={errors.submit}
-            style={{ marginBottom: "16px", width: "100%" }}
-          />
-        )}
-
-        {lookupError && (
-          <Message
-            severity="warn"
-            text={lookupError}
             style={{ marginBottom: "16px", width: "100%" }}
           />
         )}
@@ -347,7 +354,8 @@ export default function SignUpPage() {
               <small className="p-error">{errors.password}</small>
             ) : (
               <small style={{ color: "#6b7280" }}>
-                Min 8 characters, with at least 1 uppercase, 1 number, and 1 special character
+                Min 8 characters, with at least 1 uppercase, 1 number, and 1
+                special character
               </small>
             )}
           </div>
@@ -364,57 +372,40 @@ export default function SignUpPage() {
             >
               Address Details
             </p>
+            <small style={{ color: "#6b7280" }}>
+              Search for your address to automatically fill the fields below.
+            </small>
           </div>
 
-          {/* Country Dropdown */}
+          {/* Address Autocomplete Search */}
           <div>
-            <label htmlFor="signup-country" style={labelStyle}>
-              Country
+            <label htmlFor="signup-address-search" style={labelStyle}>
+              Search Address
             </label>
-            <Dropdown
-              inputId="signup-country"
-              value={selectedCountry}
-              options={countries}
-              onChange={(e) => handleCountryChange(e.value)}
-              placeholder={countriesLoading ? "Loading countries..." : "Select Country"}
-              filter
-              showClear={!!selectedCountry}
-              disabled={countriesLoading}
-              style={{ width: "100%" }}
-              className={errors.country ? "p-invalid" : ""}
-            />
-            {errors.country && (
-              <small className="p-error">{errors.country}</small>
-            )}
-          </div>
-
-          {/* City Dropdown */}
-          <div>
-            <label htmlFor="signup-city" style={labelStyle}>
-              City
-            </label>
-            <Dropdown
-              inputId="signup-city"
-              value={selectedCity}
-              options={cities}
-              onChange={(e) => {
-                setSelectedCity(e.value || "");
-                setErrors((prev) => ({ ...prev, city: undefined }));
-              }}
-              placeholder={
-                !selectedCountry
-                  ? "Select country first"
-                  : citiesLoading
-                    ? "Loading cities..."
-                    : "Select City"
+            <AutoComplete
+              id="signup-address-search"
+              value={addressQuery}
+              suggestions={addressSuggestions}
+              completeMethod={searchAddress}
+              field="formattedAddress"
+              itemTemplate={addressItemTemplate}
+              delay={400}
+              minLength={3}
+              placeholder="Enter 3 character minimum (e.g. 123 Main St, London)..."
+              emptyMessage={
+                isSearchingAddress ? "Searching..." : "No addresses found"
               }
-              filter
-              showClear={!!selectedCity}
-              disabled={!selectedCountry || citiesLoading}
+              onChange={(e) => {
+                const val =
+                  typeof e.value === "string"
+                    ? e.value
+                    : e.value?.formattedAddress || "";
+                setAddressQuery(val);
+              }}
+              onSelect={(e) => handleSelectAddress(e.value)}
               style={{ width: "100%" }}
-              className={errors.city ? "p-invalid" : ""}
+              inputStyle={{ width: "100%" }}
             />
-            {errors.city && <small className="p-error">{errors.city}</small>}
           </div>
 
           {/* Street Address */}
@@ -436,6 +427,48 @@ export default function SignUpPage() {
             />
             {errors.street && (
               <small className="p-error">{errors.street}</small>
+            )}
+          </div>
+
+          {/* City */}
+          <div>
+            <label htmlFor="signup-city" style={labelStyle}>
+              City
+            </label>
+            <InputText
+              id="signup-city"
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setErrors((prev) => ({ ...prev, city: undefined }));
+              }}
+              placeholder="City"
+              maxLength={50}
+              style={{ width: "100%" }}
+              className={errors.city ? "p-invalid" : ""}
+            />
+            {errors.city && <small className="p-error">{errors.city}</small>}
+          </div>
+
+          {/* Country */}
+          <div>
+            <label htmlFor="signup-country" style={labelStyle}>
+              Country
+            </label>
+            <InputText
+              id="signup-country"
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                setErrors((prev) => ({ ...prev, country: undefined }));
+              }}
+              placeholder="Country"
+              maxLength={50}
+              style={{ width: "100%" }}
+              className={errors.country ? "p-invalid" : ""}
+            />
+            {errors.country && (
+              <small className="p-error">{errors.country}</small>
             )}
           </div>
 

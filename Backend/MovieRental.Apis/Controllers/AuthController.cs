@@ -15,60 +15,30 @@ public class AuthController : ControllerBase
 {
     // Injected service for hashing, JWT issuance, and user verification
     private readonly IAuthService _authService;
-    private readonly ICountriesNowService _countriesNowService;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IAuthService authService,
-        ICountriesNowService countriesNowService,
         ILogger<AuthController> logger)
     {
         _authService = authService;
-        _countriesNowService = countriesNowService;
         _logger = logger;
     }
 
-    // Returns country reference list for registration from CountriesNow reference API.
+    // Returns global address autocomplete suggestions for signup registration.
     // Public endpoint: [AllowAnonymous]
-    [HttpGet("countries")]
+    [HttpGet("address-autocomplete")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetCountries()
+    [DisableRateLimiting]
+    public async Task<IActionResult> AddressAutocomplete([FromQuery] string? text)
     {
-        try
+        if (string.IsNullOrWhiteSpace(text) || text.Trim().Length < 3)
         {
-            var countries = await _countriesNowService.GetCountriesAsync();
-            return Ok(countries);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to fetch country reference list");
-            return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = "Unable to load countries reference data. Please try again." });
-        }
-    }
-
-    // Returns city reference list for a country for registration from CountriesNow reference API.
-    // Public endpoint: [AllowAnonymous]
-    [HttpGet("cities")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetCities([FromQuery] string country)
-    {
-        if (string.IsNullOrWhiteSpace(country))
-        {
-            return BadRequest(new { message = "Country parameter is required" });
+            return Ok(Array.Empty<AddressAutocompleteDto>());
         }
 
-        try
-        {
-            var cities = await _countriesNowService.GetCitiesAsync(country.Trim());
-            return Ok(cities);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to fetch city reference list for country {Country}", country);
-            return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = "Unable to load cities reference data. Please try again." });
-        }
+        var results = await _authService.GetAddressAutocompleteAsync(text.Trim());
+        return Ok(results);
     }
 
     // Authenticates a user with email and password.

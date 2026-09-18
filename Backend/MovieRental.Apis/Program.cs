@@ -93,12 +93,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // ── Repository & Service Registration ─────────────────────────
 
-// External APIs - CountriesNow
-builder.Services.AddHttpClient<ICountriesNowService, CountriesNowService>(client =>
+// External APIs - Geoapify
+builder.Services.AddHttpClient<IGeoapifyService, GeoapifyService>(client =>
 {
-    var baseUrl = builder.Configuration["ExternalApis:CountriesNow:BaseUrl"] ?? "https://countriesnow.space/api/v0.1/";
+    var baseUrl = builder.Configuration["ExternalApis:Geoapify:BaseUrl"] ?? "https://api.geoapify.com/v1/geocode/";
     client.BaseAddress = new Uri(baseUrl);
-    client.Timeout = TimeSpan.FromSeconds(15);
+    client.Timeout = TimeSpan.FromSeconds(10);
 });
 
 // Auth
