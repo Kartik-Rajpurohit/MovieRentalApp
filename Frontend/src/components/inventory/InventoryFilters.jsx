@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { LABEL_STYLE } from "../../utils/constants";
+import { getStores } from "../../services/storeService";
 
 // Filter dropdown options for inventory availability
 const STATUS_OPTIONS = [
@@ -8,25 +10,42 @@ const STATUS_OPTIONS = [
   { label: "Rented", value: false },
 ];
 
-// Filter dropdown options for rental store locations
-const STORE_OPTIONS = [
-  { label: "All Stores", value: null },
-  { label: "Store 1", value: 1 },
-  { label: "Store 2", value: 2 },
-];
-
 // Form fields for filtering inventory by store and availability status
 export default function InventoryFilters({ filters, setFilter }) {
+  const [storeOptions, setStoreOptions] = useState([
+    { label: "All Stores", value: null },
+  ]);
+  const [loadingStores, setLoadingStores] = useState(false);
+
+  useEffect(() => {
+    setLoadingStores(true);
+    getStores(1, 100)
+      .then((res) => {
+        const dynamicStores = (res.data ?? []).map((s) => ({
+          label: s.cityName
+            ? `Store #${s.storeId} — ${s.cityName}${s.street ? ` (${s.street})` : ""}`
+            : `Store #${s.storeId}`,
+          value: s.storeId,
+        }));
+        setStoreOptions([{ label: "All Stores", value: null }, ...dynamicStores]);
+      })
+      .catch((err) => {
+        console.error("Failed to load stores for filter:", err);
+      })
+      .finally(() => setLoadingStores(false));
+  }, []);
+
   return (
     <>
       <div>
         <label style={LABEL_STYLE}>Store</label>
         <Dropdown
           value={filters.storeId}
-          options={STORE_OPTIONS}
+          options={storeOptions}
           onChange={(e) => setFilter("storeId")(e.value)}
-          placeholder="All Stores"
+          placeholder={loadingStores ? "Loading stores..." : "All Stores"}
           style={{ width: "100%" }}
+          disabled={loadingStores}
         />
       </div>
       <div>

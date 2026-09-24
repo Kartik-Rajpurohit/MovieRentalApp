@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Dialog } from "primereact/dialog";
-import { InputNumber } from "primereact/inputnumber";
+import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { createInventory, updateInventory } from "../../services/inventoryService";
+import { getStores } from "../../services/storeService";
+import { getMovies } from "../../services/movieService";
 
 const labelStyle = {
   display: "block",
@@ -28,9 +30,16 @@ export default function InventoryDialog({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Initialize or reset form values when dialog opens or record changes
+  // Dropdown options and loading states
+  const [stores, setStores] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [loadingStores, setLoadingStores] = useState(false);
+  const [loadingMovies, setLoadingMovies] = useState(false);
+
+  // Load stores and movies when dialog opens
   useEffect(() => {
     if (!visible) return;
+
     if (isEdit && inventory) {
       setForm({
         inventoryId: inventory.inventoryId,
@@ -41,13 +50,59 @@ export default function InventoryDialog({
       setForm(emptyForm);
     }
     setErrors({});
+
+    // Fetch stores if not already loaded
+    if (stores.length === 0) {
+      setLoadingStores(true);
+      getStores(1, 100)
+        .then((res) => {
+          const storeList = (res.data ?? []).map((s) => ({
+            label: s.cityName
+              ? `Store #${s.storeId} — ${s.cityName}${s.street ? ` (${s.street})` : ""}`
+              : `Store #${s.storeId}`,
+            value: s.storeId,
+          }));
+
+          // Fallback to default Store 1 & Store 2 if none returned
+          setStores(
+            storeList.length > 0
+              ? storeList
+              : [
+                  { label: "Store #1", value: 1 },
+                  { label: "Store #2", value: 2 },
+                ]
+          );
+        })
+        .catch(() => {
+          setStores([
+            { label: "Store #1", value: 1 },
+            { label: "Store #2", value: 2 },
+          ]);
+        })
+        .finally(() => setLoadingStores(false));
+    }
+
+    // Fetch movies catalogue for selection if not in edit mode and not already loaded
+    if (!isEdit && movies.length === 0) {
+      setLoadingMovies(true);
+      getMovies(1, 1000, "title", "asc")
+        .then((res) => {
+          const movieList = (res.data ?? []).map((m) => ({
+            label: `#${m.movieId} — ${m.title}${m.releaseYear ? ` (${m.releaseYear})` : ""}`,
+            value: m.movieId,
+          }));
+          setMovies(movieList);
+        })
+        .catch(console.error)
+        .finally(() => setLoadingMovies(false));
+    }
   }, [visible]);
 
-  // Validate movie ID and store ID inputs
+  // Validate movie and store selection
   const validate = () => {
     const e = {};
-    if (!isEdit && !form.movieId) e.movieId = "Movie ID is required";
-    if (!form.storeId) e.storeId = "Store ID is required";
+    if (!isEdit && !form.movieId) e.movieId = "Please select a movie";
+    if (!form.storeId) e.storeId = "Please select a store";
     return e;
   };
 
@@ -68,12 +123,18 @@ export default function InventoryDialog({
       onSuccess();
       onHide();
     } catch (err) {
-      setErrors({ submit: err?.response?.data ?? "Something went wrong." });
+      const message =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.response?.data?.title ||
+        (typeof err?.response?.data === "string" ? err?.response?.data : null) ||
+        err?.message ||
+        "Something went wrong.";
+      setErrors({ submit: message });
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleHide = () => {
     setForm(emptyForm);
@@ -106,39 +167,64 @@ export default function InventoryDialog({
       visible={visible}
       onHide={handleHide}
       footer={footer}
-      style={{ width: "400px" }}
+      style={{ width: "460px", maxWidth: "95vw" }}
       modal
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px" }}>
+        {/* Read-only Movie Display in Edit Mode */}
+        {isEdit && (
+          <div>
+            <label style={labelStyle}>Movie</label>
+            <div
+              style={{
+                padding: "9px 12px",
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "6px",
+                fontSize: "14px",
+                color: "#111827",
+                fontWeight: 500,
+              }}
+            >
+              {inventory?.movieTitle
+                ? `#${inventory.movieId} — ${inventory.movieTitle}`
+                : `Movie #${form.movieId}`}
+            </div>
+          </div>
+        )}
 
-        {/* Movie ID — only in add mode */}
+        {/* Searchable Movie Dropdown — Add Mode */}
         {!isEdit && (
           <div>
-            <label style={labelStyle}>Movie ID</label>
-            <InputNumber
+            <label style={labelStyle}>Movie</label>
+            <Dropdown
               value={form.movieId}
-              onValueChange={(e) => setForm((prev) => ({ ...prev, movieId: e.value }))}
-              placeholder="Enter movie ID"
+              options={movies}
+              onChange={(e) => setForm((prev) => ({ ...prev, movieId: e.value }))}
+              placeholder={loadingMovies ? "Loading movies..." : "Select a movie"}
+              filter
+              filterBy="label"
+              showClear
+              virtualScrollerOptions={{ itemSize: 38 }}
               style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
               className={errors.movieId ? "p-invalid" : ""}
-              min={1}
+              disabled={loadingMovies}
             />
             {errors.movieId && <small className="p-error">{errors.movieId}</small>}
           </div>
         )}
 
-        {/* Store ID */}
+        {/* Store Dropdown */}
         <div>
-          <label style={labelStyle}>Store ID</label>
-          <InputNumber
+          <label style={labelStyle}>Store</label>
+          <Dropdown
             value={form.storeId}
-            onValueChange={(e) => setForm((prev) => ({ ...prev, storeId: e.value }))}
-            placeholder="Enter store ID"
+            options={stores}
+            onChange={(e) => setForm((prev) => ({ ...prev, storeId: e.value }))}
+            placeholder={loadingStores ? "Loading stores..." : "Select a store"}
             style={{ width: "100%" }}
-            inputStyle={{ width: "100%" }}
             className={errors.storeId ? "p-invalid" : ""}
-            min={1}
+            disabled={loadingStores}
           />
           {errors.storeId && <small className="p-error">{errors.storeId}</small>}
         </div>
