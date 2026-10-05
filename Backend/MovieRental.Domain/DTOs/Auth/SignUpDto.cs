@@ -47,8 +47,8 @@ public class SignUpDto
     [MaxLength(10, ErrorMessage = "Postal code must not exceed 10 characters")]
     public string? PostalCode { get; set; }
 
-    // Contact telephone number
+    // Contact telephone number (must be exactly 10 digits)
     [Required(ErrorMessage = "Phone number is required")]
-    [MaxLength(20, ErrorMessage = "Phone must not exceed 20 characters")]
+    [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits")]
     public string Phone { get; set; } = string.Empty;
 }
