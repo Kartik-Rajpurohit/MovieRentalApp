@@ -1,24 +1,11 @@
 import { useState, useEffect } from "react";
 import { Dialog } from "primereact/dialog";
-import { InputText } from "primereact/inputtext";
-import { InputTextarea } from "primereact/inputtextarea";
-import { InputNumber } from "primereact/inputnumber";
-import { Dropdown } from "primereact/dropdown";
-import { MultiSelect } from "primereact/multiselect";
 import { Button } from "primereact/button";
 import { createMovie, updateMovie } from "../../services/movieService";
 import { getLanguages } from "../../services/languageService";
 import { getCategories } from "../../services/categoryService";
 import { getActors } from "../../services/actorService";
-
-// MPAA rating options
-const RATING_OPTIONS = [
-  { label: "G", value: "G" },
-  { label: "PG", value: "PG" },
-  { label: "PG-13", value: "PG-13" },
-  { label: "R", value: "R" },
-  { label: "NC-17", value: "NC-17" },
-];
+import MovieFormFields from "./MovieFormFields";
 
 const emptyForm = {
   title: "",
@@ -34,14 +21,6 @@ const emptyForm = {
   specialFeatures: [],
   categoryIds: [],
   actorIds: [],
-};
-
-const labelStyle = {
-  display: "block",
-  marginBottom: "6px",
-  fontWeight: "500",
-  fontSize: "14px",
-  color: "#374151",
 };
 
 // Dialog modal for creating a new movie or editing an existing movie's details.
@@ -109,13 +88,6 @@ export default function MovieDialog({
     setLanguages(langList.map((l) => ({ label: l.name, value: l.languageId ?? l.id })));
     setCategories(catList.map((c) => ({ label: c.name, value: c.categoryId ?? c.id })));
     setActors(actList.map((a) => ({ label: a.fullName ?? a.name, value: a.actorId ?? a.id })));
-  };
-
-  // Generic input change handler that updates state and clears field errors
-  const handleChange = (field) => (e) => {
-    const value = e.target !== undefined ? e.target.value : e.value;
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   // Validate required form fields before submitting
@@ -217,238 +189,15 @@ export default function MovieDialog({
       style={{ width: "560px" }}
       modal
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          paddingTop: "8px",
-        }}
-      >
-        {/* Title */}
-        <div>
-          <label style={labelStyle}>Title</label>
-          <InputText
-            value={form.title}
-            onChange={handleChange("title")}
-            placeholder="Enter movie title"
-            style={{ width: "100%" }}
-            className={errors.title ? "p-invalid" : ""}
-          />
-          {errors.title && <small className="p-error">{errors.title}</small>}
-        </div>
-
-        {/* Description */}
-        <div>
-          <label style={labelStyle}>Description</label>
-          <InputTextarea
-            value={form.description}
-            onChange={handleChange("description")}
-            placeholder="Enter description"
-            rows={3}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        {/* Release Year + Length */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Release Year</label>
-            <InputNumber
-              value={form.releaseYear}
-              onValueChange={(e) =>
-                setForm((p) => ({ ...p, releaseYear: e.value }))
-              }
-              placeholder="e.g. 2006"
-              useGrouping={false}
-              style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Length (min)</label>
-            <InputNumber
-              value={form.length}
-              onValueChange={(e) => setForm((p) => ({ ...p, length: e.value }))}
-              placeholder="e.g. 120"
-              style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
-            />
-          </div>
-        </div>
-
-        {/* Language + Original Language */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Language</label>
-            <Dropdown
-              value={form.languageId}
-              options={languages}
-              onChange={(e) => setForm((p) => ({ ...p, languageId: e.value }))}
-              placeholder="Select language"
-              style={{ width: "100%" }}
-              appendTo="self"
-              className={errors.languageId ? "p-invalid" : ""}
-            />
-            {errors.languageId && (
-              <small className="p-error">{errors.languageId}</small>
-            )}
-          </div>
-          <div>
-            <label style={labelStyle}>Original Language</label>
-            <Dropdown
-              value={form.originalLanguageId}
-              options={languages}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, originalLanguageId: e.value }))
-              }
-              placeholder="Optional"
-              style={{ width: "100%" }}
-              appendTo="self"
-              showClear
-            />
-          </div>
-        </div>
-
-        {/* Rental Duration + Rental Rate + Replacement Cost */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Rental Days</label>
-            <InputNumber
-              value={form.rentalDuration}
-              onValueChange={(e) =>
-                setForm((p) => ({ ...p, rentalDuration: e.value }))
-              }
-              min={1}
-              style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
-              className={errors.rentalDuration ? "p-invalid" : ""}
-            />
-            {errors.rentalDuration && (
-              <small className="p-error">{errors.rentalDuration}</small>
-            )}
-          </div>
-          <div>
-            <label style={labelStyle}>Rental Rate ($)</label>
-            <InputNumber
-              value={form.rentalRate}
-              onValueChange={(e) =>
-                setForm((p) => ({ ...p, rentalRate: e.value }))
-              }
-              mode="decimal"
-              minFractionDigits={2}
-              style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
-              className={errors.rentalRate ? "p-invalid" : ""}
-            />
-            {errors.rentalRate && (
-              <small className="p-error">{errors.rentalRate}</small>
-            )}
-          </div>
-          <div>
-            <label style={labelStyle}>Replace Cost ($)</label>
-            <InputNumber
-              value={form.replacementCost}
-              onValueChange={(e) =>
-                setForm((p) => ({ ...p, replacementCost: e.value }))
-              }
-              mode="decimal"
-              minFractionDigits={2}
-              style={{ width: "100%" }}
-              inputStyle={{ width: "100%" }}
-              className={errors.replacementCost ? "p-invalid" : ""}
-            />
-            {errors.replacementCost && (
-              <small className="p-error">{errors.replacementCost}</small>
-            )}
-          </div>
-        </div>
-
-        {/* Rating */}
-        <div>
-          <label style={labelStyle}>MPAA Rating</label>
-          <Dropdown
-            value={form.rating}
-            options={RATING_OPTIONS}
-            onChange={(e) => setForm((p) => ({ ...p, rating: e.value }))}
-            placeholder="Select rating"
-            style={{ width: "100%" }}
-            appendTo="self"
-            showClear
-          />
-        </div>
-
-        {/* Categories */}
-        <div>
-          <label style={labelStyle}>Categories</label>
-          <MultiSelect
-            value={form.categoryIds}
-            options={categories}
-            onChange={(e) => setForm((p) => ({ ...p, categoryIds: e.value }))}
-            placeholder="Select categories"
-            style={{ width: "100%" }}
-            display="chip"
-          />
-        </div>
-
-        {/* Actors */}
-        <div>
-          <label style={labelStyle}>Actors</label>
-          <MultiSelect
-            value={form.actorIds}
-            options={actors}
-            onChange={(e) => setForm((p) => ({ ...p, actorIds: e.value }))}
-            placeholder="Select actors"
-            style={{ width: "100%" }}
-            display="chip"
-            filter
-          />
-        </div>
-        {/* Special Features */}
-        <div>
-          <label style={labelStyle}>Special Features</label>
-          <MultiSelect
-            value={form.specialFeatures}
-            options={[
-              { label: "Trailers", value: "Trailers" },
-              { label: "Commentaries", value: "Commentaries" },
-              { label: "Deleted Scenes", value: "Deleted Scenes" },
-              { label: "Behind the Scenes", value: "Behind the Scenes" },
-            ]}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, specialFeatures: e.value }))
-            }
-            placeholder="Select special features"
-            style={{ width: "100%" }}
-            display="chip"
-          />
-        </div>
-
-        {/* Submit Error */}
-        {errors.submit && (
-          <small className="p-error" style={{ textAlign: "center" }}>
-            {errors.submit}
-          </small>
-        )}
-      </div>
+      <MovieFormFields
+        form={form}
+        setForm={setForm}
+        errors={errors}
+        setErrors={setErrors}
+        languages={languages}
+        categories={categories}
+        actors={actors}
+      />
     </Dialog>
   );
 }
