@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Rentals;
@@ -6,7 +5,6 @@ using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
-using System.Security.Claims;
 
 using Microsoft.Extensions.Logging;
 
@@ -17,19 +15,19 @@ namespace MovieRental.Services.Services
     {
         private readonly IRentalRepository _rentalRepository;
         private readonly IInventoryRepository _inventoryRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<RentalService> _logger;
 
-        // Receives repositories for rentals and inventory, HTTP context for user claims, and audit logger.
+        // Receives repositories for rentals and inventory, current user service for role scoping, and audit logger.
         public RentalService(
             IRentalRepository rentalRepository,
             IInventoryRepository inventoryRepository,
-            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser,
             ILogger<RentalService> logger)
         {
             _rentalRepository = rentalRepository;
             _inventoryRepository = inventoryRepository;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
@@ -40,19 +38,11 @@ namespace MovieRental.Services.Services
         {
             var query = _rentalRepository.GetAllRentals();
 
-            // Extract caller identity and role from current user JWT claims.
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
-            // Enforce automatic server-side role scoping: Customers only see their own rentals.
-            if (role == "Customer")
+            // Enforce automatic server-side role scoping.
+            if (_currentUser.IsCustomer)
             {
-                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
-                if (int.TryParse(customerIdClaim, out var customerId))
-                {
-                    query = query.Where(r => r.CustomerId == customerId);
-                }
-                else
+                // Customers only see their own rentals.
+                if (_currentUser.CustomerId is not { } customerId)
                 {
                     return new PaginatedResponseDto<RentalResponseDto>
                     {
@@ -63,18 +53,17 @@ namespace MovieRental.Services.Services
                         Data = new List<RentalResponseDto>()
                     };
                 }
+                query = query.Where(r => r.CustomerId == customerId);
             }
-            // Staff members only see rentals from their assigned store.
-            else if (role == "Staff")
+            else if (_currentUser.IsStaff)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId))
-                {
+                // Staff members only see rentals from their assigned store.
+                if (_currentUser.StoreId is { } storeId)
                     query = query.Where(r => r.Staff.StoreId == storeId);
-                }
             }
             else if (filter.CustomerId.HasValue)
             {
+                // Admins can optionally filter by a specific customer.
                 query = query.Where(r => r.CustomerId == filter.CustomerId.Value);
             }
 
@@ -89,7 +78,7 @@ namespace MovieRental.Services.Services
             }
 
             // 2. Module Filters
-            if (role != "Staff" && filter.StaffId.HasValue)
+            if (!_currentUser.IsStaff && filter.StaffId.HasValue)
                 query = query.Where(r => r.StaffId == filter.StaffId.Value);
 
             if (filter.InventoryId.HasValue)
@@ -177,21 +166,16 @@ namespace MovieRental.Services.Services
             var rental = await _rentalRepository.GetRentalByIdAsync(id);
             if (rental == null) return null;
 
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
             // Prevent customers from viewing rentals belonging to others.
-            if (role == "Customer")
+            if (_currentUser.IsCustomer)
             {
-                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
-                if (!int.TryParse(customerIdClaim, out var customerId) || rental.CustomerId != customerId)
+                if (_currentUser.CustomerId != rental.CustomerId)
                     return null;
             }
             // Prevent staff from viewing rentals from other stores.
-            else if (role == "Staff")
+            else if (_currentUser.IsStaff)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId) && rental.Staff?.StoreId != storeId)
+                if (_currentUser.StoreId.HasValue && rental.Staff?.StoreId != _currentUser.StoreId)
                     return null;
             }
 
@@ -238,26 +222,19 @@ namespace MovieRental.Services.Services
                     $"Inventory item #{dto.InventoryId} is currently rented out and cannot be rented again until returned.");
             }
 
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
             // Security check: Staff can only rent out inventory belonging to their assigned store.
-            if (role == "Staff")
+            if (_currentUser.IsStaff)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId) && inventory.StoreId != storeId)
+                if (_currentUser.StoreId.HasValue && inventory.StoreId != _currentUser.StoreId)
                 {
                     _logger.LogWarning("Rental creation rejected: Staff store mismatch. Staff StoreId {StoreId} != Inventory StoreId {InvStoreId}",
-                        storeId, inventory.StoreId);
+                        _currentUser.StoreId, inventory.StoreId);
                     throw new InvalidOperationException("Staff can only create rentals for inventory belonging to their assigned store.");
                 }
 
                 // Enforce caller identity to prevent staff impersonation.
-                var staffIdClaim = userPrincipal?.FindFirst("staffId")?.Value;
-                if (int.TryParse(staffIdClaim, out var callerStaffId))
-                {
-                    dto.StaffId = callerStaffId;
-                }
+                if (_currentUser.StaffId.HasValue)
+                    dto.StaffId = _currentUser.StaffId.Value;
             }
 
             // Map request DTO to database entity with current UTC timestamp.
@@ -294,20 +271,14 @@ namespace MovieRental.Services.Services
                     $"Rental #{rentalId} has already been marked as returned on {rental.ReturnDate.Value:yyyy-MM-dd HH:mm} UTC.");
             }
 
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
             // Security check: Staff can only process returns for rentals belonging to their assigned store.
-            if (role == "Staff")
+            if (_currentUser.IsStaff && _currentUser.StoreId.HasValue)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId))
+                if (rental.Inventory?.StoreId != _currentUser.StoreId && rental.Staff?.StoreId != _currentUser.StoreId)
                 {
-                    if (rental.Inventory?.StoreId != storeId && rental.Staff?.StoreId != storeId)
-                    {
-                        _logger.LogWarning("Rental return rejected: Staff store {StoreId} does not match Rental #{RentalId}", storeId, rentalId);
-                        throw new InvalidOperationException("Staff can only process returns for rentals belonging to their assigned store.");
-                    }
+                    _logger.LogWarning("Rental return rejected: Staff store {StoreId} does not match Rental #{RentalId}",
+                        _currentUser.StoreId, rentalId);
+                    throw new InvalidOperationException("Staff can only process returns for rentals belonging to their assigned store.");
                 }
             }
 

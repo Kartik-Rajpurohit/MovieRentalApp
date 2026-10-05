@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Payments;
@@ -6,7 +5,6 @@ using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
 using MovieRental.Services.Extensions;
 using MovieRental.Services.Interfaces;
-using System.Security.Claims;
 
 using Microsoft.Extensions.Logging;
 
@@ -17,19 +15,19 @@ namespace MovieRental.Services.Services
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IRentalRepository _rentalRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<PaymentService> _logger;
 
-        // Receives payment and rental repositories, HTTP context accessor for user claims, and audit logger.
+        // Receives payment and rental repositories, current user service for role scoping, and audit logger.
         public PaymentService(
             IPaymentRepository paymentRepository,
             IRentalRepository rentalRepository,
-            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser,
             ILogger<PaymentService> logger)
         {
             _paymentRepository = paymentRepository;
             _rentalRepository = rentalRepository;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
@@ -40,19 +38,11 @@ namespace MovieRental.Services.Services
         {
             var query = _paymentRepository.GetAllPayments();
 
-            // Extract caller identity and role from current user JWT claims.
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
-            // Enforce automatic server-side role scoping: Customers only see their own payments.
-            if (role == "Customer")
+            // Enforce automatic server-side role scoping.
+            if (_currentUser.IsCustomer)
             {
-                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
-                if (int.TryParse(customerIdClaim, out var customerId))
-                {
-                    query = query.Where(p => p.CustomerId == customerId);
-                }
-                else
+                // Customers only see their own payments.
+                if (_currentUser.CustomerId is not { } customerId)
                 {
                     return new PaginatedResponseDto<PaymentResponseDto>
                     {
@@ -63,18 +53,17 @@ namespace MovieRental.Services.Services
                         Data = new List<PaymentResponseDto>()
                     };
                 }
+                query = query.Where(p => p.CustomerId == customerId);
             }
-            // Staff members only see payments processed at their assigned store.
-            else if (role == "Staff")
+            else if (_currentUser.IsStaff)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId))
-                {
+                // Staff members only see payments processed at their assigned store.
+                if (_currentUser.StoreId is { } storeId)
                     query = query.Where(p => p.Staff.StoreId == storeId);
-                }
             }
             else if (filter.CustomerId.HasValue)
             {
+                // Admins can optionally filter by a specific customer.
                 query = query.Where(p => p.CustomerId == filter.CustomerId.Value);
             }
 
@@ -89,7 +78,7 @@ namespace MovieRental.Services.Services
             }
 
             // 2. Module Filters
-            if (role != "Staff" && filter.StaffId.HasValue)
+            if (!_currentUser.IsStaff && filter.StaffId.HasValue)
                 query = query.Where(p => p.StaffId == filter.StaffId.Value);
 
             if (filter.RentalId.HasValue)
@@ -178,21 +167,16 @@ namespace MovieRental.Services.Services
             var payment = await _paymentRepository.GetPaymentByIdAsync(id);
             if (payment == null) return null;
 
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
             // Prevent customers from inspecting other users' payments.
-            if (role == "Customer")
+            if (_currentUser.IsCustomer)
             {
-                var customerIdClaim = userPrincipal?.FindFirst("customerId")?.Value;
-                if (!int.TryParse(customerIdClaim, out var customerId) || payment.CustomerId != customerId)
+                if (_currentUser.CustomerId != payment.CustomerId)
                     return null;
             }
             // Prevent staff from viewing payments outside their assigned store.
-            else if (role == "Staff")
+            else if (_currentUser.IsStaff)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId) && payment.Staff?.StoreId != storeId)
+                if (_currentUser.StoreId.HasValue && payment.Staff?.StoreId != _currentUser.StoreId)
                     return null;
             }
 
@@ -238,29 +222,22 @@ namespace MovieRental.Services.Services
                 throw new InvalidOperationException($"Staff member #{dto.StaffId} does not exist or has been deleted.");
             }
 
-            var userPrincipal = _httpContextAccessor.HttpContext?.User;
-            var role = userPrincipal?.FindFirst(ClaimTypes.Role)?.Value;
-
             // Security check: Staff can only collect payments for rentals associated with their store.
-            if (role == "Staff")
+            if (_currentUser.IsStaff)
             {
-                var storeIdClaim = userPrincipal?.FindFirst("storeId")?.Value;
-                if (int.TryParse(storeIdClaim, out var storeId))
+                if (_currentUser.StoreId.HasValue)
                 {
-                    if (rental.Inventory?.StoreId != storeId && rental.Staff?.StoreId != storeId)
+                    if (rental.Inventory?.StoreId != _currentUser.StoreId && rental.Staff?.StoreId != _currentUser.StoreId)
                     {
                         _logger.LogWarning("Payment creation rejected: Staff store {StoreId} does not match Rental #{RentalId}",
-                            storeId, dto.RentalId);
+                            _currentUser.StoreId, dto.RentalId);
                         throw new InvalidOperationException("Staff can only process payments for rentals belonging to their assigned store.");
                     }
                 }
 
                 // Enforce caller identity to prevent staff impersonation.
-                var staffIdClaim = userPrincipal?.FindFirst("staffId")?.Value;
-                if (int.TryParse(staffIdClaim, out var callerStaffId))
-                {
-                    dto.StaffId = callerStaffId;
-                }
+                if (_currentUser.StaffId.HasValue)
+                    dto.StaffId = _currentUser.StaffId.Value;
             }
 
             // Map request DTO to database entity with current UTC timestamp.

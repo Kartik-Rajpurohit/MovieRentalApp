@@ -168,6 +168,7 @@ builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // ── JWT Authentication Configuration ──────────────────────────
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
