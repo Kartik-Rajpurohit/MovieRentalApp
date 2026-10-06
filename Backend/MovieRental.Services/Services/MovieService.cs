@@ -84,8 +84,8 @@ namespace MovieRental.Services.Services
                     ? query.OrderByDescending(m => m.MovieId)
                     : query.OrderBy(m => m.MovieId),
                 _ => isDesc
-                    ? query.OrderByDescending(m => m.Title)
-                    : query.OrderBy(m => m.Title)
+                    ? query.OrderByDescending(m => m.MovieId)
+                    : query.OrderBy(m => m.MovieId)
             };
 
             // 5. Total count before pagination

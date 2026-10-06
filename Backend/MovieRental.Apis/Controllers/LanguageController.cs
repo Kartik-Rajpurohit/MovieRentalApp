@@ -21,11 +21,11 @@ public class LanguageController : ControllerBase
         _languageService = languageService;
     }
 
-    // Gets all languages available for movie cataloging.
+    // Gets a paginated, searchable, and sortable list of languages.
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] PaginationInputDto pagination)
     {
-        var result = await _languageService.GetAllLanguagesAsync();
+        var result = await _languageService.GetAllLanguagesAsync(pagination);
         return Ok(result);
     }
 

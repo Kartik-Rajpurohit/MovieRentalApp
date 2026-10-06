@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Dropdown } from "primereact/dropdown";
+import { AutoComplete } from "primereact/autocomplete";
 import { InputNumber } from "primereact/inputnumber";
 import { getReturnedUnpaidRentals } from "../../services/rentalService";
-import { getStaff } from "../../services/staffService";
 
 const labelStyle = {
   display: "block",
@@ -12,72 +11,90 @@ const labelStyle = {
   color: "#374151",
 };
 
-// Form fields for recording a payment against a returned unpaid rental.
+// Form fields for recording a payment against a returned unpaid rental with server-side AutoComplete
 export default function PaymentFormFields({ form, setForm, errors }) {
-  // List of returned rentals that have not yet been paid
-  const [rentals, setRentals] = useState([]);
-  const [rentalsLoading, setRentalsLoading] = useState(false);
+  const [selectedRental, setSelectedRental] = useState(null);
+  const [rentalSuggestions, setRentalSuggestions] = useState([]);
 
-  // Load returned unpaid rentals on mount so user can pick one to pay
+  // Reset selected rental when form.rentalId is cleared
   useEffect(() => {
-    setRentalsLoading(true);
-    getReturnedUnpaidRentals()
-      .then((res) =>
-        setRentals(
-          (res.data ?? []).map((r) => ({
-            label: `#${r.rentalId} — ${r.movieTitle} (${r.customerName?.toLowerCase()})`,
-            value: r.rentalId,
-            customerId: r.customerId,
-            customerName: r.customerName,
-            staffId: r.staffId,
-            staffName: r.staffName,
-            suggestedAmount: r.suggestedAmount,
-          })),
-        ),
-      )
-      .catch(console.error)
-      .finally(() => setRentalsLoading(false));
+    if (!form.rentalId) {
+      setSelectedRental(null);
+    }
+  }, [form.rentalId]);
 
-    getStaff(1, 500)
-      .then((res) =>
-        setStaffList(
-          (res.data ?? []).map((s) => ({
-            label: s.fullName,
-            value: s.staffId,
-          })),
-        ),
-      )
-      .catch(console.error);
-  }, []);
-
-  // When a rental is selected, auto-populate customer, staff, and suggested amount
-  const handleRentalChange = (rentalId) => {
-    const selected = rentals.find((r) => r.value === rentalId);
-    setForm((prev) => ({
-      ...prev,
-      rentalId,
-      customerId: selected?.customerId ?? null,
-      customerName: selected?.customerName ?? "",
-      staffId: selected?.staffId ?? null,
-      staffName: selected?.staffName ?? "",
-      amount: selected?.suggestedAmount ?? null,
-    }));
+  // Debounced server search for returned unpaid rentals via existing GET /api/Rental
+  const searchRentals = async (event) => {
+    const query = event.query?.trim();
+    if (!query) {
+      setRentalSuggestions([]);
+      return;
+    }
+    try {
+      const res = await getReturnedUnpaidRentals(1, 10, query);
+      setRentalSuggestions(res.data ?? []);
+    } catch (err) {
+      console.error("Failed to search returned rentals:", err);
+      setRentalSuggestions([]);
+    }
   };
 
+  // Suggestion item template displaying:
+  // #15432 — Academy Dinosaur
+  // Customer: Linda Smith · Suggested: $4.99
+  const rentalItemTemplate = (item) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      <span style={{ fontWeight: 600, color: "#1f2937" }}>
+        #{item.rentalId} — {item.movieTitle}
+      </span>
+      <span style={{ fontSize: "12px", color: "#6b7280" }}>
+        Customer: {item.customerName} · Suggested: ${item.suggestedAmount?.toFixed(2)}
+      </span>
+    </div>
+  );
+
+  const handleSelectRental = (e) => {
+    const val = e.value;
+    setSelectedRental(val);
+    if (val && typeof val === "object" && val.rentalId) {
+      setForm((prev) => ({
+        ...prev,
+        rentalId: val.rentalId,
+        customerId: val.customerId ?? null,
+        customerName: val.customerName ?? "",
+        staffId: val.staffId ?? null,
+        staffName: val.staffName ?? "",
+        amount: val.suggestedAmount ?? null,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        rentalId: null,
+        customerId: null,
+        customerName: "",
+        staffId: null,
+        staffName: "",
+        amount: null,
+      }));
+    }
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      {/* Rental — active only */}
+      {/* Server-Side AutoComplete Rental Selection */}
       <div>
-        <label style={labelStyle}>Rental</label>
-        <Dropdown
-          value={form.rentalId}
-          options={rentals}
-          onChange={(e) => handleRentalChange(e.value)}
-          placeholder={rentalsLoading ? "Loading..." : "Select returned rental"}
+        <label style={labelStyle}>Returned Rental</label>
+        <AutoComplete
+          value={selectedRental}
+          suggestions={rentalSuggestions}
+          completeMethod={searchRentals}
+          field="movieTitle"
+          delay={300}
+          placeholder="Search by movie title, customer, or rental ID..."
+          itemTemplate={rentalItemTemplate}
+          onChange={handleSelectRental}
           style={{ width: "100%" }}
-          filter
-          appendTo="self"
+          inputStyle={{ width: "100%" }}
           className={errors?.rentalId ? "p-invalid" : ""}
         />
         {errors?.rentalId && (

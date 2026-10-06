@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
+import { AutoComplete } from "primereact/autocomplete";
 import { Dropdown } from "primereact/dropdown";
+import { getMovies } from "../../services/movieService";
 
 const labelStyle = {
   display: "block",
@@ -15,11 +18,47 @@ export default function InventoryFormFields({
   errors,
   isEdit,
   inventory,
-  movies,
   stores,
-  loadingMovies,
   loadingStores,
 }) {
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [movieSuggestions, setMovieSuggestions] = useState([]);
+
+  // Reset selected movie whenever form.movieId is cleared
+  useEffect(() => {
+    if (!form.movieId) {
+      setSelectedMovie(null);
+    }
+  }, [form.movieId]);
+
+  // Debounced server-side movie search using GET /api/Movie?page=1&pageSize=10&search={typedText}
+  const searchMovies = async (event) => {
+    const query = event.query?.trim();
+    if (!query) {
+      setMovieSuggestions([]);
+      return;
+    }
+    try {
+      const res = await getMovies(1, 10, "title", "asc", query);
+      setMovieSuggestions(res.data ?? []);
+    } catch (err) {
+      console.error("Failed to search movies:", err);
+      setMovieSuggestions([]);
+    }
+  };
+
+  // Suggestion item template displaying:
+  // Title
+  // 2006 · #1
+  const movieItemTemplate = (item) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      <span style={{ fontWeight: 600, color: "#1f2937" }}>{item.title}</span>
+      <span style={{ fontSize: "12px", color: "#6b7280" }}>
+        {item.releaseYear ? `${item.releaseYear} · ` : ""}#{item.movieId}
+      </span>
+    </div>
+  );
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px" }}>
       {/* Read-only Movie Display in Edit Mode */}
@@ -44,22 +83,29 @@ export default function InventoryFormFields({
         </div>
       )}
 
-      {/* Searchable Movie Dropdown — Add Mode */}
+      {/* Server-side AutoComplete Movie Selection — Add Mode */}
       {!isEdit && (
         <div>
           <label style={labelStyle}>Movie</label>
-          <Dropdown
-            value={form.movieId}
-            options={movies}
-            onChange={(e) => setForm((prev) => ({ ...prev, movieId: e.value }))}
-            placeholder={loadingMovies ? "Loading movies..." : "Select a movie"}
-            filter
-            filterBy="label"
-            showClear
-            virtualScrollerOptions={{ itemSize: 38 }}
+          <AutoComplete
+            value={selectedMovie}
+            suggestions={movieSuggestions}
+            completeMethod={searchMovies}
+            field="title"
+            delay={300}
+            placeholder="Type to search movies..."
+            itemTemplate={movieItemTemplate}
+            onChange={(e) => {
+              setSelectedMovie(e.value);
+              if (e.value && typeof e.value === "object" && e.value.movieId) {
+                setForm((prev) => ({ ...prev, movieId: e.value.movieId }));
+              } else {
+                setForm((prev) => ({ ...prev, movieId: null }));
+              }
+            }}
             style={{ width: "100%" }}
+            inputStyle={{ width: "100%" }}
             className={errors.movieId ? "p-invalid" : ""}
-            disabled={loadingMovies}
           />
           {errors.movieId && <small className="p-error">{errors.movieId}</small>}
         </div>

@@ -6,7 +6,12 @@ const API = "/Rental";
 
 // GET request to fetch a paginated list of rentals with optional filters (customer, staff, returned status)
 export const getRentals = async (params = {}) => {
-  const res = await api.get(API, { params });
+  const finalParams = { ...params };
+  if (finalParams.sortField && !finalParams.sortBy) {
+    finalParams.sortBy = finalParams.sortField;
+    delete finalParams.sortField;
+  }
+  const res = await api.get(API, { params: finalParams });
   return res.data;
 };
 
@@ -28,10 +33,10 @@ export const returnRental = async (id) => {
   return res.data;
 };
 
-// GET request to fetch returned rentals that do not yet have a recorded payment
-export const getReturnedUnpaidRentals = async (page = 1, pageSize = 500) => {
-  const res = await api.get(API, {
-    params: { page, pageSize, isReturned: true, hasPayment: false },
-  });
+// GET request to fetch returned rentals that do not yet have a recorded payment (reuses existing GET /api/Rental)
+export const getReturnedUnpaidRentals = async (page = 1, pageSize = 10, search = "") => {
+  const params = { page, pageSize, isReturned: true, hasPayment: false };
+  if (search) params.search = search;
+  const res = await api.get(API, { params });
   return res.data;
 };

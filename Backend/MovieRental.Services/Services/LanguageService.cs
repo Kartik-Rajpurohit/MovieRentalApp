@@ -20,15 +20,48 @@ public class LanguageService : ILanguageService
         _languageRepository = languageRepository;
     }
 
-    // Retrieves all available languages with associated movie counts.
-    public async Task<IEnumerable<LanguageResponseDto>> GetAllLanguagesAsync()
+    // Retrieves a paginated, searchable, and sortable list of languages.
+    public async Task<PaginatedResponseDto<LanguageResponseDto>> GetAllLanguagesAsync(PaginationInputDto pagination)
     {
-        // Fetch entities first, then map in memory — avoids EF Core translation issues
-        var entities = await _languageRepository.GetAllLanguages()
-            .OrderBy(l => l.Name)
+        var query = _languageRepository.GetAllLanguages();
+
+        // 1. Search
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var s = pagination.Search.Trim().ToLower();
+            query = query.Where(l => l.Name.ToLower().Contains(s));
+        }
+
+        // 2. Sorting
+        var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = pagination.SortBy?.ToLower() switch
+        {
+            "name" => isDesc ? query.OrderByDescending(l => l.Name) : query.OrderBy(l => l.Name),
+            "moviecount" => isDesc ? query.OrderByDescending(l => l.Movies.Count) : query.OrderBy(l => l.Movies.Count),
+            "id" or "languageid" => isDesc ? query.OrderByDescending(l => l.LanguageId) : query.OrderBy(l => l.LanguageId),
+            _ => isDesc ? query.OrderByDescending(l => l.Name) : query.OrderBy(l => l.Name)
+        };
+
+        // 3. Count
+        var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
+
+        // 4. Pagination & Projection
+        var entities = await query
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .ToListAsync();
 
-        return entities.Select(l => l.ToResponseDto()).ToList();
+        var data = entities.Select(l => l.ToResponseDto()).ToList();
+
+        return new PaginatedResponseDto<LanguageResponseDto>
+        {
+            TotalRecords = totalRecords,
+            TotalPages = totalPages,
+            CurrentPage = pagination.Page,
+            PageSize = pagination.PageSize,
+            Data = data
+        };
     }
 
     // Retrieves a single language by ID.

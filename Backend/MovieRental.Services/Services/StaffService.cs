@@ -52,6 +52,9 @@ namespace MovieRental.Services.Services
                 "lastname" => isDesc
                     ? query.OrderByDescending(s => s.User != null ? s.User.LastName : "")
                     : query.OrderBy(s => s.User != null ? s.User.LastName : ""),
+                "fullname" or "name" => isDesc
+                    ? query.OrderByDescending(s => s.User != null ? s.User.FirstName : "").ThenByDescending(s => s.User != null ? s.User.LastName : "")
+                    : query.OrderBy(s => s.User != null ? s.User.FirstName : "").ThenBy(s => s.User != null ? s.User.LastName : ""),
                 "email" => isDesc
                     ? query.OrderByDescending(s => s.User != null ? s.User.Email : "")
                     : query.OrderBy(s => s.User != null ? s.User.Email : ""),

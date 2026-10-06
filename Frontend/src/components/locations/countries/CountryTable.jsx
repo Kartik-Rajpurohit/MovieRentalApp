@@ -28,8 +28,8 @@ export default function CountryTable() {
   const [saving, setSaving] = useState(false);
   // Search keyword and sorting states
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("");
-  const [sortOrder, setSortOrder] = useState(1);
+  const [sortField, setSortField] = useState("countryId");
+  const [sortOrder, setSortOrder] = useState(-1);
   // Form state for creating a new country
   const [form, setForm] = useState(EMPTY_FORM);
 

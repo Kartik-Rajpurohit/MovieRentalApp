@@ -26,8 +26,8 @@ export default function InventoryTable() {
   const [inventory, setInventory] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [sortField, setSortField] = useState("");
-  const [sortOrder, setSortOrder] = useState(1);
+  const [sortField, setSortField] = useState("inventoryId");
+  const [sortOrder, setSortOrder] = useState(-1);
   const [search, setSearch] = useState("");
   // Controls visibility of Add Copy dialog and Filter dialog
   const [dialogVisible, setDialogVisible] = useState(false);

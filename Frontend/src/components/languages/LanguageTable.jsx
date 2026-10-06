@@ -5,40 +5,46 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../common/PageHeader";
 import SearchBar from "../common/SearchBar";
 import LanguageDialog from "./LanguageDialog";
+import usePagination from "../../hooks/usePagination";
 import { getLanguages } from "../../services/languageService";
 import { AuthContext } from "../../context/AuthContext";
 
-// Displays the languages catalog in a DataTable with client-side search and add language action
+// Displays the languages catalog in a DataTable with server-side pagination, search, and sorting
 export default function LanguageTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  // Server-side pagination hook
+  const { lazyState, onPage, reset } = usePagination(10);
 
-  // Full languages list and client-filtered list
+  // Table records and total records state
   const [languages, setLanguages] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [sortField, setSortField] = useState("languageId");
+  const [sortOrder, setSortOrder] = useState(-1);
   const [search, setSearch] = useState("");
   // Controls visibility of the Add Language dialog
   const [dialogVisible, setDialogVisible] = useState(false);
 
-  // Load languages once when component mounts
-  useEffect(() => { loadLanguages(); }, []);
-
-  // Filter languages locally whenever search text changes
+  // Reload languages whenever pagination, sorting, or search change
   useEffect(() => {
-    // Client-side search — backend returns full list
-    if (!search.trim()) { setFiltered(languages); return; }
-    const s = search.toLowerCase();
-    setFiltered(languages.filter(l => l.name.toLowerCase().includes(s)));
-  }, [search, languages]);
+    loadLanguages();
+  }, [lazyState, sortField, sortOrder, search]);
 
-  // Load all languages from the backend service
+  // Load paginated and sorted languages from the backend service
   const loadLanguages = async () => {
     setLoading(true);
     try {
-      const data = await getLanguages();
-      setLanguages(data ?? []);
-      setFiltered(data ?? []);
+      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
+      const res = await getLanguages(
+        lazyState.page + 1,
+        lazyState.rows,
+        search,
+        sortField,
+        sortOrderStr,
+      );
+      setLanguages(res.data ?? []);
+      setTotalRecords(res.totalRecords ?? 0);
     } catch (err) {
       console.error(err);
     } finally {
@@ -46,6 +52,17 @@ export default function LanguageTable() {
     }
   };
 
+  // Handle column header click to toggle sort field/order
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    reset();
+  };
+
+  const onSearchChange = (val) => {
+    setSearch(val);
+    reset();
+  };
 
   return (
     <div>
@@ -58,7 +75,7 @@ export default function LanguageTable() {
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
-          onChange={setSearch}
+          onChange={onSearchChange}
           placeholder="Search languages..."
         />
       </div>
@@ -71,11 +88,23 @@ export default function LanguageTable() {
       />
 
       <DataTable
-        value={filtered}
+        value={languages}
+        paginator
+        lazy
         loading={loading}
+        first={lazyState.first}
+        rows={lazyState.rows}
+        totalRecords={totalRecords}
+        onPage={onPage}
+        rowsPerPageOptions={[5, 10, 20]}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={onSort}
         emptyMessage="No languages found."
         onRowClick={(e) => navigate(`/languages/${e.data.languageId}`)}
         rowClassName={() => "cursor-pointer"}
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
         <Column field="name" header="Name" sortable />
         <Column

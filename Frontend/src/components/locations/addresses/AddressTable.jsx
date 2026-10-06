@@ -25,7 +25,7 @@ export default function AddressTable() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("addressId");
-  const [sortOrder, setSortOrder] = useState(1);
+  const [sortOrder, setSortOrder] = useState(-1);
   const INIT_FILTERS = { city: null, postalCode: null };
   const [filters, setFilters] = useState(INIT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);

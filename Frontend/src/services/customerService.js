@@ -2,18 +2,22 @@
 import api from "./api";
 const API = "/Customer";
 
-// GET request to fetch a paginated list of customers with optional search, active status, and store filters
+// GET request to fetch a paginated list of customers with optional search, sorting, active status, and store filters
 export const getCustomers = async (
   page = 1,
   pageSize = 10,
   search = "",
   isActive = null,
   storeId = null,
+  sortField = "",
+  sortOrder = "",
 ) => {
   const params = { page, pageSize };
   if (search) params.search = search;
   if (isActive !== null && isActive !== undefined) params.isActive = isActive;
-  if (storeId !== null) params.storeId = storeId;
+  if (storeId !== null && storeId !== undefined) params.storeId = storeId;
+  if (sortField) params.sortBy = sortField;
+  if (sortOrder) params.sortOrder = sortOrder;
   const res = await api.get(API, { params });
   return res.data;
 };

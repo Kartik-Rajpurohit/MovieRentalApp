@@ -4,9 +4,25 @@ import api from "./api";
 // Base route for Language endpoints
 const LANGUAGE = "/Language";
 
-// GET request to fetch all supported languages
-export const getLanguages = () =>
-  api.get(LANGUAGE).then(r => r.data);
+// GET request to fetch languages with pagination, search, and sorting
+export const getLanguages = (
+  page = 1,
+  pageSize = 10,
+  search = "",
+  sortField = "",
+  sortOrder = "",
+) =>
+  api
+    .get(LANGUAGE, {
+      params: {
+        page,
+        pageSize,
+        search: search || undefined,
+        sortBy: sortField || undefined,
+        sortOrder: sortOrder || undefined,
+      },
+    })
+    .then((r) => r.data);
 
 // GET request to fetch detailed language info by ID
 export const getLanguageById = (id) =>

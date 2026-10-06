@@ -33,10 +33,10 @@ export default function RoleDetailPage() {
   // Fetch role information if not already supplied via navigation state
   useEffect(() => {
     if (!roleInfo && id) {
-      getRoles(1, 100)
+      getRoles(1, 1, "", "", "", Number(id))
         .then((res) => {
-          const found = (res.data ?? []).find((r) => r.roleId === Number(id));
-          if (found) setRoleInfo(found);
+          const role = res?.data?.[0];
+          if (role) setRoleInfo(role);
         })
         .catch(console.error);
     }

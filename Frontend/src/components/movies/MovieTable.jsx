@@ -52,9 +52,9 @@ export default function MovieTable() {
   const [totalRecords, setTotalRecords] = useState(0);
   // Loading indicator for table data fetch
   const [loading, setLoading] = useState(false);
-  // Sorting fields and direction
-  const [sortField, setSortField] = useState("title");
-  const [sortOrder, setSortOrder] = useState(1);
+  // Sorting fields and direction (default to newest movie first)
+  const [sortField, setSortField] = useState("movieId");
+  const [sortOrder, setSortOrder] = useState(-1);
   // Search query text
   const [search, setSearch] = useState("");
   // Dialog visibility states for filters and create movie
@@ -218,6 +218,12 @@ export default function MovieTable() {
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
+        <Column
+          field="movieId"
+          header="ID"
+          sortable
+          style={{ width: "70px" }}
+        />
         <Column
           field="title"
           header="Title"

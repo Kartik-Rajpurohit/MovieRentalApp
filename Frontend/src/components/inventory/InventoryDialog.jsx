@@ -4,7 +4,6 @@ import { Button } from "primereact/button";
 import InventoryFormFields from "./InventoryFormFields";
 import { createInventory, updateInventory } from "../../services/inventoryService";
 import { getStores } from "../../services/storeService";
-import { getMovies } from "../../services/movieService";
 
 const emptyForm = { movieId: null, storeId: null };
 
@@ -24,9 +23,7 @@ export default function InventoryDialog({
 
   // Dropdown options and loading states
   const [stores, setStores] = useState([]);
-  const [movies, setMovies] = useState([]);
   const [loadingStores, setLoadingStores] = useState(false);
-  const [loadingMovies, setLoadingMovies] = useState(false);
 
   // Load stores and movies when dialog opens
   useEffect(() => {
@@ -72,21 +69,6 @@ export default function InventoryDialog({
           ]);
         })
         .finally(() => setLoadingStores(false));
-    }
-
-    // Fetch movies catalogue for selection if not in edit mode and not already loaded
-    if (!isEdit && movies.length === 0) {
-      setLoadingMovies(true);
-      getMovies(1, 1000, "title", "asc")
-        .then((res) => {
-          const movieList = (res.data ?? []).map((m) => ({
-            label: `#${m.movieId} — ${m.title}${m.releaseYear ? ` (${m.releaseYear})` : ""}`,
-            value: m.movieId,
-          }));
-          setMovies(movieList);
-        })
-        .catch(console.error)
-        .finally(() => setLoadingMovies(false));
     }
   }, [visible]);
 
@@ -168,9 +150,7 @@ export default function InventoryDialog({
         errors={errors}
         isEdit={isEdit}
         inventory={inventory}
-        movies={movies}
         stores={stores}
-        loadingMovies={loadingMovies}
         loadingStores={loadingStores}
       />
     </Dialog>

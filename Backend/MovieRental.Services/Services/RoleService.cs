@@ -34,6 +34,11 @@ namespace MovieRental.Services.Services
                 query = query.Where(r => r.RoleName.ToLower().Contains(lower));
             }
 
+            if (filter?.RoleId.HasValue == true)
+            {
+                query = query.Where(r => r.RoleId == filter.RoleId.Value);
+            }
+
             // 2. Sorting
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch

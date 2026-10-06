@@ -25,7 +25,7 @@ export const getMovies = (
       params: {
         page,
         pageSize,
-        sortField,
+        sortBy: sortField,
         sortOrder,
         search,
         languageId,

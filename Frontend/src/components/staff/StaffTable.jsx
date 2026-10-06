@@ -35,21 +35,28 @@ export default function StaffTable() {
   const [loading, setLoading] = useState(false);
   // Search query state
   const [search, setSearch] = useState("");
+  // Sorting state (default to newest staff member first)
+  const [sortField, setSortField] = useState("staffId");
+  const [sortOrder, setSortOrder] = useState(-1);
 
-  // Reload staff data whenever pagination, search, or filters change
+  // Reload staff data whenever pagination, search, filters, or sorting change
   useEffect(() => {
     loadStaff();
-  }, [lazyState, search, filters]);
+  }, [lazyState, search, filters, sortField, sortOrder]);
 
   // Fetch paginated staff members from the staff API service
   const loadStaff = async () => {
     setLoading(true);
     try {
+      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
       const res = await getStaff(
         lazyState.page + 1,
         lazyState.rows,
         search,
         filters.isActive,
+        filters.storeId,
+        sortField,
+        sortOrderStr,
       );
       setStaff(res.data ?? []);
       setTotalRecords(res.totalRecords);
@@ -58,6 +65,12 @@ export default function StaffTable() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    reset();
   };
 
   // Update search text and reset pagination to page 1
@@ -140,36 +153,41 @@ export default function StaffTable() {
         </div>
       </div>
 
-      {/* Table displaying staff members with server-side pagination */}
+      {/* Table displaying staff members with server-side pagination and sorting */}
       <DataTable
         value={staff}
         paginator
         lazy
         loading={loading}
-
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}
         onPage={onPage}
         rowsPerPageOptions={[5, 10, 20]}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={onSort}
+        removableSort
         emptyMessage="No staff found."
         onRowClick={(e) => navigate(`/staff/${e.data.staffId}`)}
         rowClassName={() => "cursor-pointer"}
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
-        <Column field="staffId" header="ID" style={{ width: "70px" }} />
-        <Column field="fullName" header="Full Name" />
-        <Column field="email" header="Email" />
+        <Column field="staffId" header="ID" sortable style={{ width: "70px" }} />
+        <Column field="fullName" header="Full Name" sortable />
+        <Column field="email" header="Email" sortable />
         <Column
           field="storeId"
           header="Store"
+          sortable
           style={{ width: "100px" }}
           body={(r) => `Store ${r.storeId}`}
         />
         <Column
           field="isActive"
           header="Status"
+          sortable
           style={{ width: "110px" }}
           body={(r) => <StatusTag isActive={r.isActive} />}
         />

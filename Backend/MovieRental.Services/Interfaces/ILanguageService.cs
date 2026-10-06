@@ -7,8 +7,8 @@ namespace MovieRental.Services.Interfaces;
 // Defines business operations for languages used by movies.
 public interface ILanguageService
 {
-    // Retrieves all available languages.
-    Task<IEnumerable<LanguageResponseDto>> GetAllLanguagesAsync();
+    // Retrieves a paginated and searchable list of languages.
+    Task<PaginatedResponseDto<LanguageResponseDto>> GetAllLanguagesAsync(PaginationInputDto pagination);
 
     // Retrieves a single language by ID.
     Task<LanguageResponseDto?> GetLanguageByIdAsync(int id);

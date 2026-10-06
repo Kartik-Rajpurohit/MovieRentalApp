@@ -24,7 +24,7 @@ export const getPayments = ({
       params: {
         page,
         pageSize,
-        sortField,
+        sortBy: sortField,
         sortOrder,
         search,
         customerId,

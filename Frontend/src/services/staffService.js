@@ -2,18 +2,22 @@
 import api from "./api";
 const API = "/Staff";
 
-// GET request to fetch a paginated list of staff members with optional search, status, and store filters
+// GET request to fetch a paginated list of staff members with optional search, sorting, status, and store filters
 export const getStaff = async (
   page = 1,
   pageSize = 10,
   search = "",
   isActive = null,
   storeId = null,
+  sortField = "",
+  sortOrder = "",
 ) => {
   const params = { page, pageSize };
   if (search) params.search = search;
   if (isActive !== null && isActive !== undefined) params.isActive = isActive;
-  if (storeId !== null) params.storeId = storeId;
+  if (storeId !== null && storeId !== undefined) params.storeId = storeId;
+  if (sortField) params.sortBy = sortField;
+  if (sortOrder) params.sortOrder = sortOrder;
   const res = await api.get(API, { params });
   return res.data;
 };

@@ -20,20 +20,30 @@ export default function RoleTable() {
   const [loading, setLoading] = useState(false);
   // Search filter query
   const [search, setSearch] = useState("");
+  // Sorting state (default to newest role first)
+  const [sortField, setSortField] = useState("roleId");
+  const [sortOrder, setSortOrder] = useState(-1);
   const navigate = useNavigate();
   // Controls visibility of the Add Role modal
   const [addVisible, setAddVisible] = useState(false);
 
-  // Reload roles list whenever pagination or search keyword changes
+  // Reload roles list whenever pagination, search, or sorting changes
   useEffect(() => {
     loadRoles();
-  }, [lazyState, search]);
+  }, [lazyState, search, sortField, sortOrder]);
 
   // Fetch paginated roles from roleService
   const loadRoles = async () => {
     setLoading(true);
     try {
-      const res = await getRoles(lazyState.page + 1, lazyState.rows, search);
+      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
+      const res = await getRoles(
+        lazyState.page + 1,
+        lazyState.rows,
+        search,
+        sortField,
+        sortOrderStr,
+      );
       setRoles(res.data ?? []);
       setTotalRecords(res.totalRecords);
     } catch (err) {
@@ -41,6 +51,12 @@ export default function RoleTable() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    reset();
   };
 
   // Update search query and reset pagination to page 1
@@ -70,9 +86,8 @@ export default function RoleTable() {
         />
       </div>
 
-      {/* Table displaying roles with server pagination */}
+      {/* Table displaying roles with server pagination and sorting */}
       <DataTable
-
         value={roles}
         paginator
         lazy
@@ -82,6 +97,10 @@ export default function RoleTable() {
         totalRecords={totalRecords}
         onPage={onPage}
         rowsPerPageOptions={[5, 10, 20]}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={onSort}
+        removableSort
         emptyMessage="No roles found."
         onRowClick={(e) =>
           navigate(`/roles/${e.data.roleId}`, { state: e.data })
@@ -89,10 +108,11 @@ export default function RoleTable() {
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
-        <Column field="roleId" header="ID" style={{ width: "70px" }} />
+        <Column field="roleId" header="ID" sortable style={{ width: "70px" }} />
         <Column
           field="roleName"
           header="Role Name"
+          sortable
           body={(r) => (
             <span style={{ textTransform: "capitalize" }}>{r.roleName}</span>
           )}
@@ -100,6 +120,7 @@ export default function RoleTable() {
         <Column
           field="createdAt"
           header="Created At"
+          sortable
           style={{ width: "160px" }}
           body={(r) => new Date(r.createdAt).toLocaleDateString()}
         />

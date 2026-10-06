@@ -5,8 +5,14 @@ import api from "./api";
 const INVENTORY = "/Inventory";
 
 // GET request to fetch a paginated list of inventory copies with optional filters (storeId, movieId, availability)
-export const getInventory = (params = {}) =>
-  api.get(INVENTORY, { params }).then(r => r.data);
+export const getInventory = (params = {}) => {
+  const finalParams = { ...params };
+  if (finalParams.sortField && !finalParams.sortBy) {
+    finalParams.sortBy = finalParams.sortField;
+    delete finalParams.sortField;
+  }
+  return api.get(INVENTORY, { params: finalParams }).then(r => r.data);
+};
 
 // GET request to fetch detailed information for an inventory copy by ID
 export const getInventoryById = (id) =>

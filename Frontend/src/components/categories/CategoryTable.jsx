@@ -20,8 +20,8 @@ export default function CategoryTable() {
   const [categories, setCategories] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [sortField, setSortField] = useState("name");
-  const [sortOrder, setSortOrder] = useState(1);
+  const [sortField, setSortField] = useState("categoryId");
+  const [sortOrder, setSortOrder] = useState(-1);
   const [search, setSearch] = useState("");
   // Controls visibility of the Add Category modal dialog
   const [dialogVisible, setDialogVisible] = useState(false);

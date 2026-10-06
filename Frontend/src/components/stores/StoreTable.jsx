@@ -42,7 +42,7 @@ export default function StoreTable() {
   const [loading, setLoading] = useState(false);
   // Sorting parameters
   const [sortField, setSortField] = useState("storeid");
-  const [sortOrder, setSortOrder] = useState(1);
+  const [sortOrder, setSortOrder] = useState(-1);
   // Search query text
   const [search, setSearch] = useState("");
   // Add store dialog state

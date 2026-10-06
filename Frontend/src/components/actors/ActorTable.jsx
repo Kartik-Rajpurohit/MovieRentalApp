@@ -32,7 +32,7 @@ export default function ActorTable() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("actorId");
-  const [sortOrder, setSortOrder] = useState(1);
+  const [sortOrder, setSortOrder] = useState(-1);
   // Form state for creating a new actor
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});

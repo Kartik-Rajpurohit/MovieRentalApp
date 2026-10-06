@@ -32,21 +32,28 @@ export default function CustomerTable() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("customerId");
+  const [sortOrder, setSortOrder] = useState(-1);
 
-  // Reload customer records whenever pagination, search, or filters change
+  // Reload customer records whenever pagination, search, sorting, or filters change
   useEffect(() => {
     loadCustomers();
-  }, [lazyState, search, filters]);
+  }, [lazyState, search, sortField, sortOrder, filters]);
 
   // Load paginated customer records from backend API
   const loadCustomers = async () => {
     setLoading(true);
     try {
+      const backendSort = sortField === "fullName" ? "firstname" : sortField;
+      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
       const res = await getCustomers(
         lazyState.page + 1,
         lazyState.rows,
         search,
         filters.isActive,
+        null,
+        backendSort,
+        sortOrderStr,
       );
       setCustomers(res.data ?? []);
       setTotalRecords(res.totalRecords);
@@ -55,6 +62,12 @@ export default function CustomerTable() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    reset();
   };
 
   // Handle search input changes and reset to first page
@@ -143,20 +156,24 @@ export default function CustomerTable() {
         totalRecords={totalRecords}
         onPage={onPage}
         rowsPerPageOptions={[5, 10, 20]}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={onSort}
         emptyMessage="No customers found."
         onRowClick={(e) => navigate(`/customers/${e.data.customerId}`)}
         rowClassName={() => "cursor-pointer"}
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
       >
-        <Column field="customerId" header="ID" style={{ width: "70px" }} />
-        <Column field="fullName" header="Full Name" />
-        <Column field="email" header="Email" />
+        <Column field="customerId" header="ID" style={{ width: "70px" }} sortable />
+        <Column field="fullName" header="Full Name" sortable />
+        <Column field="email" header="Email" sortable />
         <Column
           field="storeId"
           header="Store"
           style={{ width: "100px" }}
           body={(r) => `Store ${r.storeId}`}
+          sortable
         />
         <Column
           field="createDate"
@@ -165,12 +182,14 @@ export default function CustomerTable() {
           body={(r) =>
             r.createDate ? new Date(r.createDate).toLocaleDateString() : "—"
           }
+          sortable
         />
         <Column
           field="isActive"
           header="Status"
           style={{ width: "110px" }}
           body={(r) => <StatusTag isActive={r.isActive} />}
+          sortable
         />
       </DataTable>
     </div>
