@@ -48,12 +48,19 @@ namespace MovieRental.Domain.Entities
         [ForeignKey("Address")]
         public int? AddressId { get; set; }
         public Address? Address { get; set; } = null!;
+
         // Refresh token — used to generate new access token without re-login
         [Column("refresh_token")]
         public string? RefreshToken { get; set; }
 
         [Column("refresh_token_expiry")]
         public DateTime? RefreshTokenExpiry { get; set; }
+
+        [Column("refresh_token_revoked")]
+        public bool RefreshTokenRevoked { get; set; } = false;
+
+        [Column("refresh_token_revoked_at")]
+        public DateTime? RefreshTokenRevokedAt { get; set; }
 
         // Reverse navigation — if this user is a staff member (optional)
         public Staff? Staff { get; set; }

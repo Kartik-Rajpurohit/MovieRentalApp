@@ -150,13 +150,15 @@ namespace MovieRental.Repository.Repositories
             return Convert.ToHexString(bytes);
         }
 
-        // Stores the hashed refresh token and expiry timestamp on the user record.
+        // Stores the hashed refresh token and expiry timestamp on the user record, resetting revocation flags.
         public async Task SaveRefreshTokenAsync(int userId, string refreshToken, DateTime expiry)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return;
             user.RefreshToken = HashRefreshToken(refreshToken);
             user.RefreshTokenExpiry = expiry;
+            user.RefreshTokenRevoked = false;
+            user.RefreshTokenRevokedAt = null;
             await _context.SaveChangesAsync();
         }
 
@@ -172,7 +174,7 @@ namespace MovieRental.Repository.Repositories
                 .FirstOrDefaultAsync(u => u.RefreshToken == hashed);
         }
 
-        // Clears the stored refresh token when the user logs out.
+        // Marks the stored refresh token as revoked when the user logs out without clearing token data.
         public async Task RevokeRefreshTokenAsync(string refreshToken, int? userId = null)
         {
             var hashed = HashRefreshToken(refreshToken);
@@ -184,18 +186,18 @@ namespace MovieRental.Repository.Repositories
             }
             var user = await query.FirstOrDefaultAsync();
             if (user == null) return;
-            user.RefreshToken = null;
-            user.RefreshTokenExpiry = null;
+            user.RefreshTokenRevoked = true;
+            user.RefreshTokenRevokedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
 
-        // Clears the refresh token by user ID.
+        // Marks the refresh token as revoked by user ID without clearing token data.
         public async Task RevokeRefreshTokenByUserIdAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return;
-            user.RefreshToken = null;
-            user.RefreshTokenExpiry = null;
+            user.RefreshTokenRevoked = true;
+            user.RefreshTokenRevokedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
 

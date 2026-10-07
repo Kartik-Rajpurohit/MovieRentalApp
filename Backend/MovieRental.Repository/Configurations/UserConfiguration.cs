@@ -19,6 +19,9 @@ namespace MovieRental.Repository.Configurations
                 .WithMany(a => a.Users)
                 .HasForeignKey(u => u.AddressId);
 
+            // Defaults
+            builder.Property(u => u.RefreshTokenRevoked).HasDefaultValue(false);
+
             // Indexes
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.RefreshToken);

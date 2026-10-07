@@ -93,7 +93,7 @@ public class AuthService : IAuthService
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
 
-        // Store the refresh token in the database with 7 days validity.
+        // Store the refresh token in the database with 7 days validity, resetting revocation.
         await _userRepository.SaveRefreshTokenAsync(
             user.UserId, refreshToken, DateTime.UtcNow.AddDays(7));
 
@@ -225,6 +225,13 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
+        // Check if the refresh token has been revoked.
+        if (user.RefreshTokenRevoked)
+        {
+            _logger.LogWarning("Token refresh failed: refresh token has been revoked for user {Email}", user.Email);
+            throw new UnauthorizedAccessException("Refresh token has been revoked");
+        }
+
         // Check if the refresh token has expired.
         if (user.RefreshTokenExpiry < DateTime.UtcNow)
         {
@@ -236,7 +243,7 @@ public class AuthService : IAuthService
         var newAccessToken = GenerateAccessToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
-        // Replace the old refresh token with the new one in the database.
+        // Replace the old refresh token with the new one in the database and reset revocation.
         await _userRepository.SaveRefreshTokenAsync(
             user.UserId, newRefreshToken, DateTime.UtcNow.AddDays(7));
 
