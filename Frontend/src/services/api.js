@@ -1,6 +1,6 @@
-// Creates and configures the centralized Axios HTTP client used for all API requests
 import axios from "axios";
 import { getErrorMessage } from "../utils/errorUtils";
+import { getAccessToken, setAccessToken, clearAccessToken } from "./tokenManager";
 
 // Base URL of the backend API, loaded from environment variables or fallback to localhost
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7176/api";
@@ -11,9 +11,9 @@ const api = axios.create({
   withCredentials: true, // Automatically sends HttpOnly cookies (like refresh token) with requests
 });
 
-// Request Interceptor: Automatically attaches the JWT access token and standardizes query parameters
+// Request Interceptor: Automatically attaches the in-memory JWT access token and standardizes query parameters
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = getAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
   if (config.params) {
@@ -86,8 +86,9 @@ api.interceptors.response.use(
         );
 
         const newToken = res.data.token;
-        localStorage.setItem("token", newToken);
-        localStorage.setItem("user", JSON.stringify(res.data));
+        setAccessToken(newToken);
+        const { token: _omitted, ...userWithoutToken } = res.data;
+        localStorage.setItem("user", JSON.stringify(userWithoutToken));
 
         processQueue(null, newToken);
 
@@ -95,6 +96,7 @@ api.interceptors.response.use(
         return api(original);
       } catch (refreshErr) {
         processQueue(refreshErr, null);
+        clearAccessToken();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.location.href = "/login";

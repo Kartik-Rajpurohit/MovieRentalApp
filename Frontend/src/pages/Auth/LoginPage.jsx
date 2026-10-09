@@ -31,7 +31,7 @@ export default function LoginPage() {
     try {
       // Call auth service to authenticate user credentials
       const response = await loginUser(email, password);
-      // Save authenticated user and token in global context and localStorage
+      // Save authenticated user in global context and token in application memory
       login(response);
       // Check if user has an assigned role; send unassigned users to /home
       const hasRole = response?.role && response.role !== "Unassigned";
