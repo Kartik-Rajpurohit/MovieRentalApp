@@ -44,6 +44,8 @@ export default function CategoryDetailPage() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [moviesLoading, setMoviesLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("title");
+  const [sortOrder, setSortOrder] = useState(1);
   // Reusable pagination hook for movies list
   const { lazyState, onPage, reset } = usePagination(10);
 
@@ -52,10 +54,10 @@ export default function CategoryDetailPage() {
     loadCategory();
   }, [id]);
 
-  // Reload movies whenever category ID, pagination, or search query change
+  // Reload movies whenever category ID, pagination, sorting, or search query change
   useEffect(() => {
     loadMovies();
-  }, [id, lazyState, search]);
+  }, [id, lazyState, search, sortField, sortOrder]);
 
   // Load category details from the backend
   const loadCategory = async () => {
@@ -70,11 +72,19 @@ export default function CategoryDetailPage() {
     }
   };
 
-  // Load movies in this category with pagination and search
+  // Load movies in this category with pagination, search, and sorting
   const loadMovies = async () => {
     setMoviesLoading(true);
     try {
-      const res = await getMoviesByCategory(id, lazyState.page + 1, lazyState.rows, search);
+      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
+      const res = await getMoviesByCategory(
+        id,
+        lazyState.page + 1,
+        lazyState.rows,
+        search,
+        sortField,
+        sortOrderStr,
+      );
       setMovies(res.data ?? []);
       setTotalRecords(res.totalRecords ?? 0);
     } catch (err) {
@@ -82,6 +92,13 @@ export default function CategoryDetailPage() {
     } finally {
       setMoviesLoading(false);
     }
+  };
+
+  // Handle column sort click
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    reset();
   };
 
   // Update search query and reset pagination to the first page
@@ -150,6 +167,9 @@ export default function CategoryDetailPage() {
           rows={lazyState.rows}
           totalRecords={totalRecords}
           onPage={onPage}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={onSort}
           rowsPerPageOptions={[5, 10, 20]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
@@ -162,6 +182,7 @@ export default function CategoryDetailPage() {
           <Column
             field="releaseYear"
             header="Year"
+            sortable
             style={{ width: "90px" }}
           />
           <Column
@@ -172,12 +193,14 @@ export default function CategoryDetailPage() {
           <Column
             field="rentalRate"
             header="Rate ($)"
+            sortable
             style={{ width: "100px" }}
             body={(r) => `$${r.rentalRate?.toFixed(2)}`}
           />
           <Column
             field="length"
             header="Length"
+            sortable
             style={{ width: "90px" }}
             body={(r) => (r.length ? `${r.length} min` : "—")}
           />

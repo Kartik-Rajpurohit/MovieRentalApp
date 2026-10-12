@@ -41,19 +41,19 @@ public class CityService : ICityService
         if (!string.IsNullOrWhiteSpace(filter.Name))
             query = query.Where(c => c.Name.ToLower().Contains(filter.Name.Trim().ToLower()));
 
-        // 3. Dynamic Sorting
+        // 3. Dynamic Sorting with deterministic CityId tie-breaker
         var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = pagination.SortBy?.ToLower() switch
         {
             "name" or "city" => isDesc
-                ? query.OrderByDescending(c => c.Name)
-                : query.OrderBy(c => c.Name),
+                ? query.OrderByDescending(c => c.Name).ThenByDescending(c => c.CityId)
+                : query.OrderBy(c => c.Name).ThenBy(c => c.CityId),
             "country" => isDesc
-                ? query.OrderByDescending(c => c.Country.Name)
-                : query.OrderBy(c => c.Country.Name),
+                ? query.OrderByDescending(c => c.Country.Name).ThenByDescending(c => c.CityId)
+                : query.OrderBy(c => c.Country.Name).ThenBy(c => c.CityId),
             "addresscount" => isDesc
-                ? query.OrderByDescending(c => c.Addresses.Count)
-                : query.OrderBy(c => c.Addresses.Count),
+                ? query.OrderByDescending(c => c.Addresses.Count).ThenByDescending(c => c.CityId)
+                : query.OrderBy(c => c.Addresses.Count).ThenBy(c => c.CityId),
             "id" or "cityid" => isDesc
                 ? query.OrderByDescending(c => c.CityId)
                 : query.OrderBy(c => c.CityId),

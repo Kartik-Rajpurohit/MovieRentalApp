@@ -42,28 +42,31 @@ namespace MovieRental.Services.Services
             if (filter.StoreId.HasValue)
                 query = query.Where(c => c.StoreId == filter.StoreId.Value);
 
-            // 4. Sorting: dynamic sorting on allowed fields.
+            // 4. Sorting: dynamic sorting on allowed fields with deterministic CustomerId tie-breaker.
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "firstname" => isDesc
-                    ? query.OrderByDescending(c => c.User != null ? c.User.FirstName : "")
-                    : query.OrderBy(c => c.User != null ? c.User.FirstName : ""),
+                    ? query.OrderByDescending(c => c.User != null ? c.User.FirstName : "").ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.User != null ? c.User.FirstName : "").ThenBy(c => c.CustomerId),
                 "lastname" => isDesc
-                    ? query.OrderByDescending(c => c.User != null ? c.User.LastName : "")
-                    : query.OrderBy(c => c.User != null ? c.User.LastName : ""),
+                    ? query.OrderByDescending(c => c.User != null ? c.User.LastName : "").ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.User != null ? c.User.LastName : "").ThenBy(c => c.CustomerId),
+                "fullname" or "name" => isDesc
+                    ? query.OrderByDescending(c => c.User != null ? c.User.FirstName : "").ThenByDescending(c => c.User != null ? c.User.LastName : "").ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.User != null ? c.User.FirstName : "").ThenBy(c => c.User != null ? c.User.LastName : "").ThenBy(c => c.CustomerId),
                 "email" => isDesc
-                    ? query.OrderByDescending(c => c.User != null ? c.User.Email : "")
-                    : query.OrderBy(c => c.User != null ? c.User.Email : ""),
+                    ? query.OrderByDescending(c => c.User != null ? c.User.Email : "").ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.User != null ? c.User.Email : "").ThenBy(c => c.CustomerId),
                 "store" or "storeid" => isDesc
-                    ? query.OrderByDescending(c => c.StoreId)
-                    : query.OrderBy(c => c.StoreId),
+                    ? query.OrderByDescending(c => c.StoreId).ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.StoreId).ThenBy(c => c.CustomerId),
                 "active" or "isactive" => isDesc
-                    ? query.OrderByDescending(c => c.User != null && c.User.IsActive)
-                    : query.OrderBy(c => c.User != null && c.User.IsActive),
+                    ? query.OrderByDescending(c => c.User != null && c.User.IsActive).ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.User != null && c.User.IsActive).ThenBy(c => c.CustomerId),
                 "createdate" => isDesc
-                    ? query.OrderByDescending(c => c.CreateDate)
-                    : query.OrderBy(c => c.CreateDate),
+                    ? query.OrderByDescending(c => c.CreateDate).ThenByDescending(c => c.CustomerId)
+                    : query.OrderBy(c => c.CreateDate).ThenBy(c => c.CustomerId),
                 _ => isDesc
                     ? query.OrderByDescending(c => c.CustomerId)
                     : query.OrderBy(c => c.CustomerId)

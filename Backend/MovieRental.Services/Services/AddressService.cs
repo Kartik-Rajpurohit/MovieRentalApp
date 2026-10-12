@@ -52,19 +52,19 @@ public class AddressService : IAddressService
             query = query.Where(a => a.PostalCode != null && a.PostalCode.Contains(postal));
         }
 
-        // 3. Dynamic Sorting
+        // 3. Dynamic Sorting with deterministic AddressId tie-breaker
         var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = pagination.SortBy?.ToLower() switch
         {
             "street" => isDesc
-                ? query.OrderByDescending(a => a.Street)
-                : query.OrderBy(a => a.Street),
+                ? query.OrderByDescending(a => a.Street).ThenByDescending(a => a.AddressId)
+                : query.OrderBy(a => a.Street).ThenBy(a => a.AddressId),
             "city" => isDesc
-                ? query.OrderByDescending(a => a.City.Name)
-                : query.OrderBy(a => a.City.Name),
+                ? query.OrderByDescending(a => a.City.Name).ThenByDescending(a => a.AddressId)
+                : query.OrderBy(a => a.City.Name).ThenBy(a => a.AddressId),
             "postalcode" => isDesc
-                ? query.OrderByDescending(a => a.PostalCode)
-                : query.OrderBy(a => a.PostalCode),
+                ? query.OrderByDescending(a => a.PostalCode).ThenByDescending(a => a.AddressId)
+                : query.OrderBy(a => a.PostalCode).ThenBy(a => a.AddressId),
             "id" or "addressid" => isDesc
                 ? query.OrderByDescending(a => a.AddressId)
                 : query.OrderBy(a => a.AddressId),

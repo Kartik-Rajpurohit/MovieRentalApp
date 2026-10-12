@@ -51,28 +51,34 @@ namespace MovieRental.Services.Services
             if (filter.IsActive.HasValue)
                 query = query.Where(u => u.IsActive == filter.IsActive.Value);
 
-            // 4. Sorting: dynamic sorting on allowed fields
+            // 4. Sorting: dynamic sorting on allowed fields with deterministic UserId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
+                "fullname" or "name" => isDesc
+                    ? query.OrderByDescending(u => u.FirstName).ThenByDescending(u => u.LastName).ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ThenBy(u => u.UserId),
+                "firstname" => isDesc
+                    ? query.OrderByDescending(u => u.FirstName).ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.FirstName).ThenBy(u => u.UserId),
+                "lastname" => isDesc
+                    ? query.OrderByDescending(u => u.LastName).ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.LastName).ThenBy(u => u.UserId),
                 "email" => isDesc
-                    ? query.OrderByDescending(u => u.Email)
-                    : query.OrderBy(u => u.Email),
+                    ? query.OrderByDescending(u => u.Email).ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.Email).ThenBy(u => u.UserId),
                 "role" => isDesc
-                    ? query.OrderByDescending(u => u.Role != null ? u.Role.RoleName : "")
-                    : query.OrderBy(u => u.Role != null ? u.Role.RoleName : ""),
+                    ? query.OrderByDescending(u => u.Role != null ? u.Role.RoleName : "").ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.Role != null ? u.Role.RoleName : "").ThenBy(u => u.UserId),
                 "id" or "userid" => isDesc
                     ? query.OrderByDescending(u => u.UserId)
                     : query.OrderBy(u => u.UserId),
                 "active" or "isactive" => isDesc
-                    ? query.OrderByDescending(u => u.IsActive)
-                    : query.OrderBy(u => u.IsActive),
-                "lastname" => isDesc
-                    ? query.OrderByDescending(u => u.LastName)
-                    : query.OrderBy(u => u.LastName),
+                    ? query.OrderByDescending(u => u.IsActive).ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.IsActive).ThenBy(u => u.UserId),
                 _ => isDesc
-                    ? query.OrderByDescending(u => u.FirstName)
-                    : query.OrderBy(u => u.FirstName)
+                    ? query.OrderByDescending(u => u.FirstName).ThenByDescending(u => u.LastName).ThenByDescending(u => u.UserId)
+                    : query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ThenBy(u => u.UserId)
             };
 
             // 5. Total count before pagination

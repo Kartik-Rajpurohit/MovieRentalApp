@@ -37,22 +37,22 @@ public class ActorService : IActorService
         if (filter.ActorId.HasValue)
             query = query.Where(a => a.ActorId == filter.ActorId.Value);
 
-        // 4. Apply dynamic sorting based on the requested field and direction.
+        // 4. Apply dynamic sorting based on the requested field and direction with deterministic ActorId tie-breaker.
         var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = pagination.SortBy?.ToLower() switch
         {
             "fullname" => isDesc
-                ? query.OrderByDescending(a => a.FirstName).ThenByDescending(a => a.LastName)
-                : query.OrderBy(a => a.FirstName).ThenBy(a => a.LastName),
+                ? query.OrderByDescending(a => a.FirstName).ThenByDescending(a => a.LastName).ThenByDescending(a => a.ActorId)
+                : query.OrderBy(a => a.FirstName).ThenBy(a => a.LastName).ThenBy(a => a.ActorId),
             "firstname" => isDesc
-                ? query.OrderByDescending(a => a.FirstName)
-                : query.OrderBy(a => a.FirstName),
+                ? query.OrderByDescending(a => a.FirstName).ThenByDescending(a => a.ActorId)
+                : query.OrderBy(a => a.FirstName).ThenBy(a => a.ActorId),
             "lastname" => isDesc
-                ? query.OrderByDescending(a => a.LastName)
-                : query.OrderBy(a => a.LastName),
+                ? query.OrderByDescending(a => a.LastName).ThenByDescending(a => a.ActorId)
+                : query.OrderBy(a => a.LastName).ThenBy(a => a.ActorId),
             "moviecount" => isDesc
-                ? query.OrderByDescending(a => a.MovieActors.Count)
-                : query.OrderBy(a => a.MovieActors.Count),
+                ? query.OrderByDescending(a => a.MovieActors.Count).ThenByDescending(a => a.ActorId)
+                : query.OrderBy(a => a.MovieActors.Count).ThenBy(a => a.ActorId),
             _ => isDesc
                 ? query.OrderByDescending(a => a.ActorId)
                 : query.OrderBy(a => a.ActorId)
@@ -147,16 +147,16 @@ public class ActorService : IActorService
             query = query.Where(m => m.Title.ToLower().Contains(search) || (m.Description != null && m.Description.ToLower().Contains(search)));
         }
 
-        // Apply sorting
+        // Apply sorting with deterministic MovieId tie-breaker
         var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = pagination.SortBy?.ToLower() switch
         {
-            "title" => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title),
-            "releaseyear" => isDesc ? query.OrderByDescending(m => m.ReleaseYear) : query.OrderBy(m => m.ReleaseYear),
-            "rentalrate" => isDesc ? query.OrderByDescending(m => m.RentalRate) : query.OrderBy(m => m.RentalRate),
-            "length" => isDesc ? query.OrderByDescending(m => m.Length) : query.OrderBy(m => m.Length),
+            "title" => isDesc ? query.OrderByDescending(m => m.Title).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.Title).ThenBy(m => m.MovieId),
+            "releaseyear" => isDesc ? query.OrderByDescending(m => m.ReleaseYear).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.ReleaseYear).ThenBy(m => m.MovieId),
+            "rentalrate" => isDesc ? query.OrderByDescending(m => m.RentalRate).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.RentalRate).ThenBy(m => m.MovieId),
+            "length" => isDesc ? query.OrderByDescending(m => m.Length).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.Length).ThenBy(m => m.MovieId),
             "id" or "movieid" => isDesc ? query.OrderByDescending(m => m.MovieId) : query.OrderBy(m => m.MovieId),
-            _ => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title)
+            _ => isDesc ? query.OrderByDescending(m => m.Title).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.Title).ThenBy(m => m.MovieId)
         };
 
         var totalRecords = await query.CountAsync();

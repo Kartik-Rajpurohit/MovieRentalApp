@@ -39,16 +39,16 @@ namespace MovieRental.Services.Services
                 query = query.Where(r => r.RoleId == filter.RoleId.Value);
             }
 
-            // 2. Sorting
+            // 2. Sorting with deterministic RoleId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "rolename" or "name" => isDesc
-                    ? query.OrderByDescending(r => r.RoleName)
-                    : query.OrderBy(r => r.RoleName),
+                    ? query.OrderByDescending(r => r.RoleName).ThenByDescending(r => r.RoleId)
+                    : query.OrderBy(r => r.RoleName).ThenBy(r => r.RoleId),
                 "createdat" => isDesc
-                    ? query.OrderByDescending(r => r.CreatedAt)
-                    : query.OrderBy(r => r.CreatedAt),
+                    ? query.OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.RoleId)
+                    : query.OrderBy(r => r.CreatedAt).ThenBy(r => r.RoleId),
                 "id" or "roleid" => isDesc
                     ? query.OrderByDescending(r => r.RoleId)
                     : query.OrderBy(r => r.RoleId),

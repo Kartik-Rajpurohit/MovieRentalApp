@@ -34,13 +34,15 @@ export default function LanguageDetailPage() {
   // Controls visibility of the edit language dialog
   const [editVisible, setEditVisible] = useState(false);
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("title");
+  const [sortOrder, setSortOrder] = useState(1);
   const [page, setPage] = useState(0);
-  const [rows] = useState(10);
+  const [rows, setRows] = useState(10);
 
   // Fetch language details when the ID changes
   useEffect(() => { loadLanguage(); }, [id]);
-  // Fetch movies whenever ID, pagination page, or search query change
-  useEffect(() => { loadMovies(); }, [id, page, search]);
+  // Fetch movies whenever ID, pagination page, rows, sorting, or search query change
+  useEffect(() => { loadMovies(); }, [id, page, rows, search, sortField, sortOrder]);
 
   // Load language details from the backend
   const loadLanguage = async () => {
@@ -55,11 +57,19 @@ export default function LanguageDetailPage() {
     }
   };
 
-  // Load movies associated with this language with pagination and search
+  // Load movies associated with this language with pagination, search, and sorting
   const loadMovies = async () => {
     setMoviesLoading(true);
     try {
-      const data = await getMoviesByLanguage(id, page + 1, rows, search);
+      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
+      const data = await getMoviesByLanguage(
+        id,
+        page + 1,
+        rows,
+        search,
+        sortField,
+        sortOrderStr,
+      );
       setMovies(data.data ?? []);
       setTotalRecords(data.totalRecords ?? 0);
     } catch (err) {
@@ -67,6 +77,13 @@ export default function LanguageDetailPage() {
     } finally {
       setMoviesLoading(false);
     }
+  };
+
+  // Handle column sort click
+  const onSort = (e) => {
+    setSortField(e.sortField);
+    setSortOrder(e.sortOrder);
+    setPage(0);
   };
 
   // Prompt confirmation dialog before deleting this language
@@ -136,17 +153,23 @@ export default function LanguageDetailPage() {
           first={page * rows}
           rows={rows}
           totalRecords={totalRecords}
-          onPage={(e) => setPage(e.page)}
+          onPage={(e) => {
+            setPage(e.page);
+            setRows(e.rows);
+          }}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={onSort}
           rowsPerPageOptions={[5, 10, 20]}
           emptyMessage="No movies found."
           onRowClick={(e) => navigate(`/movies/${e.data.movieId}`)}
           rowClassName={() => "cursor-pointer"}
         >
           <Column field="title" header="Title" sortable />
-          <Column field="releaseYear" header="Year" style={{ width: "90px" }} />
-          <Column field="rentalRate" header="Rate ($)" style={{ width: "100px" }}
+          <Column field="releaseYear" header="Year" sortable style={{ width: "90px" }} />
+          <Column field="rentalRate" header="Rate ($)" sortable style={{ width: "100px" }}
             body={(r) => `$${r.rentalRate?.toFixed(2)}`} />
-          <Column field="length" header="Length" style={{ width: "90px" }}
+          <Column field="length" header="Length" sortable style={{ width: "90px" }}
             body={(r) => r.length ? `${r.length} min` : "—"} />
           <Column field="rating" header="Rating" style={{ width: "90px" }}
             body={(r) => r.rating

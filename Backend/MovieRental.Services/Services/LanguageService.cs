@@ -32,14 +32,14 @@ public class LanguageService : ILanguageService
             query = query.Where(l => l.Name.ToLower().Contains(s));
         }
 
-        // 2. Sorting
+        // 2. Sorting with deterministic LanguageId tie-breaker
         var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = pagination.SortBy?.ToLower() switch
         {
-            "name" => isDesc ? query.OrderByDescending(l => l.Name) : query.OrderBy(l => l.Name),
-            "moviecount" => isDesc ? query.OrderByDescending(l => l.Movies.Count) : query.OrderBy(l => l.Movies.Count),
+            "name" => isDesc ? query.OrderByDescending(l => l.Name).ThenByDescending(l => l.LanguageId) : query.OrderBy(l => l.Name).ThenBy(l => l.LanguageId),
+            "moviecount" => isDesc ? query.OrderByDescending(l => l.Movies.Count).ThenByDescending(l => l.LanguageId) : query.OrderBy(l => l.Movies.Count).ThenBy(l => l.LanguageId),
             "id" or "languageid" => isDesc ? query.OrderByDescending(l => l.LanguageId) : query.OrderBy(l => l.LanguageId),
-            _ => isDesc ? query.OrderByDescending(l => l.Name) : query.OrderBy(l => l.Name)
+            _ => isDesc ? query.OrderByDescending(l => l.Name).ThenByDescending(l => l.LanguageId) : query.OrderBy(l => l.Name).ThenBy(l => l.LanguageId)
         };
 
         // 3. Count
@@ -120,16 +120,16 @@ public class LanguageService : ILanguageService
             query = query.Where(m => m.Title.ToLower().Contains(s) || (m.Description != null && m.Description.ToLower().Contains(s)));
         }
 
-        // Apply sorting
+        // Apply sorting with deterministic MovieId tie-breaker
         var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = pagination.SortBy?.ToLower() switch
         {
-            "title" => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title),
-            "releaseyear" => isDesc ? query.OrderByDescending(m => m.ReleaseYear) : query.OrderBy(m => m.ReleaseYear),
-            "rentalrate" => isDesc ? query.OrderByDescending(m => m.RentalRate) : query.OrderBy(m => m.RentalRate),
-            "length" => isDesc ? query.OrderByDescending(m => m.Length) : query.OrderBy(m => m.Length),
+            "title" => isDesc ? query.OrderByDescending(m => m.Title).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.Title).ThenBy(m => m.MovieId),
+            "releaseyear" => isDesc ? query.OrderByDescending(m => m.ReleaseYear).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.ReleaseYear).ThenBy(m => m.MovieId),
+            "rentalrate" => isDesc ? query.OrderByDescending(m => m.RentalRate).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.RentalRate).ThenBy(m => m.MovieId),
+            "length" => isDesc ? query.OrderByDescending(m => m.Length).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.Length).ThenBy(m => m.MovieId),
             "id" or "movieid" => isDesc ? query.OrderByDescending(m => m.MovieId) : query.OrderBy(m => m.MovieId),
-            _ => isDesc ? query.OrderByDescending(m => m.Title) : query.OrderBy(m => m.Title)
+            _ => isDesc ? query.OrderByDescending(m => m.Title).ThenByDescending(m => m.MovieId) : query.OrderBy(m => m.Title).ThenBy(m => m.MovieId)
         };
 
         var totalRecords = await query.CountAsync();

@@ -49,16 +49,16 @@ namespace MovieRental.Services.Services
                     : query.Where(i => i.Rentals.Any(r => r.ReturnDate == null));
             }
 
-            // 3. Sorting
+            // 3. Sorting with deterministic InventoryId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "movietitle" or "movie" => isDesc
-                    ? query.OrderByDescending(i => i.Movie.Title)
-                    : query.OrderBy(i => i.Movie.Title),
+                    ? query.OrderByDescending(i => i.Movie.Title).ThenByDescending(i => i.InventoryId)
+                    : query.OrderBy(i => i.Movie.Title).ThenBy(i => i.InventoryId),
                 "storeid" or "store" => isDesc
-                    ? query.OrderByDescending(i => i.StoreId)
-                    : query.OrderBy(i => i.StoreId),
+                    ? query.OrderByDescending(i => i.StoreId).ThenByDescending(i => i.InventoryId)
+                    : query.OrderBy(i => i.StoreId).ThenBy(i => i.InventoryId),
                 "id" or "inventoryid" => isDesc
                     ? query.OrderByDescending(i => i.InventoryId)
                     : query.OrderBy(i => i.InventoryId),

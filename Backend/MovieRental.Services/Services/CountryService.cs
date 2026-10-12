@@ -41,22 +41,22 @@ namespace MovieRental.Services.Services
                 query = query.Where(c => c.Name.ToLower().Contains(name));
             }
 
-            // 3. Dynamic Sorting
+            // 3. Dynamic Sorting with deterministic CountryId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "name" or "country" => isDesc
-                    ? query.OrderByDescending(c => c.Name)
-                    : query.OrderBy(c => c.Name),
+                    ? query.OrderByDescending(c => c.Name).ThenByDescending(c => c.CountryId)
+                    : query.OrderBy(c => c.Name).ThenBy(c => c.CountryId),
                 "citycount" => isDesc
-                    ? query.OrderByDescending(c => c.Cities.Count())
-                    : query.OrderBy(c => c.Cities.Count()),
+                    ? query.OrderByDescending(c => c.Cities.Count()).ThenByDescending(c => c.CountryId)
+                    : query.OrderBy(c => c.Cities.Count()).ThenBy(c => c.CountryId),
                 "id" or "countryid" => isDesc
                     ? query.OrderByDescending(c => c.CountryId)
                     : query.OrderBy(c => c.CountryId),
                 _ => isDesc
-                    ? query.OrderByDescending(c => c.Name)
-                    : query.OrderBy(c => c.Name)
+                    ? query.OrderByDescending(c => c.Name).ThenByDescending(c => c.CountryId)
+                    : query.OrderBy(c => c.Name).ThenBy(c => c.CountryId)
             };
 
             // 4. Count

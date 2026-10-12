@@ -53,16 +53,16 @@ namespace MovieRental.Services.Services
                 query = query.Where(s => s.Address.City.Country.Name.ToLower().Contains(country));
             }
 
-            // 3. Dynamic Sorting
+            // 3. Dynamic Sorting with deterministic StoreId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "city" => isDesc
-                    ? query.OrderByDescending(s => s.Address.City.Name)
-                    : query.OrderBy(s => s.Address.City.Name),
+                    ? query.OrderByDescending(s => s.Address.City.Name).ThenByDescending(s => s.StoreId)
+                    : query.OrderBy(s => s.Address.City.Name).ThenBy(s => s.StoreId),
                 "country" => isDesc
-                    ? query.OrderByDescending(s => s.Address.City.Country.Name)
-                    : query.OrderBy(s => s.Address.City.Country.Name),
+                    ? query.OrderByDescending(s => s.Address.City.Country.Name).ThenByDescending(s => s.StoreId)
+                    : query.OrderBy(s => s.Address.City.Country.Name).ThenBy(s => s.StoreId),
                 "id" or "storeid" => isDesc
                     ? query.OrderByDescending(s => s.StoreId)
                     : query.OrderBy(s => s.StoreId),

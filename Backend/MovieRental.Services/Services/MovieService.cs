@@ -64,22 +64,22 @@ namespace MovieRental.Services.Services
             if (filter.MaxLength.HasValue)
                 query = query.Where(m => m.Length <= filter.MaxLength.Value);
 
-            // 4. Sorting: dynamic sorting on allowed fields
+            // 4. Sorting: dynamic sorting on allowed fields with deterministic MovieId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "title" => isDesc
-                    ? query.OrderByDescending(m => m.Title)
-                    : query.OrderBy(m => m.Title),
+                    ? query.OrderByDescending(m => m.Title).ThenByDescending(m => m.MovieId)
+                    : query.OrderBy(m => m.Title).ThenBy(m => m.MovieId),
                 "releaseyear" => isDesc
-                    ? query.OrderByDescending(m => m.ReleaseYear)
-                    : query.OrderBy(m => m.ReleaseYear),
+                    ? query.OrderByDescending(m => m.ReleaseYear).ThenByDescending(m => m.MovieId)
+                    : query.OrderBy(m => m.ReleaseYear).ThenBy(m => m.MovieId),
                 "rentalrate" => isDesc
-                    ? query.OrderByDescending(m => m.RentalRate)
-                    : query.OrderBy(m => m.RentalRate),
+                    ? query.OrderByDescending(m => m.RentalRate).ThenByDescending(m => m.MovieId)
+                    : query.OrderBy(m => m.RentalRate).ThenBy(m => m.MovieId),
                 "length" => isDesc
-                    ? query.OrderByDescending(m => m.Length)
-                    : query.OrderBy(m => m.Length),
+                    ? query.OrderByDescending(m => m.Length).ThenByDescending(m => m.MovieId)
+                    : query.OrderBy(m => m.Length).ThenBy(m => m.MovieId),
                 "id" or "movieid" => isDesc
                     ? query.OrderByDescending(m => m.MovieId)
                     : query.OrderBy(m => m.MovieId),

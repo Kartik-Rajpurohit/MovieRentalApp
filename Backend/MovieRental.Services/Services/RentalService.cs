@@ -96,19 +96,19 @@ namespace MovieRental.Services.Services
                     ? query.Where(r => r.Payments.Any())
                     : query.Where(r => !r.Payments.Any());
 
-            // 3. Dynamic Sorting
+            // 3. Dynamic Sorting with deterministic RentalId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "rentaldate" => isDesc
-                    ? query.OrderByDescending(r => r.RentalDate)
-                    : query.OrderBy(r => r.RentalDate),
+                    ? query.OrderByDescending(r => r.RentalDate).ThenByDescending(r => r.RentalId)
+                    : query.OrderBy(r => r.RentalDate).ThenBy(r => r.RentalId),
                 "returndate" => isDesc
-                    ? query.OrderByDescending(r => r.ReturnDate)
-                    : query.OrderBy(r => r.ReturnDate),
+                    ? query.OrderByDescending(r => r.ReturnDate).ThenByDescending(r => r.RentalId)
+                    : query.OrderBy(r => r.ReturnDate).ThenBy(r => r.RentalId),
                 "movietitle" or "movie" => isDesc
-                    ? query.OrderByDescending(r => r.Inventory.Movie.Title)
-                    : query.OrderBy(r => r.Inventory.Movie.Title),
+                    ? query.OrderByDescending(r => r.Inventory.Movie.Title).ThenByDescending(r => r.RentalId)
+                    : query.OrderBy(r => r.Inventory.Movie.Title).ThenBy(r => r.RentalId),
                 "id" or "rentalid" => isDesc
                     ? query.OrderByDescending(r => r.RentalId)
                     : query.OrderBy(r => r.RentalId),

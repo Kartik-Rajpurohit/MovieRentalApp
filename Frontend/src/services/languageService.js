@@ -28,9 +28,21 @@ export const getLanguages = (
 export const getLanguageById = (id) =>
   api.get(`${LANGUAGE}/${id}`).then(r => r.data);
 
-// GET request to fetch movies in a specific language with pagination and search
-export const getMoviesByLanguage = (id, page = 1, pageSize = 10, search = "") =>
-  api.get(`${LANGUAGE}/${id}/movies`, { params: { page, pageSize, search } }).then(r => r.data);
+// GET request to fetch movies in a specific language with pagination, search, and sorting
+export const getMoviesByLanguage = (
+  id,
+  page = 1,
+  pageSize = 10,
+  search = "",
+  sortField = "",
+  sortOrder = "",
+) => {
+  const params = { page, pageSize };
+  if (search) params.search = search;
+  if (sortField) params.sortField = sortField;
+  if (sortOrder) params.sortOrder = sortOrder;
+  return api.get(`${LANGUAGE}/${id}/movies`, { params }).then((r) => r.data);
+};
 
 // POST request to create a new language record
 export const createLanguage = (dto) =>

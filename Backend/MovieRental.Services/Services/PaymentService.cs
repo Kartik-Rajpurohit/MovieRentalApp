@@ -104,19 +104,19 @@ namespace MovieRental.Services.Services
                 query = query.Where(p => p.PaymentDate <= toUtc);
             }
 
-            // 3. Dynamic Sorting
+            // 3. Dynamic Sorting with deterministic PaymentId tie-breaker
             var isDesc = string.Equals(pagination.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
             query = pagination.SortBy?.ToLower() switch
             {
                 "amount" => isDesc
-                    ? query.OrderByDescending(p => p.Amount)
-                    : query.OrderBy(p => p.Amount),
+                    ? query.OrderByDescending(p => p.Amount).ThenByDescending(p => p.PaymentId)
+                    : query.OrderBy(p => p.Amount).ThenBy(p => p.PaymentId),
                 "paymentdate" => isDesc
-                    ? query.OrderByDescending(p => p.PaymentDate)
-                    : query.OrderBy(p => p.PaymentDate),
+                    ? query.OrderByDescending(p => p.PaymentDate).ThenByDescending(p => p.PaymentId)
+                    : query.OrderBy(p => p.PaymentDate).ThenBy(p => p.PaymentId),
                 "movietitle" or "movie" => isDesc
-                    ? query.OrderByDescending(p => p.Rental.Inventory.Movie.Title)
-                    : query.OrderBy(p => p.Rental.Inventory.Movie.Title),
+                    ? query.OrderByDescending(p => p.Rental.Inventory.Movie.Title).ThenByDescending(p => p.PaymentId)
+                    : query.OrderBy(p => p.Rental.Inventory.Movie.Title).ThenBy(p => p.PaymentId),
                 "id" or "paymentid" => isDesc
                     ? query.OrderByDescending(p => p.PaymentId)
                     : query.OrderBy(p => p.PaymentId),
