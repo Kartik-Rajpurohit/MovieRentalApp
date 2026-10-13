@@ -8,8 +8,8 @@ import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import MovieDialog from "../../components/movies/MovieDialog";
-import { getMovieById, deleteMovie } from "../../services/movieService";
 import { AuthContext } from "../../context/AuthContext";
+import { useToastContext } from "../../context/ToastContext";
 
 const RATING_SEVERITY = { G: "success", PG: "info", "PG-13": "warning", R: "danger", "NC-17": "danger" };
 const fieldStyle = { display: "flex", flexDirection: "column", gap: "4px" };
@@ -19,6 +19,7 @@ const valueStyle = { fontSize: "15px", color: "#111827", fontWeight: 500 };
 // Displays detailed information for a single movie including rating, rental terms, cast, and categories
 export default function MovieDetailPage() {
   const { user } = useContext(AuthContext);
+  const { showSuccess, showError } = useToastContext();
   // Read movie ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,8 +54,13 @@ export default function MovieDetailPage() {
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
       accept: async () => {
-        await deleteMovie(id);
-        navigate("/movies");
+        try {
+          await deleteMovie(id);
+          showSuccess("Movie deleted successfully");
+          navigate("/movies");
+        } catch (err) {
+          showError(err.response?.data?.message || err.message || "Failed to delete movie");
+        }
       },
     });
   };

@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a physical street address used by users and stores.
     [Table("address")]
-    public class Address
+    public class Address : ISoftDelete
     {
         // Primary key uniquely identifying the address.
         [Key]

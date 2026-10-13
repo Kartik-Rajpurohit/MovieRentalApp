@@ -58,8 +58,18 @@ namespace MovieRental.Services.Services
             else if (_currentUser.IsStaff)
             {
                 // Staff members only see payments processed at their assigned store.
-                if (_currentUser.StoreId is { } storeId)
-                    query = query.Where(p => p.Staff.StoreId == storeId);
+                if (_currentUser.StoreId is not { } storeId)
+                {
+                    return new PaginatedResponseDto<PaymentResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = pagination.Page,
+                        PageSize = pagination.PageSize,
+                        Data = new List<PaymentResponseDto>()
+                    };
+                }
+                query = query.Where(p => p.Staff.StoreId == storeId);
             }
             else if (filter.CustomerId.HasValue)
             {
@@ -173,10 +183,10 @@ namespace MovieRental.Services.Services
                 if (_currentUser.CustomerId != payment.CustomerId)
                     return null;
             }
-            // Prevent staff from viewing payments outside their assigned store.
+            // Prevent staff from viewing payments outside their assigned store or if unassigned.
             else if (_currentUser.IsStaff)
             {
-                if (_currentUser.StoreId.HasValue && payment.Staff?.StoreId != _currentUser.StoreId)
+                if (!_currentUser.StoreId.HasValue || payment.Staff?.StoreId != _currentUser.StoreId.Value)
                     return null;
             }
 
@@ -225,14 +235,11 @@ namespace MovieRental.Services.Services
             // Security check: Staff can only collect payments for rentals associated with their store.
             if (_currentUser.IsStaff)
             {
-                if (_currentUser.StoreId.HasValue)
+                if (!_currentUser.StoreId.HasValue || (rental.Inventory?.StoreId != _currentUser.StoreId.Value && rental.Staff?.StoreId != _currentUser.StoreId.Value))
                 {
-                    if (rental.Inventory?.StoreId != _currentUser.StoreId && rental.Staff?.StoreId != _currentUser.StoreId)
-                    {
-                        _logger.LogWarning("Payment creation rejected: Staff store {StoreId} does not match Rental #{RentalId}",
-                            _currentUser.StoreId, dto.RentalId);
-                        throw new InvalidOperationException("Staff can only process payments for rentals belonging to their assigned store.");
-                    }
+                    _logger.LogWarning("Payment creation rejected: Staff store {StoreId} does not match Rental #{RentalId}",
+                        _currentUser.StoreId, dto.RentalId);
+                    throw new InvalidOperationException("Staff can only process payments for rentals belonging to their assigned store.");
                 }
 
                 // Enforce caller identity to prevent staff impersonation.

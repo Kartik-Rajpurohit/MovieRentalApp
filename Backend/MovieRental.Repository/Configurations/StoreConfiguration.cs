@@ -19,6 +19,11 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(s => s.ManagerStaff)
                 .WithMany()
                 .HasForeignKey(s => s.ManagerStaffId);
+
+            // Defaults
+            builder.Property(s => s.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
         }
     }
 }

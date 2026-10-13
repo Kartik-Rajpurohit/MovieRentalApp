@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a monetary payment transaction made by a customer for a rental.
     [Table("payment")]
-    public class Payment
+    public class Payment : ISoftDelete
     {
         // Primary key uniquely identifying the payment transaction.
         [Key]

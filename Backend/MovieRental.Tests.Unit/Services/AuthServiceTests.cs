@@ -225,6 +225,37 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task RefreshTokenAsync_WhenUserIsInactive_RevokesTokenAndThrowsUnauthorizedAccessException()
+    {
+        // Arrange
+        var user = new User
+        {
+            UserId = 12,
+            Email = "inactive@example.com",
+            RefreshToken = "inactive-user-token",
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(2),
+            RefreshTokenRevoked = false,
+            IsActive = false
+        };
+        _userRepositoryMock.Setup(r => r.GetUserByRefreshTokenAsync("inactive-user-token"))
+            .ReturnsAsync(user);
+
+        var dto = new RefreshTokenDto { RefreshToken = "inactive-user-token" };
+
+        // Act
+        Func<Task> act = async () => await _sut.RefreshTokenAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("User account is inactive");
+
+        // Verify token was revoked in repository
+        _userRepositoryMock.Verify(r => r.RevokeRefreshTokenAsync("inactive-user-token", user.UserId), Times.Once);
+        // Verify no new token saved
+        _userRepositoryMock.Verify(r => r.SaveRefreshTokenAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<DateTime>()), Times.Never);
+    }
+
+    [Fact]
     public async Task RefreshToken_WhenRevoked_ReturnsUnauthorized()
     {
         // Arrange

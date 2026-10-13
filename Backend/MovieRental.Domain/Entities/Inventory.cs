@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a physical copy of a DVD or movie stocked at a specific store.
     [Table("inventory")]
-    public class Inventory
+    public class Inventory : ISoftDelete
     {
         // Primary key uniquely identifying this specific physical movie copy.
         [Key]

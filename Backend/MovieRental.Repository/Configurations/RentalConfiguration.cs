@@ -24,6 +24,11 @@ namespace MovieRental.Repository.Configurations
                 .WithMany(s => s.Rentals)
                 .HasForeignKey(r => r.StaffId);
 
+            // Defaults
+            builder.Property(r => r.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             // Indexes
             // Composite index for fast inventory active rental checks (InventoryId + ReturnDate)
             builder.HasIndex(r => new { r.InventoryId, r.ReturnDate });

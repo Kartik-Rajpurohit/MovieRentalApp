@@ -2,13 +2,17 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
+import { Button } from "primereact/button";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import { getCustomerById } from "../../services/customerService";
+import { getRentals } from "../../services/rentalService";
 import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 
-// Displays full profile and address details for a specific customer
+// Displays full profile, address details, and rental history with tab switching for a specific customer
 export default function CustomerDetailPage() {
   // Read customer ID from the route parameters
   const { id } = useParams();
@@ -16,21 +20,82 @@ export default function CustomerDetailPage() {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch customer information whenever customer ID changes
-  useEffect(() => { fetchCustomer(); }, [id]);
+  // Tab state for rental history (0: Active Rentals, 1: All History)
+  const [activeTab, setActiveTab] = useState(0);
+  const [rentals, setRentals] = useState([]);
+  const [rentalsLoading, setRentalsLoading] = useState(false);
 
-  // Load customer profile and associated address data from the backend
-  const fetchCustomer = async () => {
-    setLoading(true);
-    try {
-      const data = await getCustomerById(id);
-      setCustomer(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch customer profile whenever customer ID changes
+  useEffect(() => {
+    let isCancelled = false;
+    const controller = new AbortController();
+
+    const fetchCustomer = async () => {
+      setLoading(true);
+      try {
+        const data = await getCustomerById(id);
+        if (!isCancelled) {
+          setCustomer(data);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          console.error(err);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCustomer();
+
+    return () => {
+      isCancelled = true;
+      controller.abort();
+    };
+  }, [id]);
+
+  // Fetch rentals whenever active tab or customer ID changes with AbortController to prevent race conditions
+  useEffect(() => {
+    let isCancelled = false;
+    const controller = new AbortController();
+
+    const fetchRentals = async () => {
+      setRentalsLoading(true);
+      try {
+        const res = await getRentals(
+          {
+            customerId: id,
+            isReturned: activeTab === 0 ? false : undefined,
+            page: 1,
+            pageSize: 20,
+            sortField: "rentaldate",
+            sortOrder: "desc",
+          },
+          { signal: controller.signal }
+        );
+        if (!isCancelled) {
+          setRentals(res.data ?? []);
+        }
+      } catch (err) {
+        if (!isCancelled && err.name !== "CanceledError" && err.name !== "AbortError") {
+          console.error("Failed to load customer rentals:", err);
+        }
+      } finally {
+        if (!isCancelled) {
+          setRentalsLoading(false);
+        }
+      }
+    };
+
+    fetchRentals();
+
+    return () => {
+      isCancelled = true;
+      controller.abort();
+    };
+  }, [id, activeTab]);
 
   // Show loading spinner while customer details are loading
   if (loading) {
@@ -86,7 +151,6 @@ export default function CustomerDetailPage() {
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
             <div><p style={FIELD_LABEL}>Street</p><p style={FIELD_VALUE}>{customer?.street ?? "—"}</p></div>
-            <div><p style={FIELD_LABEL}>District</p><p style={FIELD_VALUE}>{customer?.district ?? "—"}</p></div>
             <div><p style={FIELD_LABEL}>Postal Code</p><p style={FIELD_VALUE}>{customer?.postalCode ?? "—"}</p></div>
             <div><p style={FIELD_LABEL}>Phone</p><p style={FIELD_VALUE}>{customer?.phone ?? "—"}</p></div>
             <div><p style={FIELD_LABEL}>City</p><p style={FIELD_VALUE}>{customer?.cityName ?? "—"}</p></div>
@@ -94,6 +158,69 @@ export default function CustomerDetailPage() {
           </div>
         </div>
       </Card>
+
+      {/* Customer Rentals with Tab Switcher */}
+      <Card
+        title={
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <span>Rental History</span>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <Button
+                label="Active Rentals"
+                icon="pi pi-clock"
+                size="small"
+                severity={activeTab === 0 ? "primary" : "secondary"}
+                outlined={activeTab !== 0}
+                onClick={() => setActiveTab(0)}
+              />
+              <Button
+                label="All History"
+                icon="pi pi-history"
+                size="small"
+                severity={activeTab === 1 ? "primary" : "secondary"}
+                outlined={activeTab !== 1}
+                onClick={() => setActiveTab(1)}
+              />
+            </div>
+          </div>
+        }
+        style={{ marginTop: "24px" }}
+      >
+        <DataTable
+          value={rentals}
+          loading={rentalsLoading}
+          emptyMessage={activeTab === 0 ? "No active rentals for this customer." : "No rental history found."}
+        >
+          <Column field="rentalId" header="ID" style={{ width: "70px" }} />
+          <Column field="movieTitle" header="Movie" style={{ minWidth: "180px" }} />
+          <Column
+            field="rentalDate"
+            header="Rented On"
+            body={(r) => (r.rentalDate ? new Date(r.rentalDate).toLocaleDateString() : "—")}
+          />
+          <Column
+            field="returnDate"
+            header="Returned On"
+            body={(r) => (r.returnDate ? new Date(r.returnDate).toLocaleDateString() : "Active")}
+          />
+          <Column
+            field="isReturned"
+            header="Status"
+            body={(r) => (
+              <Tag
+                value={r.isReturned ? "Returned" : "Active"}
+                severity={r.isReturned ? "success" : "warning"}
+              />
+            )}
+          />
+          <Column
+            field="totalPaid"
+            header="Paid"
+            body={(r) => (r.totalPaid !== undefined && r.totalPaid !== null ? `$${Number(r.totalPaid).toFixed(2)}` : "—")}
+          />
+        </DataTable>
+      </Card>
     </AppLayout>
   );
 }
+

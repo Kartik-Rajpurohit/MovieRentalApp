@@ -18,6 +18,6 @@ namespace MovieRental.Services.Interfaces
         Task<RentalResponseDto> CreateRentalAsync(CreateRentalDto dto);
 
         // Marks a movie rental as returned and updates inventory status.
-        Task<RentalResponseDto?> ReturnRentalAsync(int rentalId);
+        Task<RentalResponseDto?> ReturnRentalAsync(int rentalId, DateTime? returnDate = null);
     }
 }

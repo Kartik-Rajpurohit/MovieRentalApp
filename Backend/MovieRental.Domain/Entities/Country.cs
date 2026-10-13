@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a nation or country at the top level of the location hierarchy.
     [Table("country")]
-    public class Country
+    public class Country : ISoftDelete
     {
         // Primary key uniquely identifying the country.
         [Key]

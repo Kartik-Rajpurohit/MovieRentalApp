@@ -34,9 +34,9 @@ const sections = [
     label: "Locations",
     items: [
       { label: "Stores", icon: "pi pi-building", to: "/stores", roles: ["Admin", "Staff"] },
-      { label: "Countries", icon: "pi pi-globe", to: "/countries", roles: ["Admin"] },
-      { label: "Cities", icon: "pi pi-map-marker", to: "/cities", roles: ["Admin"] },
-      { label: "Addresses", icon: "pi pi-map", to: "/addresses", roles: ["Admin"] },
+      { label: "Countries", icon: "pi pi-globe", to: "/countries", roles: ["Admin", "Staff"] },
+      { label: "Cities", icon: "pi pi-map-marker", to: "/cities", roles: ["Admin", "Staff"] },
+      { label: "Addresses", icon: "pi pi-map", to: "/addresses", roles: ["Admin", "Staff"] },
     ],
   },
 ];

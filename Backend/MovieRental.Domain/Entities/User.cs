@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents an application-level user for authentication and authorization
     [Table("user")]
-    public class User
+    public class User : ISoftDelete
     {
         [Key]
         [Column("user_id")]

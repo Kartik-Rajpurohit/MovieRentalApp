@@ -12,9 +12,14 @@ namespace MovieRental.Services.Services
     public class StaffService : IStaffService
     {
         private readonly IStaffRepository _staffRepository;
+        private readonly ICurrentUserService _currentUser;
 
-        // Receives the staff repository needed to access staff records.
-        public StaffService(IStaffRepository staffRepository) => _staffRepository = staffRepository;
+        // Receives the staff repository and current user context for authorization and tenant scoping.
+        public StaffService(IStaffRepository staffRepository, ICurrentUserService currentUser)
+        {
+            _staffRepository = staffRepository;
+            _currentUser = currentUser;
+        }
 
         // Retrieves a paginated, filtered, and sorted list of staff members.
         public async Task<PaginatedResponseDto<StaffResponseDto>> GetAllStaffAsync(
@@ -22,6 +27,34 @@ namespace MovieRental.Services.Services
         {
             // 1. Get the base query from the repository.
             var query = _staffRepository.GetAllStaff();
+
+            // Tenant & IDOR Scoping
+            if (_currentUser.IsCustomer)
+            {
+                return new PaginatedResponseDto<StaffResponseDto>
+                {
+                    TotalRecords = 0,
+                    TotalPages = 0,
+                    CurrentPage = pagination.Page,
+                    PageSize = pagination.PageSize,
+                    Data = new List<StaffResponseDto>()
+                };
+            }
+            else if (_currentUser.IsStaff)
+            {
+                if (_currentUser.StoreId is not { } storeId)
+                {
+                    return new PaginatedResponseDto<StaffResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = pagination.Page,
+                        PageSize = pagination.PageSize,
+                        Data = new List<StaffResponseDto>()
+                    };
+                }
+                query = query.Where(s => s.StoreId == storeId);
+            }
 
             // 2. Search: matches staff full name, email, or numeric staff ID.
             if (!string.IsNullOrWhiteSpace(pagination.Search))
@@ -39,7 +72,7 @@ namespace MovieRental.Services.Services
             if (filter.IsActive.HasValue)
                 query = query.Where(s => s.User != null && s.User.IsActive == filter.IsActive.Value);
 
-            if (filter.StoreId.HasValue)
+            if (!_currentUser.IsStaff && filter.StoreId.HasValue)
                 query = query.Where(s => s.StoreId == filter.StoreId.Value);
 
             // 4. Sorting: dynamic sorting on allowed fields with deterministic StaffId tie-breaker.
@@ -101,6 +134,18 @@ namespace MovieRental.Services.Services
         {
             var s = await _staffRepository.GetStaffByIdAsync(id);
             if (s == null) return null;
+
+            // IDOR Protection: Customers cannot inspect internal staff profiles
+            if (_currentUser.IsCustomer)
+            {
+                return null;
+            }
+            // Store Scoping: Staff can only inspect staff in their assigned store
+            else if (_currentUser.IsStaff)
+            {
+                if (!_currentUser.StoreId.HasValue || s.StoreId != _currentUser.StoreId.Value)
+                    return null;
+            }
 
             return s.ToDetailDto();
         }

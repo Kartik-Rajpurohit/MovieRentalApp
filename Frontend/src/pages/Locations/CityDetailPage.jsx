@@ -204,7 +204,6 @@ export default function CityDetailPage() {
               style={{ width: "70px" }}
             />
             <Column field="street" header="Street" />
-            <Column field="district" header="District" />
             <Column
               field="postalCode"
               header="Postal Code"

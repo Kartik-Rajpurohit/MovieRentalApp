@@ -30,8 +30,14 @@ namespace MovieRental.Repository.Interfaces
         // Creates a staff record linked to the given user account.
         Task CreateStaffAsync(int userId, int storeId);
 
+        // Updates the assigned store for a staff member.
+        Task UpdateStaffStoreAsync(int userId, int storeId);
+
         // Creates a customer record linked to the given user account.
         Task CreateCustomerAsync(int userId, int storeId);
+
+        // Updates the assigned store for a customer.
+        Task UpdateCustomerStoreAsync(int userId, int storeId);
 
         // Finds a user account by email address (used during login).
         Task<User?> GetUserByEmailAsync(string email);

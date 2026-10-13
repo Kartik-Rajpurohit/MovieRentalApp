@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents an actor who can appear in multiple movies.
     [Table("actor")]
-    public class Actor
+    public class Actor : ISoftDelete
     {
         // Primary key uniquely identifying the actor.
         [Key]

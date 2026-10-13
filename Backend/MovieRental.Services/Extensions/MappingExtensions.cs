@@ -224,6 +224,7 @@ public static class MappingExtensions
         IsActive = u.IsActive,
         RoleId = u.RoleId,
         RoleName = u.Role?.RoleName ?? "Unassigned",
+        StoreId = u.Staff?.StoreId ?? u.Customer?.StoreId,
         AddressId = u.AddressId,
         Street = u.Address?.Street,
         PostalCode = u.Address?.PostalCode,

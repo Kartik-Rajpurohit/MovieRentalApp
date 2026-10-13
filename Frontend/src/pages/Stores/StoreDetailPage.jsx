@@ -112,15 +112,7 @@ export default function StoreDetailPage() {
 
           <div style={fieldStyle}>
             <span style={labelStyle}>Address</span>
-            <span style={valueStyle}>
-              {store.street}
-              {store.street2 ? `, ${store.street2}` : ""}
-            </span>
-          </div>
-
-          <div style={fieldStyle}>
-            <span style={labelStyle}>District</span>
-            <span style={valueStyle}>{store.district || "—"}</span>
+            <span style={valueStyle}>{store.street}</span>
           </div>
 
           <div style={fieldStyle}>

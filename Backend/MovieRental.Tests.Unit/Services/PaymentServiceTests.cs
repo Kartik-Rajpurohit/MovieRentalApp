@@ -182,6 +182,27 @@ public class PaymentServiceTests
         result.Data.First().PaymentId.Should().Be(2);
     }
 
+    [Fact]
+    public async Task GetAllPaymentsAsync_WhenStaffHasNoStoreId_ReturnsEmpty()
+    {
+        // Arrange
+        var payments = CreateSamplePayments();
+        _paymentRepositoryMock.Setup(r => r.GetAllPayments()).Returns(payments.BuildMock());
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(false);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new PaymentFilterDto();
+
+        // Act
+        var result = await _sut.GetAllPaymentsAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(0);
+        result.Data.Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData("Dark Knight", 1)]
     [InlineData("John", 2)]
@@ -333,6 +354,23 @@ public class PaymentServiceTests
     }
 
     [Fact]
+    public async Task GetPaymentByIdAsync_WhenStaffHasNoStoreId_ReturnsNull()
+    {
+        // Arrange
+        var payment = CreateSamplePayments().First(p => p.PaymentId == 1);
+        _paymentRepositoryMock.Setup(r => r.GetPaymentByIdAsync(1)).ReturnsAsync(payment);
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(false);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null);
+
+        // Act
+        var result = await _sut.GetPaymentByIdAsync(1);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
     public async Task GetPaymentByIdAsync_WhenNotFound_ReturnsNull()
     {
         // Arrange
@@ -472,6 +510,33 @@ public class PaymentServiceTests
 
         _currentUserMock.Setup(u => u.IsStaff).Returns(true);
         _currentUserMock.Setup(u => u.StoreId).Returns(1); // Staff belongs to store 1, rental is in store 2
+
+        // Act
+        var act = () => _sut.CreatePaymentAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Staff can only process payments for rentals belonging to their assigned store*");
+    }
+
+    [Fact]
+    public async Task CreatePaymentAsync_WhenStaffHasNoStoreId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var dto = new CreatePaymentDto { Amount = 10m, RentalId = 1, CustomerId = 1, StaffId = 1 };
+        var rental = new Rental
+        {
+            RentalId = 1,
+            CustomerId = 1,
+            Inventory = new Inventory { StoreId = 1 },
+            Staff = new Staff { StoreId = 1 }
+        };
+        _rentalRepositoryMock.Setup(r => r.GetRentalByIdAsync(1)).ReturnsAsync(rental);
+        _rentalRepositoryMock.Setup(r => r.CustomerExistsAsync(1)).ReturnsAsync(true);
+        _rentalRepositoryMock.Setup(r => r.StaffExistsAsync(1)).ReturnsAsync(true);
+
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null); // Unassigned staff
 
         // Act
         var act = () => _sut.CreatePaymentAsync(dto);

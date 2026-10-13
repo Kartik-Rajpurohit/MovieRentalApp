@@ -27,6 +27,9 @@ namespace MovieRental.Domain.DTOs.Users
         // Assigned role name (e.g. "Admin", "Staff", "Customer")
         public string RoleName { get; set; } = string.Empty;
 
+        // Assigned store ID (for Staff or Customer users)
+        public int? StoreId { get; set; }
+
         // Associated address ID
         public int? AddressId { get; set; }
 

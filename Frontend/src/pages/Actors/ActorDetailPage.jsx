@@ -18,6 +18,7 @@ import {
   deleteActor,
 } from "../../services/actorService";
 import { AuthContext } from "../../context/AuthContext";
+import { useToastContext } from "../../context/ToastContext";
 
 const FIELD_LABEL = {
   margin: "0 0 4px 0",
@@ -38,6 +39,7 @@ export default function ActorDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { showSuccess, showError } = useToastContext();
 
   // State for holding actor profile details
   const [actor, setActor] = useState(null);
@@ -138,8 +140,13 @@ export default function ActorDetailPage() {
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
       accept: async () => {
-        await deleteActor(id);
-        navigate("/actors");
+        try {
+          await deleteActor(id);
+          showSuccess("Actor deleted successfully");
+          navigate("/actors");
+        } catch (err) {
+          showError(err.response?.data?.message || err.message || "Failed to delete actor");
+        }
       },
     });
   };

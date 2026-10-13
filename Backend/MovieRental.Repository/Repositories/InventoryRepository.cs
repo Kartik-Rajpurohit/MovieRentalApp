@@ -16,14 +16,14 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all active inventory copies without tracking, loading related Movie and Rentals for availability checks.
+        // Reads all active inventory copies without tracking.
+        // Returns IQueryable so filtering, sorting, pagination, and projections can be applied in the service
+        // without attaching unnecessary eager LEFT JOINs to count queries.
         public IQueryable<Inventory> GetAllInventory()
         {
             return _context.Inventories
                 .AsNoTracking()
-                .Where(i => !i.IsDeleted && !i.Movie.IsDeleted)
-                .Include(i => i.Movie)
-                .Include(i => i.Rentals);
+                .Where(i => !i.IsDeleted && !i.Movie.IsDeleted);
         }
 
         // Finds a specific active inventory copy by ID along with its movie and rental records.

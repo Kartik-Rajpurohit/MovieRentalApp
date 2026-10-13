@@ -92,13 +92,31 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // 6. Pagination & Materialization
-            var entities = await query
+            // 6. Pagination & Database-side Projection
+            var data = await query
                 .Skip((pagination.Page - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
+                .Select(m => new MovieResponseDto
+                {
+                    MovieId = m.MovieId,
+                    Title = m.Title,
+                    Description = m.Description,
+                    ReleaseYear = m.ReleaseYear,
+                    LanguageId = m.LanguageId,
+                    LanguageName = m.Language != null ? m.Language.Name : "",
+                    RentalDuration = m.RentalDuration,
+                    RentalRate = m.RentalRate,
+                    Length = m.Length,
+                    ReplacementCost = m.ReplacementCost,
+                    Rating = m.Rating,
+                    Categories = m.MovieCategories
+                        .Select(mc => mc.Category.Name)
+                        .ToList(),
+                    Actors = m.MovieActors
+                        .Select(ma => (ma.Actor.FirstName + " " + ma.Actor.LastName).Trim())
+                        .ToList()
+                })
                 .ToListAsync();
-
-            var data = entities.Select(m => m.ToResponseDto()).ToList();
 
             return new PaginatedResponseDto<MovieResponseDto>
             {

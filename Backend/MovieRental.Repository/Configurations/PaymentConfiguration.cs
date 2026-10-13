@@ -24,6 +24,11 @@ namespace MovieRental.Repository.Configurations
                 .WithMany(r => r.Payments)
                 .HasForeignKey(p => p.RentalId);
 
+            // Defaults
+            builder.Property(p => p.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             // Indexes
             builder.HasIndex(p => p.RentalId);
             builder.HasIndex(p => new { p.CustomerId, p.PaymentDate });

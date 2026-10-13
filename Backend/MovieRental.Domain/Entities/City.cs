@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a city within a country, used for address classification.
     [Table("city")]
-    public class City
+    public class City : ISoftDelete
     {
         // Primary key uniquely identifying the city.
         [Key]

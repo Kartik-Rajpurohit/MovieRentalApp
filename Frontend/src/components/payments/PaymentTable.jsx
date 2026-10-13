@@ -62,6 +62,7 @@ export default function PaymentTable() {
 
   // Validate and submit a new payment to the backend
   const handleAdd = async () => {
+    if (saving) return;
     const errs = {};
     if (!form.rentalId) errs.rentalId = "Rental is required";
     if (!form.amount || form.amount <= 0)

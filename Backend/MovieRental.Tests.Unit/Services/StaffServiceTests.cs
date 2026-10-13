@@ -6,6 +6,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Staff;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Interfaces;
 using MovieRental.Services.Services;
 using Xunit;
 
@@ -14,12 +15,14 @@ namespace MovieRental.Tests.Unit.Services;
 public class StaffServiceTests
 {
     private readonly Mock<IStaffRepository> _staffRepositoryMock;
+    private readonly Mock<ICurrentUserService> _currentUserMock;
     private readonly StaffService _sut;
 
     public StaffServiceTests()
     {
         _staffRepositoryMock = new Mock<IStaffRepository>();
-        _sut = new StaffService(_staffRepositoryMock.Object);
+        _currentUserMock = new Mock<ICurrentUserService>();
+        _sut = new StaffService(_staffRepositoryMock.Object, _currentUserMock.Object);
     }
 
     private static List<Staff> CreateSampleStaff()
@@ -244,6 +247,96 @@ public class StaffServiceTests
 
         // Act
         var result = await _sut.GetStaffByIdAsync(999);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAllStaffAsync_WhenStaff_ScopesToStaffAssignedStore()
+    {
+        // Arrange
+        var staffList = CreateSampleStaff();
+        _staffRepositoryMock.Setup(r => r.GetAllStaff()).Returns(staffList.BuildMock());
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns(2);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new StaffFilterDto();
+
+        // Act
+        var result = await _sut.GetAllStaffAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(1);
+        result.Data.First().StaffId.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetAllStaffAsync_WhenStaffHasNoStoreId_ReturnsEmpty()
+    {
+        // Arrange
+        var staffList = CreateSampleStaff();
+        _staffRepositoryMock.Setup(r => r.GetAllStaff()).Returns(staffList.BuildMock());
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new StaffFilterDto();
+
+        // Act
+        var result = await _sut.GetAllStaffAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(0);
+        result.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAllStaffAsync_WhenCustomer_ReturnsEmpty()
+    {
+        // Arrange
+        var staffList = CreateSampleStaff();
+        _staffRepositoryMock.Setup(r => r.GetAllStaff()).Returns(staffList.BuildMock());
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(true);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new StaffFilterDto();
+
+        // Act
+        var result = await _sut.GetAllStaffAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(0);
+        result.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetStaffByIdAsync_WhenCustomerAttemptsToViewStaff_ReturnsNull()
+    {
+        // Arrange
+        var staff = CreateSampleStaff().First(s => s.StaffId == 1);
+        _staffRepositoryMock.Setup(r => r.GetStaffByIdAsync(1)).ReturnsAsync(staff);
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(true);
+
+        // Act
+        var result = await _sut.GetStaffByIdAsync(1);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetStaffByIdAsync_WhenStaffAttemptsToViewOtherStoreStaff_ReturnsNull()
+    {
+        // Arrange
+        var staff = CreateSampleStaff().First(s => s.StaffId == 1); // StoreId = 1
+        _staffRepositoryMock.Setup(r => r.GetStaffByIdAsync(1)).ReturnsAsync(staff);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns(2); // Assigned to Store 2
+
+        // Act
+        var result = await _sut.GetStaffByIdAsync(1);
 
         // Assert
         result.Should().BeNull();

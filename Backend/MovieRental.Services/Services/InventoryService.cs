@@ -71,10 +71,19 @@ namespace MovieRental.Services.Services
             var totalRecords = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / pagination.PageSize);
 
-            // 5. Pagination & Materialization
-            var entities = await query
+            // 5. Pagination & Database-side Projection
+            var data = await query
                 .Skip((pagination.Page - 1) * pagination.PageSize)
                 .Take(pagination.PageSize)
+                .Select(i => new InventoryResponseDto
+                {
+                    InventoryId = i.InventoryId,
+                    MovieId = i.MovieId,
+                    MovieTitle = i.Movie != null ? i.Movie.Title : "",
+                    StoreId = i.StoreId,
+                    IsAvailable = !i.Rentals.Any(r => r.ReturnDate == null),
+                    LastUpdate = i.LastUpdate
+                })
                 .ToListAsync();
 
             return new PaginatedResponseDto<InventoryResponseDto>
@@ -83,7 +92,7 @@ namespace MovieRental.Services.Services
                 TotalPages = totalPages,
                 CurrentPage = pagination.Page,
                 PageSize = pagination.PageSize,
-                Data = entities.Select(i => i.ToResponseDto()).ToList()
+                Data = data
             };
         }
 

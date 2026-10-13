@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using MovieRental.Domain.Common;
 using MovieRental.Domain.Entities;
 
 namespace MovieRental.Repository.Data
@@ -42,22 +44,20 @@ namespace MovieRental.Repository.Data
             // Automatically discovers and applies all IEntityTypeConfiguration classes in this assembly
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-            // Configure default values for is_deleted column across all soft-deletable entities
-            modelBuilder.Entity<Actor>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Address>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Category>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<City>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Country>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Customer>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Inventory>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Language>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Movie>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Payment>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Rental>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Role>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Staff>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<Store>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
-            modelBuilder.Entity<User>().Property(e => e.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+            // Configure global query filters for all ISoftDelete entities
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(ISoftDelete).IsAssignableFrom(entityType.ClrType) && entityType.BaseType == null)
+                {
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var filter = Expression.Lambda(
+                        Expression.Equal(
+                            Expression.Property(parameter, nameof(ISoftDelete.IsDeleted)),
+                            Expression.Constant(false)),
+                        parameter);
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
+                }
+            }
         }
     }
 }

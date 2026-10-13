@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a physical DVD rental store location
     [Table("store")]
-    public class Store
+    public class Store : ISoftDelete
     {
         [Key]
         [Column("store_id")]

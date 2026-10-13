@@ -21,6 +21,11 @@ namespace MovieRental.Repository.Configurations
                 .WithMany(l => l.OriginalLanguageMovies)
                 .HasForeignKey(m => m.OriginalLanguageId);
 
+            // Defaults
+            builder.Property(m => m.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             // Indexes
             builder.HasIndex(m => m.Title);
         }

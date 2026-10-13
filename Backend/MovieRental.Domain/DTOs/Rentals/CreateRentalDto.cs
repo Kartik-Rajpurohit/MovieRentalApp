@@ -16,4 +16,7 @@ public class CreateRentalDto
     // Staff ID processing the rental checkout
     [Range(1, int.MaxValue, ErrorMessage = "A valid Staff ID is required.")]
     public int StaffId { get; set; }
+
+    // Optional rental checkout timestamp (defaults to UtcNow if not provided)
+    public DateTime? RentalDate { get; set; }
 }

@@ -19,6 +19,11 @@ namespace MovieRental.Repository.Configurations
                 .WithMany(s => s.Inventories)
                 .HasForeignKey(i => i.StoreId);
 
+            // Defaults
+            builder.Property(i => i.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             // Indexes
             builder.HasIndex(i => new { i.MovieId, i.StoreId });
         }

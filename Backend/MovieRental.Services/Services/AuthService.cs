@@ -225,6 +225,14 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
+        // Prevent token refresh if the user account is deactivated.
+        if (!user.IsActive)
+        {
+            _logger.LogWarning("Token refresh failed: user account {Email} is inactive", user.Email);
+            await _userRepository.RevokeRefreshTokenAsync(dto.RefreshToken, user.UserId);
+            throw new UnauthorizedAccessException("User account is inactive");
+        }
+
         // Check if the refresh token has been revoked.
         if (user.RefreshTokenRevoked)
         {

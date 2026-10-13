@@ -17,6 +17,7 @@ import {
   getMoviesByCategory,
 } from "../../services/categoryService";
 import { AuthContext } from "../../context/AuthContext";
+import { useToastContext } from "../../context/ToastContext";
 
 const RATING_SEVERITY = {
   G: "success",
@@ -32,6 +33,7 @@ export default function CategoryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { showSuccess, showError } = useToastContext();
 
   // Category profile details state
   const [category, setCategory] = useState(null);
@@ -115,8 +117,13 @@ export default function CategoryDetailPage() {
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
       accept: async () => {
-        await deleteCategory(id);
-        navigate("/categories");
+        try {
+          await deleteCategory(id);
+          showSuccess("Category deleted successfully");
+          navigate("/categories");
+        } catch (err) {
+          showError(err.response?.data?.message || err.message || "Failed to delete category");
+        }
       },
     });
   };

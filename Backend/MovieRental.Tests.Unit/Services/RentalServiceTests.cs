@@ -182,6 +182,27 @@ public class RentalServiceTests
         result.Data.First().RentalId.Should().Be(2);
     }
 
+    [Fact]
+    public async Task GetAllRentalsAsync_WhenStaffHasNoStoreId_ReturnsEmpty()
+    {
+        // Arrange
+        var rentals = CreateSampleRentals();
+        _rentalRepositoryMock.Setup(r => r.GetAllRentals()).Returns(rentals.BuildMock());
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(false);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new RentalFilterDto();
+
+        // Act
+        var result = await _sut.GetAllRentalsAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(0);
+        result.Data.Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData("Inception", 2)]
     [InlineData("Jane", 1)]
@@ -333,6 +354,23 @@ public class RentalServiceTests
     }
 
     [Fact]
+    public async Task GetRentalByIdAsync_WhenStaffHasNoStoreId_ReturnsNull()
+    {
+        // Arrange
+        var rental = CreateSampleRentals().First(r => r.RentalId == 1);
+        _rentalRepositoryMock.Setup(r => r.GetRentalByIdAsync(1)).ReturnsAsync(rental);
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(false);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null);
+
+        // Act
+        var result = await _sut.GetRentalByIdAsync(1);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
     public async Task GetRentalByIdAsync_WhenNotFound_ReturnsNull()
     {
         // Arrange
@@ -385,6 +423,46 @@ public class RentalServiceTests
         result.RentalId.Should().Be(100);
         result.MovieTitle.Should().Be("Inception");
         result.RentalRate.Should().Be(2.99m);
+    }
+
+    [Fact]
+    public async Task CreateRentalAsync_WithUnspecifiedRentalDate_NormalizesToUtc()
+    {
+        // Arrange
+        var customDate = new DateTime(2026, 10, 15, 14, 30, 0, DateTimeKind.Unspecified);
+        var dto = new CreateRentalDto { InventoryId = 1, CustomerId = 1, StaffId = 1, RentalDate = customDate };
+        var movie = new Movie { MovieId = 1, Title = "Inception", RentalRate = 2.99m };
+        var inventory = new Inventory { InventoryId = 1, MovieId = 1, Movie = movie, StoreId = 1 };
+
+        _inventoryRepositoryMock.Setup(r => r.GetInventoryByIdAsync(1)).ReturnsAsync(inventory);
+        _rentalRepositoryMock.Setup(r => r.CustomerExistsAsync(1)).ReturnsAsync(true);
+        _rentalRepositoryMock.Setup(r => r.StaffExistsAsync(1)).ReturnsAsync(true);
+        _rentalRepositoryMock.Setup(r => r.GetAllRentals()).Returns(new List<Rental>().BuildMock());
+        _currentUserMock.Setup(u => u.IsStaff).Returns(false);
+
+        Rental? capturedRental = null;
+        _rentalRepositoryMock.Setup(r => r.CreateRentalAsync(It.IsAny<Rental>()))
+            .Callback<Rental>(r => capturedRental = r)
+            .ReturnsAsync(new Rental
+            {
+                RentalId = 101,
+                InventoryId = 1,
+                Inventory = inventory,
+                CustomerId = 1,
+                Customer = new Customer { CustomerId = 1, User = new User { FirstName = "John", LastName = "Doe" } },
+                StaffId = 1,
+                Staff = new Staff { StaffId = 1, User = new User { FirstName = "Mike", LastName = "Ross" } },
+                RentalDate = DateTime.SpecifyKind(customDate, DateTimeKind.Utc)
+            });
+
+        // Act
+        var result = await _sut.CreateRentalAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        capturedRental.Should().NotBeNull();
+        capturedRental!.RentalDate.Kind.Should().Be(DateTimeKind.Utc);
+        capturedRental.RentalDate.Should().Be(DateTime.SpecifyKind(customDate, DateTimeKind.Utc));
     }
 
     [Fact]
@@ -482,6 +560,28 @@ public class RentalServiceTests
             .WithMessage("*Staff can only create rentals for inventory belonging to their assigned store*");
     }
 
+    [Fact]
+    public async Task CreateRentalAsync_WhenStaffHasNoStoreId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var dto = new CreateRentalDto { InventoryId = 1, CustomerId = 1, StaffId = 1 };
+        var inventory = new Inventory { InventoryId = 1, StoreId = 1, Movie = new Movie { MovieId = 1 } };
+        _inventoryRepositoryMock.Setup(r => r.GetInventoryByIdAsync(1)).ReturnsAsync(inventory);
+        _rentalRepositoryMock.Setup(r => r.CustomerExistsAsync(1)).ReturnsAsync(true);
+        _rentalRepositoryMock.Setup(r => r.StaffExistsAsync(1)).ReturnsAsync(true);
+        _rentalRepositoryMock.Setup(r => r.GetAllRentals()).Returns(new List<Rental>().BuildMock());
+
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null); // Staff has no store assigned
+
+        // Act
+        var act = () => _sut.CreateRentalAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Staff can only create rentals for inventory belonging to their assigned store*");
+    }
+
     // =========================================================
     // ReturnRentalAsync Tests
     // =========================================================
@@ -503,7 +603,7 @@ public class RentalServiceTests
             RentalDate = rental.RentalDate,
             ReturnDate = DateTime.UtcNow
         };
-        _rentalRepositoryMock.Setup(r => r.ReturnRentalAsync(2)).ReturnsAsync(returned);
+        _rentalRepositoryMock.Setup(r => r.ReturnRentalAsync(2, It.IsAny<DateTime?>())).ReturnsAsync(returned);
 
         // Act
         var result = await _sut.ReturnRentalAsync(2);
@@ -512,6 +612,82 @@ public class RentalServiceTests
         result.Should().NotBeNull();
         result!.RentalId.Should().Be(2);
         result.ReturnDate.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ReturnRentalAsync_WhenReturnDatePrecedesRentalDate_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var rental = CreateSampleRentals().First(r => r.RentalId == 2); // RentalDate is Jan 10, 2025
+        _rentalRepositoryMock.Setup(r => r.GetRentalByIdAsync(2)).ReturnsAsync(rental);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(false);
+
+        var pastDate = new DateTime(2025, 1, 5, 0, 0, 0, DateTimeKind.Utc);
+
+        // Act
+        var act = () => _sut.ReturnRentalAsync(2, pastDate);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Return date cannot precede rental start date*");
+        _rentalRepositoryMock.Verify(r => r.ReturnRentalAsync(It.IsAny<int>(), It.IsAny<DateTime?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReturnRentalAsync_WhenCustomValidReturnDateProvided_PassesReturnDateToRepository()
+    {
+        // Arrange
+        var rental = CreateSampleRentals().First(r => r.RentalId == 2); // RentalDate is Jan 10, 2025
+        _rentalRepositoryMock.Setup(r => r.GetRentalByIdAsync(2)).ReturnsAsync(rental);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(false);
+
+        var validReturnDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+        var returned = new Rental
+        {
+            RentalId = 2,
+            Inventory = rental.Inventory,
+            Customer = rental.Customer,
+            Staff = rental.Staff,
+            RentalDate = rental.RentalDate,
+            ReturnDate = validReturnDate
+        };
+        _rentalRepositoryMock.Setup(r => r.ReturnRentalAsync(2, validReturnDate)).ReturnsAsync(returned);
+
+        // Act
+        var result = await _sut.ReturnRentalAsync(2, validReturnDate);
+
+        // Assert
+        result.Should().NotBeNull();
+        _rentalRepositoryMock.Verify(r => r.ReturnRentalAsync(2, validReturnDate), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReturnRentalAsync_WhenUnspecifiedReturnDateProvided_NormalizesToUtc()
+    {
+        // Arrange
+        var rental = CreateSampleRentals().First(r => r.RentalId == 2); // RentalDate is Jan 10, 2025
+        _rentalRepositoryMock.Setup(r => r.GetRentalByIdAsync(2)).ReturnsAsync(rental);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(false);
+
+        var unspecifiedReturnDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        var expectedUtcDate = DateTime.SpecifyKind(unspecifiedReturnDate, DateTimeKind.Utc);
+        var returned = new Rental
+        {
+            RentalId = 2,
+            Inventory = rental.Inventory,
+            Customer = rental.Customer,
+            Staff = rental.Staff,
+            RentalDate = rental.RentalDate,
+            ReturnDate = expectedUtcDate
+        };
+        _rentalRepositoryMock.Setup(r => r.ReturnRentalAsync(2, expectedUtcDate)).ReturnsAsync(returned);
+
+        // Act
+        var result = await _sut.ReturnRentalAsync(2, unspecifiedReturnDate);
+
+        // Assert
+        result.Should().NotBeNull();
+        _rentalRepositoryMock.Verify(r => r.ReturnRentalAsync(2, expectedUtcDate), Times.Once);
     }
 
     [Fact]

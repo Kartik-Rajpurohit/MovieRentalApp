@@ -115,6 +115,21 @@ namespace MovieRental.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
+        // Updates the assigned store for a staff member. Creates staff record if it doesn't exist yet.
+        public async Task UpdateStaffStoreAsync(int userId, int storeId)
+        {
+            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.UserId == userId && !s.IsDeleted);
+            if (staff != null)
+            {
+                staff.StoreId = storeId;
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                await CreateStaffAsync(userId, storeId);
+            }
+        }
+
         // Creates a customer record linked to the user account.
         public async Task CreateCustomerAsync(int userId, int storeId)
         {
@@ -127,6 +142,21 @@ namespace MovieRental.Repository.Repositories
             };
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
+        }
+
+        // Updates the assigned store for a customer. Creates customer record if it doesn't exist yet.
+        public async Task UpdateCustomerStoreAsync(int userId, int storeId)
+        {
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
+            if (customer != null)
+            {
+                customer.StoreId = storeId;
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                await CreateCustomerAsync(userId, storeId);
+            }
         }
 
         // Finds a user by email with full profile, role, and address details.

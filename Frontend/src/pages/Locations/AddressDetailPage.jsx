@@ -104,12 +104,6 @@ export default function AddressDetailPage() {
             <p style={FIELD_LABEL}>Street</p>
             <p style={FIELD_VALUE}>{address.street}</p>
           </div>
-          {address.street2 && (
-            <div>
-              <p style={FIELD_LABEL}>Street 2</p>
-              <p style={FIELD_VALUE}>{address.street2}</p>
-            </div>
-          )}
           <div>
             <p style={FIELD_LABEL}>City</p>
             <p

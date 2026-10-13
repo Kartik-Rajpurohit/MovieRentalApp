@@ -64,11 +64,15 @@ namespace MovieRental.Apis.Controllers
         // Returns 404 NotFound if rental does not exist, or 400 BadRequest if already returned.
         [HttpPatch("{id}/return")]
         [Authorize(Policy = Permissions.Rentals.Return)]
-        public async Task<IActionResult> Return(int id)//TODO- Correc tthe naming convention of the method to be more descriptive, e.g., ReturnRental
+        public async Task<IActionResult> Return(
+            int id,
+            [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] ReturnRentalDto? dto = null,
+            [FromQuery] DateTime? returnDate = null)
         {
             try
             {
-                var result = await _rentalService.ReturnRentalAsync(id);
+                var effectiveDate = dto?.ReturnDate ?? returnDate;
+                var result = await _rentalService.ReturnRentalAsync(id, effectiveDate);
                 if (result == null) return NotFound($"Rental {id} not found");
                 return Ok(result);
             }

@@ -20,6 +20,11 @@ namespace MovieRental.Repository.Configurations
                 .HasForeignKey<Customer>(c => c.UserId)
                 .IsRequired(false);
 
+            // Defaults
+            builder.Property(c => c.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             // Indexes
             builder.HasIndex(c => c.StoreId);
             builder.HasIndex(c => c.UserId);

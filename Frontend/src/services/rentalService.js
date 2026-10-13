@@ -5,13 +5,13 @@ import api from "./api";
 const API = "/Rental";
 
 // GET request to fetch a paginated list of rentals with optional filters (customer, staff, returned status)
-export const getRentals = async (params = {}) => {
+export const getRentals = async (params = {}, options = {}) => {
   const finalParams = { ...params };
   if (finalParams.sortField && !finalParams.sortBy) {
     finalParams.sortBy = finalParams.sortField;
     delete finalParams.sortField;
   }
-  const res = await api.get(API, { params: finalParams });
+  const res = await api.get(API, { params: finalParams, ...options });
   return res.data;
 };
 

@@ -12,6 +12,7 @@ import DetailPageHeader from "../../components/common/DetailPageHeader";
 import LanguageDialog from "../../components/languages/LanguageDialog";
 import { getLanguageById, getMoviesByLanguage, deleteLanguage } from "../../services/languageService";
 import { AuthContext } from "../../context/AuthContext";
+import { useToastContext } from "../../context/ToastContext";
 
 const RATING_SEVERITY = {
   G: "success", PG: "info", "PG-13": "warning", R: "danger", "NC-17": "danger",
@@ -23,6 +24,7 @@ export default function LanguageDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { showSuccess, showError } = useToastContext();
 
   // State holding language profile information
   const [language, setLanguage] = useState(null);
@@ -94,8 +96,13 @@ export default function LanguageDetailPage() {
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
       accept: async () => {
-        await deleteLanguage(id);
-        navigate("/languages");
+        try {
+          await deleteLanguage(id);
+          showSuccess("Language deleted successfully");
+          navigate("/languages");
+        } catch (err) {
+          showError(err.response?.data?.message || err.message || "Failed to delete language");
+        }
       },
     });
   };

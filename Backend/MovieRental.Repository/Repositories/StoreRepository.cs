@@ -39,5 +39,13 @@ namespace MovieRental.Repository.Repositories
             return await GetAllStores()
                 .FirstAsync(s => s.StoreId == store.StoreId);
         }
+
+        // Checks whether an active address exists by ID.
+        public async Task<bool> AddressExistsAsync(int addressId)
+            => await _context.Addresses.AnyAsync(a => a.AddressId == addressId && !a.IsDeleted);
+
+        // Checks whether an active staff member exists by ID.
+        public async Task<bool> StaffExistsAsync(int staffId)
+            => await _context.Staff.AnyAsync(s => s.StaffId == staffId && !s.IsDeleted);
     }
 }

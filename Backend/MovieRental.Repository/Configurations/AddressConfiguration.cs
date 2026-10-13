@@ -13,6 +13,10 @@ namespace MovieRental.Repository.Configurations
             builder.HasOne(a => a.City)
                 .WithMany(c => c.Addresses)
                 .HasForeignKey(a => a.CityId);
+
+            builder.Property(a => a.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
         }
     }
 }

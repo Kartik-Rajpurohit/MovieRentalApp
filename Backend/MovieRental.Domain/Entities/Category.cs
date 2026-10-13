@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a movie genre or category (such as Action, Comedy, Drama).
     [Table("category")]
-    public class Category
+    public class Category : ISoftDelete
     {
         // Primary key uniquely identifying the category.
         [Key]

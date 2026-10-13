@@ -42,7 +42,7 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       roleId: user?.roleId ?? null,
-      storeId: null,
+      storeId: user?.storeId ?? null,
       addressId: user?.addressId ?? null,
     });
     setErrors({});

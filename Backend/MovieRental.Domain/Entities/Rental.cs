@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a movie rental transaction — customer borrowing a specific inventory copy
     [Table("rental")]
-    public class Rental
+    public class Rental : ISoftDelete
     {
         [Key]
         [Column("rental_id")]

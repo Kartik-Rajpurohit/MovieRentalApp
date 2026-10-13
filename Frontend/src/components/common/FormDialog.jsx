@@ -27,6 +27,7 @@ export default function FormDialog({
         icon="pi pi-check"
         onClick={onSubmit}
         loading={loading}
+        disabled={loading}
       />
     </div>
   );

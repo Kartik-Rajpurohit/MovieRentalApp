@@ -21,6 +21,9 @@ namespace MovieRental.Repository.Configurations
 
             // Defaults
             builder.Property(u => u.RefreshTokenRevoked).HasDefaultValue(false);
+            builder.Property(u => u.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
 
             // Indexes
             builder.HasIndex(u => u.Email).IsUnique();

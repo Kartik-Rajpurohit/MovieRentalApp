@@ -55,6 +55,7 @@ export default function RentalTable() {
 
   // Validate and submit a new rental to the backend
   const handleAdd = async () => {
+    if (saving) return;
     const errs = {};
     if (!form.inventoryId) errs.inventoryId = "Inventory item is required";
     if (!form.customerId) errs.customerId = "Customer is required";
@@ -181,18 +182,18 @@ export default function RentalTable() {
           {[filters.isReturned, filters.customerId, filters.staffId].filter(
             (v) => v !== null && v !== undefined,
           ).length > 0 && (
-            <Badge
-              value={
-                [
-                  filters.isReturned,
-                  filters.customerId,
-                  filters.staffId,
-                ].filter((v) => v !== null && v !== undefined).length
-              }
-              severity="danger"
-              style={{ position: "absolute", top: "-8px", right: "-8px" }}
-            />
-          )}
+              <Badge
+                value={
+                  [
+                    filters.isReturned,
+                    filters.customerId,
+                    filters.staffId,
+                  ].filter((v) => v !== null && v !== undefined).length
+                }
+                severity="danger"
+                style={{ position: "absolute", top: "-8px", right: "-8px" }}
+              />
+            )}
         </div>
       </div>
 

@@ -15,7 +15,7 @@ namespace MovieRental.Repository.Interfaces
         Task<Rental> CreateRentalAsync(Rental rental);
 
         // Marks a rental record as returned by setting its return date.
-        Task<Rental?> ReturnRentalAsync(int rentalId);
+        Task<Rental?> ReturnRentalAsync(int rentalId, DateTime? returnDate = null);
 
         // Checks whether an active customer exists by ID.
         Task<bool> CustomerExistsAsync(int customerId);

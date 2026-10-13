@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a store employee who processes rentals and payments
     // Personal info (name, email, password, address) is stored in the linked User entity
     [Table("staff")]
-    public class Staff
+    public class Staff : ISoftDelete
     {
         [Key]
         [Column("staff_id")]

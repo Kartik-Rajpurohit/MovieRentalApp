@@ -6,6 +6,7 @@ using MovieRental.Domain.DTOs.Common;
 using MovieRental.Domain.DTOs.Customers;
 using MovieRental.Domain.Entities;
 using MovieRental.Repository.Interfaces;
+using MovieRental.Services.Interfaces;
 using MovieRental.Services.Services;
 using Xunit;
 
@@ -14,12 +15,14 @@ namespace MovieRental.Tests.Unit.Services;
 public class CustomerServiceTests
 {
     private readonly Mock<ICustomerRepository> _customerRepositoryMock;
+    private readonly Mock<ICurrentUserService> _currentUserMock;
     private readonly CustomerService _sut;
 
     public CustomerServiceTests()
     {
         _customerRepositoryMock = new Mock<ICustomerRepository>();
-        _sut = new CustomerService(_customerRepositoryMock.Object);
+        _currentUserMock = new Mock<ICurrentUserService>();
+        _sut = new CustomerService(_customerRepositoryMock.Object, _currentUserMock.Object);
     }
 
     private static List<Customer> CreateSampleCustomers()
@@ -248,6 +251,78 @@ public class CustomerServiceTests
 
         // Act
         var result = await _sut.GetCustomerByIdAsync(999);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAllCustomersAsync_WhenStaff_ScopesToStaffAssignedStore()
+    {
+        // Arrange
+        var customers = CreateSampleCustomers();
+        _customerRepositoryMock.Setup(r => r.GetAllCustomers()).Returns(customers.BuildMock());
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns(2);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new CustomerFilterDto();
+
+        // Act
+        var result = await _sut.GetAllCustomersAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(1);
+        result.Data.First().CustomerId.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetAllCustomersAsync_WhenStaffHasNoStoreId_ReturnsEmpty()
+    {
+        // Arrange
+        var customers = CreateSampleCustomers();
+        _customerRepositoryMock.Setup(r => r.GetAllCustomers()).Returns(customers.BuildMock());
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns((int?)null);
+
+        var pagination = new PaginationInputDto { Page = 1, PageSize = 10 };
+        var filter = new CustomerFilterDto();
+
+        // Act
+        var result = await _sut.GetAllCustomersAsync(pagination, filter);
+
+        // Assert
+        result.TotalRecords.Should().Be(0);
+        result.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetCustomerByIdAsync_WhenCustomerAttemptsToViewOtherCustomer_ReturnsNull()
+    {
+        // Arrange
+        var customer = CreateSampleCustomers().First(c => c.CustomerId == 1);
+        _customerRepositoryMock.Setup(r => r.GetCustomerByIdAsync(1)).ReturnsAsync(customer);
+        _currentUserMock.Setup(u => u.IsCustomer).Returns(true);
+        _currentUserMock.Setup(u => u.CustomerId).Returns(999); // Different customer ID
+
+        // Act
+        var result = await _sut.GetCustomerByIdAsync(1);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetCustomerByIdAsync_WhenStaffAttemptsToViewOtherStoreCustomer_ReturnsNull()
+    {
+        // Arrange
+        var customer = CreateSampleCustomers().First(c => c.CustomerId == 1); // StoreId = 1
+        _customerRepositoryMock.Setup(r => r.GetCustomerByIdAsync(1)).ReturnsAsync(customer);
+        _currentUserMock.Setup(u => u.IsStaff).Returns(true);
+        _currentUserMock.Setup(u => u.StoreId).Returns(2); // StoreId = 2
+
+        // Act
+        var result = await _sut.GetCustomerByIdAsync(1);
 
         // Assert
         result.Should().BeNull();

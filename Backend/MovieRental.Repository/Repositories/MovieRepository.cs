@@ -16,18 +16,14 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all active movies without tracking, loading related language, categories, and actors.
-        // Returns IQueryable so filtering, sorting, and pagination can be applied in the service.
+        // Reads all active movies without tracking.
+        // Returns IQueryable so filtering, sorting, pagination, and projections can be applied in the service
+        // without attaching unnecessary eager LEFT JOINs to count queries.
         public IQueryable<Movie> GetAllMovies()
         {
             return _context.Movies
                 .AsNoTracking()
-                .Where(m => !m.IsDeleted)
-                .Include(m => m.Language)
-                .Include(m => m.MovieCategories)
-                    .ThenInclude(mc => mc.Category)
-                .Include(m => m.MovieActors)
-                    .ThenInclude(ma => ma.Actor);
+                .Where(m => !m.IsDeleted);
         }
 
         // Finds an active movie by ID with all related categories, actors, languages, and inventory items.

@@ -379,6 +379,71 @@ public class UserServiceTests
 
         _userRepositoryMock.Verify(r => r.DeleteCustomerByUserIdAsync(11), Times.Once);
         _userRepositoryMock.Verify(r => r.CreateStaffAsync(11, 2), Times.Once);
+        _userRepositoryMock.Verify(r => r.RevokeRefreshTokenByUserIdAsync(11), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_WhenRoleUnchangedAndStoreIdProvidedForStaff_UpdatesStaffStore()
+    {
+        // Arrange
+        var user = new User
+        {
+            UserId = 12,
+            FirstName = "Staff",
+            LastName = "Member",
+            RoleId = 2
+        };
+
+        _userRepositoryMock.Setup(r => r.GetUserByIdAsync(12)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(r => r.GetRoleNameAsync(2)).ReturnsAsync("Staff");
+        _userRepositoryMock.Setup(r => r.UpdateUserAsync(user)).ReturnsAsync(user);
+
+        var dto = new UpdateUserDto
+        {
+            UserId = 12,
+            RoleId = 2,
+            StoreId = 5
+        };
+
+        // Act
+        var result = await _sut.UpdateUserAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        _userRepositoryMock.Verify(r => r.UpdateStaffStoreAsync(12, 5), Times.Once);
+        _userRepositoryMock.Verify(r => r.DeleteStaffByUserIdAsync(It.IsAny<int>()), Times.Never);
+        _userRepositoryMock.Verify(r => r.RevokeRefreshTokenByUserIdAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_WhenRoleUnchangedAndStoreIdProvidedForCustomer_UpdatesCustomerStore()
+    {
+        // Arrange
+        var user = new User
+        {
+            UserId = 13,
+            FirstName = "Customer",
+            LastName = "Member",
+            RoleId = 3
+        };
+
+        _userRepositoryMock.Setup(r => r.GetUserByIdAsync(13)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(r => r.GetRoleNameAsync(3)).ReturnsAsync("Customer");
+        _userRepositoryMock.Setup(r => r.UpdateUserAsync(user)).ReturnsAsync(user);
+
+        var dto = new UpdateUserDto
+        {
+            UserId = 13,
+            StoreId = 8
+        };
+
+        // Act
+        var result = await _sut.UpdateUserAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        _userRepositoryMock.Verify(r => r.UpdateCustomerStoreAsync(13, 8), Times.Once);
+        _userRepositoryMock.Verify(r => r.DeleteCustomerByUserIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -417,6 +482,23 @@ public class UserServiceTests
         result!.UserId.Should().Be(1);
         result.IsActive.Should().BeFalse();
         _userRepositoryMock.Verify(r => r.ToggleUserStatusAsync(1), Times.Once);
+        _userRepositoryMock.Verify(r => r.RevokeRefreshTokenByUserIdAsync(1), Times.Once);
+    }
+
+    [Fact]
+    public async Task ToggleUserStatusAsync_WhenUserReactivated_DoesNotRevokeRefreshToken()
+    {
+        // Arrange
+        var user = new User { UserId = 2, IsActive = true };
+        _userRepositoryMock.Setup(r => r.ToggleUserStatusAsync(2)).ReturnsAsync(user);
+
+        // Act
+        var result = await _sut.ToggleUserStatusAsync(2);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.IsActive.Should().BeTrue();
+        _userRepositoryMock.Verify(r => r.RevokeRefreshTokenByUserIdAsync(2), Times.Never);
     }
 
     [Fact]

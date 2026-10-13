@@ -138,9 +138,24 @@ namespace MovieRental.Services.Services
         // Validates and creates a new store location record.
         public async Task<StoreResponseDto> CreateStoreAsync(CreateStoreDto dto)
         {
+            if (!dto.ManagerStaffId.HasValue || dto.ManagerStaffId.Value <= 0)
+            {
+                throw new InvalidOperationException("Manager staff ID is required to create a store.");
+            }
+
+            if (!await _storeRepository.StaffExistsAsync(dto.ManagerStaffId.Value))
+            {
+                throw new InvalidOperationException($"Staff member with ID {dto.ManagerStaffId.Value} does not exist or has been deleted.");
+            }
+
+            if (dto.AddressId <= 0 || !await _storeRepository.AddressExistsAsync(dto.AddressId))
+            {
+                throw new InvalidOperationException($"Address with ID {dto.AddressId} does not exist or has been deleted.");
+            }
+
             var store = new Store
             {
-                ManagerStaffId = dto.ManagerStaffId ?? 0,
+                ManagerStaffId = dto.ManagerStaffId.Value,
                 AddressId = dto.AddressId,
                 LastUpdate = DateTime.UtcNow,
             };

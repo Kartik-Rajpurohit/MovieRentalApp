@@ -16,14 +16,13 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all active rentals without tracking, loading inventory, movie, customer, and staff details.
+        // Reads all active rentals without tracking.
+        // Returns IQueryable so filtering, sorting, pagination, and projections can be applied in the service
+        // without attaching unnecessary eager LEFT JOINs to count queries.
         public IQueryable<Rental> GetAllRentals()
             => _context.Rentals
                 .AsNoTracking()
                 .Where(r => !r.IsDeleted)
-                .Include(r => r.Inventory).ThenInclude(i => i.Movie)
-                .Include(r => r.Customer).ThenInclude(c => c.User)
-                .Include(r => r.Staff).ThenInclude(s => s.User)
                 .AsQueryable();
 
         // Finds an active rental by ID, including movie, customer, staff, and linked payment records.
@@ -47,7 +46,7 @@ namespace MovieRental.Repository.Repositories
         }
 
         // Stamps the return timestamp on a rental record.
-        public async Task<Rental?> ReturnRentalAsync(int rentalId)
+        public async Task<Rental?> ReturnRentalAsync(int rentalId, DateTime? returnDate = null)
         {
             var rental = await _context.Rentals.FindAsync(rentalId);
             if (rental == null) return null;
@@ -58,7 +57,7 @@ namespace MovieRental.Repository.Repositories
                 return await GetRentalByIdAsync(rentalId);
             }
 
-            rental.ReturnDate = DateTime.UtcNow;
+            rental.ReturnDate = returnDate ?? DateTime.UtcNow;
             rental.LastUpdate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 

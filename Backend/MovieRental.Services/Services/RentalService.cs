@@ -58,8 +58,18 @@ namespace MovieRental.Services.Services
             else if (_currentUser.IsStaff)
             {
                 // Staff members only see rentals from their assigned store.
-                if (_currentUser.StoreId is { } storeId)
-                    query = query.Where(r => r.Staff.StoreId == storeId);
+                if (_currentUser.StoreId is not { } storeId)
+                {
+                    return new PaginatedResponseDto<RentalResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = pagination.Page,
+                        PageSize = pagination.PageSize,
+                        Data = new List<RentalResponseDto>()
+                    };
+                }
+                query = query.Where(r => r.Staff.StoreId == storeId);
             }
             else if (filter.CustomerId.HasValue)
             {
@@ -172,10 +182,10 @@ namespace MovieRental.Services.Services
                 if (_currentUser.CustomerId != rental.CustomerId)
                     return null;
             }
-            // Prevent staff from viewing rentals from other stores.
+            // Prevent staff from viewing rentals from other stores or if unassigned.
             else if (_currentUser.IsStaff)
             {
-                if (_currentUser.StoreId.HasValue && rental.Staff?.StoreId != _currentUser.StoreId)
+                if (!_currentUser.StoreId.HasValue || rental.Staff?.StoreId != _currentUser.StoreId.Value)
                     return null;
             }
 
@@ -225,7 +235,7 @@ namespace MovieRental.Services.Services
             // Security check: Staff can only rent out inventory belonging to their assigned store.
             if (_currentUser.IsStaff)
             {
-                if (_currentUser.StoreId.HasValue && inventory.StoreId != _currentUser.StoreId)
+                if (!_currentUser.StoreId.HasValue || inventory.StoreId != _currentUser.StoreId.Value)
                 {
                     _logger.LogWarning("Rental creation rejected: Staff store mismatch. Staff StoreId {StoreId} != Inventory StoreId {InvStoreId}",
                         _currentUser.StoreId, inventory.StoreId);
@@ -237,13 +247,19 @@ namespace MovieRental.Services.Services
                     dto.StaffId = _currentUser.StaffId.Value;
             }
 
+            var effectiveRentalDate = dto.RentalDate.HasValue
+                ? (dto.RentalDate.Value.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(dto.RentalDate.Value, DateTimeKind.Utc)
+                    : dto.RentalDate.Value.ToUniversalTime())
+                : DateTime.UtcNow;
+
             // Map request DTO to database entity with current UTC timestamp.
             var rental = new Rental
             {
                 InventoryId = dto.InventoryId,
                 CustomerId = dto.CustomerId,
                 StaffId = dto.StaffId,
-                RentalDate = DateTime.UtcNow,
+                RentalDate = effectiveRentalDate,
                 LastUpdate = DateTime.UtcNow,
             };
 
@@ -257,7 +273,7 @@ namespace MovieRental.Services.Services
         }
 
         // Marks a rental as returned and updates return timestamp.
-        public async Task<RentalResponseDto?> ReturnRentalAsync(int rentalId)
+        public async Task<RentalResponseDto?> ReturnRentalAsync(int rentalId, DateTime? returnDate = null)
         {
             var rental = await _rentalRepository.GetRentalByIdAsync(rentalId);
             if (rental == null) return null;
@@ -272,9 +288,9 @@ namespace MovieRental.Services.Services
             }
 
             // Security check: Staff can only process returns for rentals belonging to their assigned store.
-            if (_currentUser.IsStaff && _currentUser.StoreId.HasValue)
+            if (_currentUser.IsStaff)
             {
-                if (rental.Inventory?.StoreId != _currentUser.StoreId && rental.Staff?.StoreId != _currentUser.StoreId)
+                if (!_currentUser.StoreId.HasValue || (rental.Inventory?.StoreId != _currentUser.StoreId.Value && rental.Staff?.StoreId != _currentUser.StoreId.Value))
                 {
                     _logger.LogWarning("Rental return rejected: Staff store {StoreId} does not match Rental #{RentalId}",
                         _currentUser.StoreId, rentalId);
@@ -282,8 +298,22 @@ namespace MovieRental.Services.Services
                 }
             }
 
+            var effectiveReturnDate = returnDate.HasValue
+                ? (returnDate.Value.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(returnDate.Value, DateTimeKind.Utc)
+                    : returnDate.Value.ToUniversalTime())
+                : DateTime.UtcNow;
+
+            // Business rule: Return date cannot precede rental start date.
+            if (effectiveReturnDate < rental.RentalDate)
+            {
+                _logger.LogWarning("Rental return rejected: Return date {ReturnDate} precedes rental start date {RentalDate}",
+                    effectiveReturnDate, rental.RentalDate);
+                throw new InvalidOperationException("Return date cannot precede rental start date.");
+            }
+
             // Update rental in repository to set return date and free up inventory.
-            var updated = await _rentalRepository.ReturnRentalAsync(rentalId);
+            var updated = await _rentalRepository.ReturnRentalAsync(rentalId, effectiveReturnDate);
             if (updated == null) return null;
 
             _logger.LogInformation("Rental returned successfully: RentalId #{RentalId}", rentalId);

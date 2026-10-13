@@ -12,9 +12,14 @@ namespace MovieRental.Services.Services
     public class CustomerService : ICustomerService
     {
         private readonly ICustomerRepository _customerRepository;
+        private readonly ICurrentUserService _currentUser;
 
-        // Receives the customer repository needed to query customer data.
-        public CustomerService(ICustomerRepository customerRepository) => _customerRepository = customerRepository;
+        // Receives repository and current user context for authorization and tenant scoping.
+        public CustomerService(ICustomerRepository customerRepository, ICurrentUserService currentUser)
+        {
+            _customerRepository = customerRepository;
+            _currentUser = currentUser;
+        }
 
         // Retrieves a paginated, filtered, and sorted list of customers.
         public async Task<PaginatedResponseDto<CustomerResponseDto>> GetAllCustomersAsync(
@@ -22,6 +27,38 @@ namespace MovieRental.Services.Services
         {
             // 1. Get the base query from the repository.
             var query = _customerRepository.GetAllCustomers();
+
+            // Tenant & IDOR Scoping
+            if (_currentUser.IsCustomer)
+            {
+                if (_currentUser.CustomerId is not { } customerId)
+                {
+                    return new PaginatedResponseDto<CustomerResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = pagination.Page,
+                        PageSize = pagination.PageSize,
+                        Data = new List<CustomerResponseDto>()
+                    };
+                }
+                query = query.Where(c => c.CustomerId == customerId);
+            }
+            else if (_currentUser.IsStaff)
+            {
+                if (_currentUser.StoreId is not { } storeId)
+                {
+                    return new PaginatedResponseDto<CustomerResponseDto>
+                    {
+                        TotalRecords = 0,
+                        TotalPages = 0,
+                        CurrentPage = pagination.Page,
+                        PageSize = pagination.PageSize,
+                        Data = new List<CustomerResponseDto>()
+                    };
+                }
+                query = query.Where(c => c.StoreId == storeId);
+            }
 
             // 2. Search: matching customer full name, email, or numeric ID.
             if (!string.IsNullOrWhiteSpace(pagination.Search))
@@ -39,7 +76,7 @@ namespace MovieRental.Services.Services
             if (filter.IsActive.HasValue)
                 query = query.Where(c => c.User != null && c.User.IsActive == filter.IsActive.Value);
 
-            if (filter.StoreId.HasValue)
+            if (!_currentUser.IsStaff && filter.StoreId.HasValue)
                 query = query.Where(c => c.StoreId == filter.StoreId.Value);
 
             // 4. Sorting: dynamic sorting on allowed fields with deterministic CustomerId tie-breaker.
@@ -105,6 +142,19 @@ namespace MovieRental.Services.Services
         {
             var c = await _customerRepository.GetCustomerByIdAsync(id);
             if (c == null) return null;
+
+            // IDOR Protection: Customers can only view their own profile
+            if (_currentUser.IsCustomer)
+            {
+                if (_currentUser.CustomerId != c.CustomerId)
+                    return null;
+            }
+            // Store Scoping: Staff can only view customers registered in their assigned store
+            else if (_currentUser.IsStaff)
+            {
+                if (!_currentUser.StoreId.HasValue || c.StoreId != _currentUser.StoreId.Value)
+                    return null;
+            }
 
             return c.ToDetailDto();
         }

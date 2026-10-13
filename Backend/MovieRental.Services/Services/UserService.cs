@@ -149,6 +149,21 @@ namespace MovieRental.Services.Services
 
                 // Update role on user entity
                 user.RoleId = dto.RoleId.Value;
+
+                // Revoke refresh token on role change to terminate sessions with old claims
+                await _userRepository.RevokeRefreshTokenByUserIdAsync(user.UserId);
+            }
+            else if (dto.StoreId.HasValue)
+            {
+                var currentRoleName = oldRoleName ?? (user.RoleId.HasValue ? await _userRepository.GetRoleNameAsync(user.RoleId.Value) : null);
+                if (currentRoleName?.ToLower() == "staff")
+                {
+                    await _userRepository.UpdateStaffStoreAsync(user.UserId, dto.StoreId.Value);
+                }
+                else if (currentRoleName?.ToLower() == "customer")
+                {
+                    await _userRepository.UpdateCustomerStoreAsync(user.UserId, dto.StoreId.Value);
+                }
             }
 
             // Repository handles save only
@@ -165,6 +180,13 @@ namespace MovieRental.Services.Services
         {
             var user = await _userRepository.ToggleUserStatusAsync(id);
             if (user == null) return null;
+
+            // If user was deactivated, immediately revoke all active refresh tokens
+            if (!user.IsActive)
+            {
+                await _userRepository.RevokeRefreshTokenByUserIdAsync(user.UserId);
+            }
+
             return user.ToResponseDto();
         }
     }

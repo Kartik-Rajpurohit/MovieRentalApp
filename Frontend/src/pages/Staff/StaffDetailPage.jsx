@@ -85,7 +85,6 @@ export default function StaffDetailPage() {
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
             <div><p style={FIELD_LABEL}>Street</p><p style={FIELD_VALUE}>{staff?.street ?? "—"}</p></div>
-            <div><p style={FIELD_LABEL}>District</p><p style={FIELD_VALUE}>{staff?.district ?? "—"}</p></div>
             <div><p style={FIELD_LABEL}>Postal Code</p><p style={FIELD_VALUE}>{staff?.postalCode ?? "—"}</p></div>
             <div><p style={FIELD_LABEL}>Phone</p><p style={FIELD_VALUE}>{staff?.phone ?? "—"}</p></div>
             <div><p style={FIELD_LABEL}>City</p><p style={FIELD_VALUE}>{staff?.cityName ?? "—"}</p></div>

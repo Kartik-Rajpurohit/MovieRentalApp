@@ -10,5 +10,11 @@ namespace MovieRental.Repository.Interfaces
 
         // Adds a new store branch to the database.
         Task<Store> CreateStoreAsync(Store store);
+
+        // Checks whether an active address exists by ID.
+        Task<bool> AddressExistsAsync(int addressId);
+
+        // Checks whether an active staff member exists by ID.
+        Task<bool> StaffExistsAsync(int staffId);
     }
 }

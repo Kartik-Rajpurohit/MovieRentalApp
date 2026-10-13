@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a spoken or dubbed language available for movies.
     [Table("language")]
-    public class Language
+    public class Language : ISoftDelete
     {
         // Primary key uniquely identifying the language.
         [Key]

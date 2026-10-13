@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents an application-level role e.g. Admin, Staff, Customer
     [Table("role")]
-    public class Role
+    public class Role : ISoftDelete
     {
         [Key]
         [Column("role_id")]

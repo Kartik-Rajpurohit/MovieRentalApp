@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a store customer who can rent movies and make payments.
     [Table("customer")]
-    public class Customer
+    public class Customer : ISoftDelete
     {
         // Primary key uniquely identifying the customer.
         [Key]

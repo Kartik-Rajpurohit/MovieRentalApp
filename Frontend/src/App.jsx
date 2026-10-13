@@ -110,13 +110,13 @@ function App() {
                 <Route path="/stores" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoresPage /></ProtectedRoute>} />
                 <Route path="/stores/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><StoreDetailPage /></ProtectedRoute>} />
 
-                {/* Locations — Admin only */}
-                <Route path="/countries" element={<ProtectedRoute allowedRoles={["Admin"]}><CountriesPage /></ProtectedRoute>} />
-                <Route path="/countries/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CountryDetailPage /></ProtectedRoute>} />
-                <Route path="/cities" element={<ProtectedRoute allowedRoles={["Admin"]}><CitiesPage /></ProtectedRoute>} />
-                <Route path="/cities/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><CityDetailPage /></ProtectedRoute>} />
-                <Route path="/addresses" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressesPage /></ProtectedRoute>} />
-                <Route path="/addresses/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><AddressDetailPage /></ProtectedRoute>} />
+                {/* Locations — Admin and Staff */}
+                <Route path="/countries" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CountriesPage /></ProtectedRoute>} />
+                <Route path="/countries/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CountryDetailPage /></ProtectedRoute>} />
+                <Route path="/cities" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CitiesPage /></ProtectedRoute>} />
+                <Route path="/cities/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><CityDetailPage /></ProtectedRoute>} />
+                <Route path="/addresses" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><AddressesPage /></ProtectedRoute>} />
+                <Route path="/addresses/:id" element={<ProtectedRoute allowedRoles={["Admin", "Staff"]}><AddressDetailPage /></ProtectedRoute>} />
 
                 {/* Default redirects */}
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />

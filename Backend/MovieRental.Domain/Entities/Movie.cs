@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MovieRental.Domain.Common;
 
 namespace MovieRental.Domain.Entities
 {
     // Represents a movie available in the catalog for rental.
     // Maps to the existing PostgreSQL 'film' table in the Sakila database schema.
     [Table("film")]
-    public class Movie
+    public class Movie : ISoftDelete
     {
         // Primary key uniquely identifying the movie. Maps to existing database column 'film_id'.
         [Key]

@@ -3,12 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { Button } from "primereact/button";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import { getRentalById, returnRental } from "../../services/rentalService";
+import { getPayments } from "../../services/paymentService";
 import { AuthContext } from "../../context/AuthContext";
+import { useToastContext } from "../../context/ToastContext";
 
 const FIELD_LABEL = {
   margin: "0 0 4px 0",
@@ -29,6 +33,7 @@ const FIELD_VALUE = {
 // Displays complete details of a movie rental transaction and provides a return movie action
 export default function RentalDetailPage() {
   const { user } = useContext(AuthContext);
+  const { showSuccess, showError } = useToastContext();
   // Read rental ID from route parameters
   const { id } = useParams();
   const navigate = useNavigate();
@@ -36,9 +41,14 @@ export default function RentalDetailPage() {
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
   const [returning, setReturning] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
 
-  // Fetch rental details whenever the rental ID changes
-  useEffect(() => { loadRental(); }, [id]);
+  // Fetch rental details and associated payment ledger whenever rental ID changes
+  useEffect(() => {
+    loadRental();
+    loadPayments();
+  }, [id]);
 
   // Load rental record, customer, staff, and return status from backend
   const loadRental = async () => {
@@ -53,6 +63,19 @@ export default function RentalDetailPage() {
     }
   };
 
+  // Load related payments ledger for this rental transaction
+  const loadPayments = async () => {
+    setPaymentsLoading(true);
+    try {
+      const res = await getPayments({ rentalId: id });
+      setPayments(res.data ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
   // Mark the rented movie as returned after confirmation
   const handleReturn = () => {
     confirmDialog({
@@ -63,7 +86,10 @@ export default function RentalDetailPage() {
         setReturning(true);
         try {
           await returnRental(id);
-          await loadRental();
+          showSuccess("Rental marked as returned successfully");
+          await Promise.all([loadRental(), loadPayments()]);
+        } catch (err) {
+          showError(err.response?.data?.message || err.message || "Failed to mark rental as returned");
         } finally {
           setReturning(false);
         }
@@ -133,6 +159,29 @@ export default function RentalDetailPage() {
           <div><p style={FIELD_LABEL}>Total Paid</p><p style={FIELD_VALUE}>${rental.totalPaid?.toFixed(2)}</p></div>
           <div><p style={FIELD_LABEL}>Payments</p><p style={FIELD_VALUE}>{rental.paymentCount}</p></div>
         </div>
+      </Card>
+
+      {/* Payment Ledger */}
+      <Card title="Payment Ledger" style={{ marginTop: "24px" }}>
+        <DataTable
+          value={payments}
+          loading={paymentsLoading}
+          emptyMessage="No payments recorded for this rental."
+        >
+          <Column field="paymentId" header="Payment ID" style={{ width: "120px" }} />
+          <Column
+            field="amount"
+            header="Amount"
+            body={(p) => `$${Number(p.amount).toFixed(2)}`}
+            style={{ width: "120px" }}
+          />
+          <Column
+            field="paymentDate"
+            header="Payment Date"
+            body={(p) => (p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—")}
+          />
+          <Column field="staffName" header="Processed By" />
+        </DataTable>
       </Card>
     </AppLayout>
   );

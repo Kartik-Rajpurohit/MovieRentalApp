@@ -282,6 +282,9 @@ public class StoreServiceTests
             AddressId = 5
         };
 
+        _storeRepositoryMock.Setup(r => r.StaffExistsAsync(1)).ReturnsAsync(true);
+        _storeRepositoryMock.Setup(r => r.AddressExistsAsync(5)).ReturnsAsync(true);
+
         _storeRepositoryMock.Setup(r => r.CreateStoreAsync(It.IsAny<Store>()))
             .ReturnsAsync((Store s) =>
             {
@@ -305,5 +308,67 @@ public class StoreServiceTests
             s.AddressId == 5 &&
             s.LastUpdate != default
         )), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateStoreAsync_WhenManagerStaffIdNullOrZero_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var dto = new CreateStoreDto
+        {
+            ManagerStaffId = null,
+            AddressId = 5
+        };
+
+        // Act
+        var act = () => _sut.CreateStoreAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Manager staff ID is required*");
+        _storeRepositoryMock.Verify(r => r.CreateStoreAsync(It.IsAny<Store>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateStoreAsync_WhenStaffDoesNotExist_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var dto = new CreateStoreDto
+        {
+            ManagerStaffId = 99,
+            AddressId = 5
+        };
+
+        _storeRepositoryMock.Setup(r => r.StaffExistsAsync(99)).ReturnsAsync(false);
+
+        // Act
+        var act = () => _sut.CreateStoreAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Staff member with ID 99 does not exist*");
+        _storeRepositoryMock.Verify(r => r.CreateStoreAsync(It.IsAny<Store>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateStoreAsync_WhenAddressDoesNotExist_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var dto = new CreateStoreDto
+        {
+            ManagerStaffId = 1,
+            AddressId = 99
+        };
+
+        _storeRepositoryMock.Setup(r => r.StaffExistsAsync(1)).ReturnsAsync(true);
+        _storeRepositoryMock.Setup(r => r.AddressExistsAsync(99)).ReturnsAsync(false);
+
+        // Act
+        var act = () => _sut.CreateStoreAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Address with ID 99 does not exist*");
+        _storeRepositoryMock.Verify(r => r.CreateStoreAsync(It.IsAny<Store>()), Times.Never);
     }
 }

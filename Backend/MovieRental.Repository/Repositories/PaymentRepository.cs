@@ -16,14 +16,13 @@ namespace MovieRental.Repository.Repositories
             _context = context;
         }
 
-        // Reads all active payment records without tracking, including Customer, Staff, Rental, Inventory, and Movie.
+        // Reads all active payment records without tracking.
+        // Returns IQueryable so filtering, sorting, pagination, and projections can be applied in the service
+        // without attaching unnecessary eager LEFT JOINs to count queries.
         public IQueryable<Payment> GetAllPayments()
             => _context.Payments
                 .AsNoTracking()
                 .Where(p => !p.IsDeleted)
-                .Include(p => p.Customer).ThenInclude(c => c.User)
-                .Include(p => p.Staff).ThenInclude(s => s.User)
-                .Include(p => p.Rental).ThenInclude(r => r.Inventory).ThenInclude(i => i.Movie)
                 .AsQueryable();
 
         // Finds an active payment transaction by ID with full relation trees.
