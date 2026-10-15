@@ -135,6 +135,7 @@ export default function CustomerTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={openFilter}
+            aria-label="Filter customers"
           />
           {activeCount > 0 && (
             <Badge

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import FormDialog from "../../components/common/FormDialog";
@@ -10,6 +10,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import SearchBar from "../../components/common/SearchBar";
 import usePagination from "../../hooks/usePagination";
+import useDeleteEntity from "../../hooks/useDeleteEntity";
 import { getCities } from "../../services/cityService";
 import { FIELD_LABEL, FIELD_VALUE } from "../../utils/constants";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
@@ -101,18 +102,19 @@ export default function CountryDetailPage() {
     }
   };
 
+  const { confirmDelete } = useDeleteEntity({
+    deleteFn: deleteCountry,
+    redirectPath: "/countries",
+    entityName: "Country",
+  });
+
   // Prompt confirmation before deleting the country
   const handleDelete = () => {
-    confirmDialog({
-      message: `Delete country "${country?.name}"? All associated cities will also be affected.`,
-      header: "Delete Country",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        await deleteCountry(id);
-        navigate("/countries");
-      },
-    });
+    confirmDelete(
+      id,
+      country?.name,
+      `Delete country "${country?.name}"? All associated cities will also be affected.`
+    );
   };
 
   // Show loading spinner while country details are loading

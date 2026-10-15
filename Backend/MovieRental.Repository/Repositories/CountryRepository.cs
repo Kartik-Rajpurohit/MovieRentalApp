@@ -18,20 +18,20 @@ namespace MovieRental.Repository.Repositories
 
         // Reads all active countries from the database without tracking.
         public IQueryable<Country> GetAllCountries()
-            => _context.Countries.AsNoTracking().Where(c => !c.IsDeleted).AsQueryable();
+            => _context.Countries.AsNoTracking().AsQueryable();
 
         // Finds an active country by its ID, loading its associated cities.
         public async Task<Country?> GetCountryByIdAsync(int id)
             => await _context.Countries
-                .Include(c => c.Cities.Where(ct => !ct.IsDeleted))
-                .FirstOrDefaultAsync(c => c.CountryId == id && !c.IsDeleted);
+                .Include(c => c.Cities)
+                .FirstOrDefaultAsync(c => c.CountryId == id);
 
         // Finds an active country by name with case-insensitive matching.
         public async Task<Country?> GetCountryByNameAsync(string name)
         {
             var trimmed = name.Trim();
             return await _context.Countries
-                .FirstOrDefaultAsync(c => !c.IsDeleted && EF.Functions.ILike(c.Name, trimmed));
+                .FirstOrDefaultAsync(c => EF.Functions.ILike(c.Name, trimmed));
         }
 
         // Adds a new country record to the database and saves changes.

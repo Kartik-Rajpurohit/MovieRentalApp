@@ -166,6 +166,7 @@ export default function MovieTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter movies"
           />
           {activeFilterCount > 0 && (
             <Badge

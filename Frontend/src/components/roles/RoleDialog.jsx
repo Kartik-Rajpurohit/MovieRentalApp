@@ -71,6 +71,9 @@ export default function RoleDialog({
       footer={footer}
       style={{ width: "380px" }}
       modal
+      closeOnEscape
+      focusOnShow
+      dismissableMask
     >
       <div style={{ paddingTop: "8px" }}>
         <label

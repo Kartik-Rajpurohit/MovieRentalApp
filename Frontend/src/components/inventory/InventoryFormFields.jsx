@@ -20,6 +20,8 @@ export default function InventoryFormFields({
   inventory,
   stores,
   loadingStores,
+  isStaffStoreLocked = false,
+  staffStoreId = null,
 }) {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [movieSuggestions, setMovieSuggestions] = useState([]);
@@ -121,8 +123,24 @@ export default function InventoryFormFields({
           placeholder={loadingStores ? "Loading stores..." : "Select a store"}
           style={{ width: "100%" }}
           className={errors.storeId ? "p-invalid" : ""}
-          disabled={loadingStores}
+          disabled={loadingStores || isStaffStoreLocked}
         />
+        {isStaffStoreLocked && (
+          <small
+            style={{
+              color: "#6b7280",
+              marginTop: "4px",
+              display: "block",
+              fontSize: "12px",
+            }}
+          >
+            <i
+              className="pi pi-lock"
+              style={{ fontSize: "11px", marginRight: "4px" }}
+            />
+            Defaulted to your assigned store (Store #{staffStoreId})
+          </small>
+        )}
         {errors.storeId && <small className="p-error">{errors.storeId}</small>}
       </div>
 

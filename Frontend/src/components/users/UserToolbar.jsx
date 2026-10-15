@@ -52,6 +52,7 @@ export default function UserToolbar({
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter users"
           />
           {activeCount > 0 && (
             <Badge

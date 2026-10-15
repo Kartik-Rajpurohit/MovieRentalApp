@@ -42,6 +42,7 @@ export default function PageHeader({ title, addLabel, onAdd }) {
             label={addLabel ?? `Add ${title}`}
             icon="pi pi-plus"
             onClick={onAdd}
+            aria-label={addLabel ?? `Add ${title}`}
           />
         )}
       </div>

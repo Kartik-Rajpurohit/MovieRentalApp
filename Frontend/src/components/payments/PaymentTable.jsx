@@ -214,6 +214,7 @@ export default function PaymentTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter payments"
           />
           {Object.values(filters).filter((v) => v !== null).length > 0 && (
             <Badge

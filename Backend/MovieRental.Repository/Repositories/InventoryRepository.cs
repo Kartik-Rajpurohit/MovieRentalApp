@@ -22,15 +22,13 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Inventory> GetAllInventory()
         {
             return _context.Inventories
-                .AsNoTracking()
-                .Where(i => !i.IsDeleted && !i.Movie.IsDeleted);
+                .AsNoTracking();
         }
 
         // Finds a specific active inventory copy by ID along with its movie and rental records.
         public async Task<Inventory?> GetInventoryByIdAsync(int id)
         {
             return await _context.Inventories
-                .Where(i => !i.IsDeleted)
                 .Include(i => i.Movie)
                 .Include(i => i.Rentals)
                 .FirstOrDefaultAsync(i => i.InventoryId == id);
@@ -55,7 +53,7 @@ namespace MovieRental.Repository.Repositories
             var existing = await _context.Inventories
                 .Include(i => i.Movie)
                 .Include(i => i.Rentals)
-                .FirstOrDefaultAsync(i => i.InventoryId == inventory.InventoryId && !i.IsDeleted);
+                .FirstOrDefaultAsync(i => i.InventoryId == inventory.InventoryId);
 
             if (existing == null) return null;
 
@@ -81,10 +79,10 @@ namespace MovieRental.Repository.Repositories
 
         // Checks whether an active movie exists by ID.
         public async Task<bool> MovieExistsAsync(int movieId)
-            => await _context.Movies.AnyAsync(m => m.MovieId == movieId && !m.IsDeleted);
+            => await _context.Movies.AnyAsync(m => m.MovieId == movieId);
 
         // Checks whether an active store exists by ID.
         public async Task<bool> StoreExistsAsync(int storeId)
-            => await _context.Stores.AnyAsync(s => s.StoreId == storeId && !s.IsDeleted);
+            => await _context.Stores.AnyAsync(s => s.StoreId == storeId);
     }
 }

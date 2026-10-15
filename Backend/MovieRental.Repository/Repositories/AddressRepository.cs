@@ -20,17 +20,15 @@ public class AddressRepository : IAddressRepository
     public IQueryable<Address> GetAllAddresses()
         => _context.Addresses
             .AsNoTracking()
-            .Where(a => !a.IsDeleted && !a.City.IsDeleted)
             .Include(a => a.City).ThenInclude(c => c.Country)
             .AsQueryable();
 
     // Finds an active address by ID, loading related City, Country, Users, and Stores.
     public async Task<Address?> GetAddressByIdAsync(int id)
         => await _context.Addresses
-            .Where(a => !a.IsDeleted)
             .Include(a => a.City).ThenInclude(c => c.Country)
-            .Include(a => a.Users.Where(u => !u.IsDeleted))
-            .Include(a => a.Stores.Where(s => !s.IsDeleted))
+            .Include(a => a.Users)
+            .Include(a => a.Stores)
             .FirstOrDefaultAsync(a => a.AddressId == id);
 
     // Adds a new address to the database and re-fetches it with related entities.
@@ -68,5 +66,5 @@ public class AddressRepository : IAddressRepository
 
     // Checks whether an active city exists by ID.
     public async Task<bool> CityExistsAsync(int cityId)
-        => await _context.Cities.AnyAsync(c => c.CityId == cityId && !c.IsDeleted);
+        => await _context.Cities.AnyAsync(c => c.CityId == cityId);
 }

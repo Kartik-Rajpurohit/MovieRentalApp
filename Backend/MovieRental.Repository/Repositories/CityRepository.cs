@@ -20,17 +20,15 @@ public class CityRepository : ICityRepository
     public IQueryable<City> GetAllCities()
         => _context.Cities
             .AsNoTracking()
-            .Where(c => !c.IsDeleted && !c.Country.IsDeleted)
             .Include(c => c.Country)
-            .Include(c => c.Addresses.Where(a => !a.IsDeleted))
+            .Include(c => c.Addresses)
             .AsQueryable();
 
     // Finds an active city by its ID with country and address information.
     public async Task<City?> GetCityByIdAsync(int id)
         => await _context.Cities
-            .Where(c => !c.IsDeleted)
             .Include(c => c.Country)
-            .Include(c => c.Addresses.Where(a => !a.IsDeleted))
+            .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.CityId == id);
 
     // Finds an active city by name and country ID with case-insensitive matching.
@@ -38,7 +36,7 @@ public class CityRepository : ICityRepository
     {
         var trimmed = name.Trim();
         return await _context.Cities
-            .FirstOrDefaultAsync(c => !c.IsDeleted && c.CountryId == countryId && EF.Functions.ILike(c.Name, trimmed));
+            .FirstOrDefaultAsync(c => c.CountryId == countryId && EF.Functions.ILike(c.Name, trimmed));
     }
 
     // Adds a new city to the database and re-fetches it with related entities.
@@ -74,5 +72,5 @@ public class CityRepository : ICityRepository
 
     // Checks whether an active country exists by ID.
     public async Task<bool> CountryExistsAsync(int countryId)
-        => await _context.Countries.AnyAsync(c => c.CountryId == countryId && !c.IsDeleted);
+        => await _context.Countries.AnyAsync(c => c.CountryId == countryId);
 }

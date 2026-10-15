@@ -198,6 +198,7 @@ export default function StoreTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={openFilter}
+            aria-label="Filter stores"
           />
           {activeCount > 0 && (
             <Badge

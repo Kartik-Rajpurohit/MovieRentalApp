@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -6,8 +6,7 @@ import PageHeader from "../common/PageHeader";
 import SearchBar from "../common/SearchBar";
 import FormDialog from "../common/FormDialog";
 import ActorFormFields from "./ActorFormFields";
-import useDialog from "../../hooks/useDialog";
-import usePagination from "../../hooks/usePagination";
+import useListingResource from "../../hooks/useListingResource";
 import {
   getActors,
   createActor,
@@ -20,60 +19,37 @@ const EMPTY_FORM = { firstName: "", lastName: "" };
 export default function ActorTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-  // Dialog visibility hook for the Add Actor dialog
-  const addDialog = useDialog();
-  // Server-side pagination hook
-  const { lazyState, onPage, reset } = usePagination(10);
 
-  // Table records and total count
-  const [actors, setActors] = useState([]);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const fetchFn = useCallback(
+    ({ page, pageSize, search, sortField, sortOrder }) =>
+      getActors(page, pageSize, search, sortField, sortOrder),
+    []
+  );
+
+  const {
+    items: actors,
+    totalRecords,
+    loading,
+    search,
+    onSearchChange,
+    sortField,
+    sortOrder,
+    onSort,
+    lazyState,
+    onPage,
+    resetPagination,
+    addDialog,
+    reload,
+  } = useListingResource({
+    fetchFn,
+    defaultSortField: "actorId",
+    defaultSortOrder: -1,
+  });
+
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("actorId");
-  const [sortOrder, setSortOrder] = useState(-1);
   // Form state for creating a new actor
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
-
-  // Reload actors when pagination, search, or sorting change
-  useEffect(() => {
-    loadActors();
-  }, [lazyState, search, sortField, sortOrder]);
-
-  // Load paginated and sorted actor records from the backend API
-  const loadActors = async () => {
-    setLoading(true);
-    try {
-      const res = await getActors(
-        lazyState.page + 1,
-        lazyState.rows,
-        search,
-        sortField,
-        sortOrder === 1 ? "asc" : "desc",
-      );
-      setActors(res.data ?? []);
-      setTotalRecords(res.totalRecords ?? 0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle search query change and reset pagination to page 1
-  const onSearchChange = (val) => {
-    setSearch(val);
-    reset();
-  };
-
-  // Handle column sorting and reload data
-  const onSort = (e) => {
-    setSortField(e.sortField);
-    setSortOrder(e.sortOrder);
-    reset();
-  };
 
   // Validate form before submitting new actor
   const validate = () => {
@@ -96,7 +72,8 @@ export default function ActorTable() {
       addDialog.close();
       setForm(EMPTY_FORM);
       setErrors({});
-      reset();
+      resetPagination();
+      reload();
     } catch (err) {
       console.error(err);
     } finally {

@@ -1,11 +1,11 @@
-import { useEffect, useState, useContext } from "react";
+import { useContext, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../common/PageHeader";
 import SearchBar from "../common/SearchBar";
 import CategoryDialog from "./CategoryDialog";
-import usePagination from "../../hooks/usePagination";
+import useListingResource from "../../hooks/useListingResource";
 import { getCategories } from "../../services/categoryService";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -13,76 +13,52 @@ import { AuthContext } from "../../context/AuthContext";
 export default function CategoryTable() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-  // Server-side pagination hook
-  const { lazyState, onPage, reset } = usePagination(10);
 
-  // Table records and total records state
-  const [categories, setCategories] = useState([]);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [sortField, setSortField] = useState("categoryId");
-  const [sortOrder, setSortOrder] = useState(-1);
-  const [search, setSearch] = useState("");
-  // Controls visibility of the Add Category modal dialog
-  const [dialogVisible, setDialogVisible] = useState(false);
+  const fetchFn = useCallback(
+    ({ page, pageSize, search, sortField, sortOrder }) =>
+      getCategories(page, pageSize, search, sortField, sortOrder),
+    []
+  );
 
-  // Reload categories whenever pagination, sorting, or search change
-  useEffect(() => {
-    loadCategories();
-  }, [lazyState, sortField, sortOrder, search]);
-
-  // Load paginated and sorted categories from the backend service
-  const loadCategories = async () => {
-    setLoading(true);
-    try {
-      const sortOrderStr = sortOrder === 1 ? "asc" : "desc";
-      const res = await getCategories(
-        lazyState.page + 1,
-        lazyState.rows,
-        search,
-        sortField,
-        sortOrderStr,
-      );
-      setCategories(res.data ?? []);
-      setTotalRecords(res.totalRecords ?? 0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle column header click to toggle sort field/order
-  const onSort = (e) => {
-    setSortField(e.sortField);
-    setSortOrder(e.sortOrder);
-    reset();
-  };
-
+  const {
+    items: categories,
+    totalRecords,
+    loading,
+    search,
+    onSearchChange,
+    sortField,
+    sortOrder,
+    onSort,
+    lazyState,
+    onPage,
+    addDialog,
+    reload,
+  } = useListingResource({
+    fetchFn,
+    defaultSortField: "categoryId",
+    defaultSortOrder: -1,
+  });
 
   return (
     <div>
       <PageHeader
         title="Categories"
         addLabel="Add Category"
-        onAdd={user?.role !== "Customer" ? () => setDialogVisible(true) : undefined}
+        onAdd={user?.role !== "Customer" ? () => addDialog.open() : undefined}
       />
 
       <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
         <SearchBar
           value={search}
-          onChange={(v) => {
-            setSearch(v);
-            reset();
-          }}
+          onChange={onSearchChange}
           placeholder="Search categories..."
         />
       </div>
 
       <CategoryDialog
-        visible={dialogVisible}
-        onHide={() => setDialogVisible(false)}
-        onSuccess={loadCategories}
+        visible={addDialog.visible}
+        onHide={() => addDialog.close()}
+        onSuccess={reload}
         mode="add"
       />
 

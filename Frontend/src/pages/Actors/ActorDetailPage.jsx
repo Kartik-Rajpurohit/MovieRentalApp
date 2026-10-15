@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from "react";
 import { Card } from "primereact/card";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -11,6 +11,7 @@ import SearchBar from "../../components/common/SearchBar";
 import FormDialog from "../../components/common/FormDialog";
 import ActorFormFields from "../../components/actors/ActorFormFields";
 import usePagination from "../../hooks/usePagination";
+import useDeleteEntity from "../../hooks/useDeleteEntity";
 import {
   getActorById,
   getMoviesByActor,
@@ -132,23 +133,19 @@ export default function ActorDetailPage() {
     }
   };
 
+  const { confirmDelete } = useDeleteEntity({
+    deleteFn: deleteActor,
+    redirectPath: "/actors",
+    entityName: "Actor",
+  });
+
   // Prompt confirmation before deleting the actor
   const handleDelete = () => {
-    confirmDialog({
-      message: `Delete actor "${actor?.firstName} ${actor?.lastName}"? This will remove them from all movies.`,
-      header: "Delete Actor",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        try {
-          await deleteActor(id);
-          showSuccess("Actor deleted successfully");
-          navigate("/actors");
-        } catch (err) {
-          showError(err.response?.data?.message || err.message || "Failed to delete actor");
-        }
-      },
-    });
+    confirmDelete(
+      id,
+      `${actor?.firstName} ${actor?.lastName}`,
+      `Delete actor "${actor?.firstName} ${actor?.lastName}"? This will remove them from all movies.`
+    );
   };
 
   // Show loading spinner while initial actor data is loading

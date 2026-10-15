@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import StatusTag from "../common/StatusTag";
 import PageHeader from "../common/PageHeader";
 import UserToolbar from "./UserToolbar";
 import usePagination from "../../hooks/usePagination";
-import { getUsers } from "../../services/userService";
+import { getUsers, toggleUserStatus } from "../../services/userService";
+import { useToastContext } from "../../context/ToastContext";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 // Default filter criteria for user accounts
 const INIT_FILTERS = { name: "", email: "", role: null, isActive: null };
@@ -14,6 +17,7 @@ const INIT_FILTERS = { name: "", email: "", role: null, isActive: null };
 // Displays the paginated user accounts table with search, sorting, filtering, and row click navigation.
 export default function UserTable() {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToastContext();
   // Pagination state hook (first, rows, page)
   const { lazyState, onPage, reset } = usePagination(10);
 
@@ -86,9 +90,32 @@ export default function UserTable() {
     reset();
   };
 
+  // Toggle user active/inactive status with a confirmation modal to avoid accidental lockouts
+  const confirmToggleStatus = (e, rowUser) => {
+    e.stopPropagation(); // Prevent row click from navigating to detail page
+    const willDeactivate = rowUser.isActive;
+    confirmDialog({
+      header: willDeactivate ? "Confirm Account Deactivation" : "Confirm Account Activation",
+      message: `Are you sure you want to ${willDeactivate ? "deactivate" : "activate"} user "${rowUser.fullName}"? ${willDeactivate ? "This will prevent the user from logging in." : ""}`.trim(),
+      icon: "pi pi-exclamation-triangle",
+      acceptClassName: willDeactivate ? "p-button-danger" : "p-button-success",
+      acceptLabel: willDeactivate ? "Deactivate" : "Activate",
+      rejectLabel: "Cancel",
+      accept: async () => {
+        try {
+          await toggleUserStatus(rowUser.userId);
+          showSuccess(`User "${rowUser.fullName}" successfully ${willDeactivate ? "deactivated" : "activated"}.`);
+          loadUsers();
+        } catch (err) {
+          showError(getErrorMessage(err, "Failed to update user status."));
+        }
+      },
+    });
+  };
 
   return (
     <div>
+      <ConfirmDialog />
       {/* Header bar with title */}
       <PageHeader title="Users" />
 
@@ -106,7 +133,6 @@ export default function UserTable() {
         paginator
         lazy
         loading={loading}
-
         first={lazyState.first}
         rows={lazyState.rows}
         totalRecords={totalRecords}
@@ -136,8 +162,17 @@ export default function UserTable() {
         <Column
           field="isActive"
           header="Status"
-          style={{ width: "110px" }}
-          body={(r) => <StatusTag isActive={r.isActive} />}
+          style={{ width: "120px" }}
+          body={(r) => (
+            <div
+              onClick={(e) => confirmToggleStatus(e, r)}
+              title={`Click to ${r.isActive ? "deactivate" : "activate"} user`}
+              aria-label={`Toggle status for ${r.fullName}: currently ${r.isActive ? "Active" : "Inactive"}`}
+              style={{ cursor: "pointer", display: "inline-block" }}
+            >
+              <StatusTag isActive={r.isActive} />
+            </div>
+          )}
         />
       </DataTable>
     </div>

@@ -119,10 +119,16 @@ export default function MovieFormFields({
           <Dropdown
             value={form.languageId}
             options={languages}
-            onChange={(e) => setForm((p) => ({ ...p, languageId: e.value }))}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                languageId: e.value ? Number(e.value) : null,
+              }))
+            }
             placeholder="Select language"
             style={{ width: "100%" }}
             appendTo="self"
+            showClear
             className={errors.languageId ? "p-invalid" : ""}
           />
           {errors.languageId && (
@@ -135,7 +141,10 @@ export default function MovieFormFields({
             value={form.originalLanguageId}
             options={languages}
             onChange={(e) =>
-              setForm((p) => ({ ...p, originalLanguageId: e.value }))
+              setForm((p) => ({
+                ...p,
+                originalLanguageId: e.value ? Number(e.value) : null,
+              }))
             }
             placeholder="Optional"
             style={{ width: "100%" }}

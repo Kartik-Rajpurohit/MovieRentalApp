@@ -3,13 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Tag } from "primereact/tag";
 import { Card } from "primereact/card";
 import { Button } from "primereact/button";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import MovieDialog from "../../components/movies/MovieDialog";
 import { AuthContext } from "../../context/AuthContext";
 import { useToastContext } from "../../context/ToastContext";
+import { getMovieById, deleteMovie } from "../../services/movieService";
+import useDeleteEntity from "../../hooks/useDeleteEntity";
 
 const RATING_SEVERITY = { G: "success", PG: "info", "PG-13": "warning", R: "danger", "NC-17": "danger" };
 const fieldStyle = { display: "flex", flexDirection: "column", gap: "4px" };
@@ -30,6 +32,13 @@ export default function MovieDetailPage() {
   // Controls visibility of the edit movie dialog
   const [editVisible, setEditVisible] = useState(false);
 
+  const { confirmDelete } = useDeleteEntity({
+    deleteFn: deleteMovie,
+    redirectPath: "/movies",
+    entityName: "Movie",
+    successMessage: "Movie deleted successfully",
+  });
+
   // Fetch movie details whenever the movie ID changes
   useEffect(() => { loadMovie(); }, [id]);
 
@@ -48,21 +57,7 @@ export default function MovieDetailPage() {
 
   // Prompt confirmation dialog before deleting this movie
   const handleDelete = () => {
-    confirmDialog({
-      message: `Are you sure you want to delete "${movie?.title}"?`,
-      header: "Delete Movie",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        try {
-          await deleteMovie(id);
-          showSuccess("Movie deleted successfully");
-          navigate("/movies");
-        } catch (err) {
-          showError(err.response?.data?.message || err.message || "Failed to delete movie");
-        }
-      },
-    });
+    confirmDelete(id, movie?.title, `Are you sure you want to delete "${movie?.title}"?`);
   };
 
   // Show loading spinner while movie details are being fetched

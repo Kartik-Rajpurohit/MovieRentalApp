@@ -22,13 +22,11 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Payment> GetAllPayments()
             => _context.Payments
                 .AsNoTracking()
-                .Where(p => !p.IsDeleted)
                 .AsQueryable();
 
         // Finds an active payment transaction by ID with full relation trees.
         public async Task<Payment?> GetPaymentByIdAsync(int id)
             => await _context.Payments
-                .Where(p => !p.IsDeleted)
                 .Include(p => p.Customer).ThenInclude(c => c.User)
                 .Include(p => p.Staff).ThenInclude(s => s.User)
                 .Include(p => p.Rental).ThenInclude(r => r.Inventory).ThenInclude(i => i.Movie)

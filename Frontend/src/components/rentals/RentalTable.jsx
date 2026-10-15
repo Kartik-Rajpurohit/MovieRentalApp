@@ -178,6 +178,7 @@ export default function RentalTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter rentals"
           />
           {[filters.isReturned, filters.customerId, filters.staffId].filter(
             (v) => v !== null && v !== undefined,

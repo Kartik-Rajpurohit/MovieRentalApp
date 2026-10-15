@@ -25,7 +25,6 @@ namespace MovieRental.Repository.Repositories
         {
             return _context.Users
                 .AsNoTracking()
-                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Address)
                     .ThenInclude(a => a!.City)
@@ -36,7 +35,6 @@ namespace MovieRental.Repository.Repositories
         public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _context.Users
-                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
@@ -118,7 +116,7 @@ namespace MovieRental.Repository.Repositories
         // Updates the assigned store for a staff member. Creates staff record if it doesn't exist yet.
         public async Task UpdateStaffStoreAsync(int userId, int storeId)
         {
-            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.UserId == userId && !s.IsDeleted);
+            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.UserId == userId);
             if (staff != null)
             {
                 staff.StoreId = storeId;
@@ -147,7 +145,7 @@ namespace MovieRental.Repository.Repositories
         // Updates the assigned store for a customer. Creates customer record if it doesn't exist yet.
         public async Task UpdateCustomerStoreAsync(int userId, int storeId)
         {
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             if (customer != null)
             {
                 customer.StoreId = storeId;
@@ -163,7 +161,6 @@ namespace MovieRental.Repository.Repositories
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _context.Users
-                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)
@@ -197,7 +194,6 @@ namespace MovieRental.Repository.Repositories
         {
             var hashed = HashRefreshToken(refreshToken);
             return await _context.Users
-                .Where(u => !u.IsDeleted)
                 .Include(u => u.Role)
                 .Include(u => u.Customer)
                 .Include(u => u.Staff)

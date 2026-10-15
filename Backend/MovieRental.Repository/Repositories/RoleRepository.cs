@@ -19,14 +19,14 @@ namespace MovieRental.Repository.Repositories
         // Reads all active roles from the database without tracking.
         public IQueryable<Role> GetAllRoles()
         {
-            return _context.Roles.AsNoTracking().Where(r => !r.IsDeleted).AsQueryable();
+            return _context.Roles.AsNoTracking().AsQueryable();
         }
 
         // Checks whether an active role with the same name already exists (case-insensitive).
         public async Task<bool> RoleExistsAsync(string roleName)
         {
             return await _context.Roles
-                .AnyAsync(r => r.RoleName.ToLower() == roleName.ToLower() && !r.IsDeleted);
+                .AnyAsync(r => r.RoleName.ToLower() == roleName.ToLower());
         }
 
         // Adds a new role to the database and saves changes.

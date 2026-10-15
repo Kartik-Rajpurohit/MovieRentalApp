@@ -172,6 +172,7 @@ export default function CustomerDetailPage() {
                 severity={activeTab === 0 ? "primary" : "secondary"}
                 outlined={activeTab !== 0}
                 onClick={() => setActiveTab(0)}
+                aria-label="Show active rentals"
               />
               <Button
                 label="All History"
@@ -180,6 +181,7 @@ export default function CustomerDetailPage() {
                 severity={activeTab === 1 ? "primary" : "secondary"}
                 outlined={activeTab !== 1}
                 onClick={() => setActiveTab(1)}
+                aria-label="Show all rental history"
               />
             </div>
           </div>

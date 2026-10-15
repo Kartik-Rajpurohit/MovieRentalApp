@@ -1,4 +1,4 @@
-import { Dialog } from "primereact/dialog";
+import Modal from "./Modal";
 import { Button } from "primereact/button";
 
 // Reusable modal dialog wrapper for create and edit forms
@@ -33,13 +33,12 @@ export default function FormDialog({
   );
 
   return (
-    <Dialog
+    <Modal
       header={title}
       visible={visible}
       onHide={onHide}
       footer={footer}
       style={{ width: "440px" }}
-      modal
     >
       <div
         style={{
@@ -51,6 +50,6 @@ export default function FormDialog({
       >
         {children}
       </div>
-    </Dialog>
+    </Modal>
   );
 }

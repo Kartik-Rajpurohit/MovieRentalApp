@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import InventoryFormFields from "./InventoryFormFields";
 import { createInventory, updateInventory } from "../../services/inventoryService";
 import { getStores } from "../../services/storeService";
+import { AuthContext } from "../../context/AuthContext";
 
 const emptyForm = { movieId: null, storeId: null };
 
@@ -15,6 +16,11 @@ export default function InventoryDialog({
   mode = "add",
   inventory = null,
 }) {
+  const { user } = useContext(AuthContext);
+  const isStaff = user?.role === "Staff";
+  const staffStoreId = user?.storeId ? Number(user.storeId) : null;
+  const isStaffStoreLocked = isStaff && !!staffStoreId;
+
   const isEdit = mode === "edit";
   // Form input state (movieId and storeId)
   const [form, setForm] = useState(emptyForm);
@@ -36,7 +42,10 @@ export default function InventoryDialog({
         storeId: inventory.storeId,
       });
     } else {
-      setForm(emptyForm);
+      setForm({
+        ...emptyForm,
+        storeId: isStaffStoreLocked ? staffStoreId : null,
+      });
     }
     setErrors({});
 
@@ -143,6 +152,9 @@ export default function InventoryDialog({
       footer={footer}
       style={{ width: "460px", maxWidth: "95vw" }}
       modal
+      closeOnEscape
+      focusOnShow
+      dismissableMask
     >
       <InventoryFormFields
         form={form}
@@ -152,6 +164,8 @@ export default function InventoryDialog({
         inventory={inventory}
         stores={stores}
         loadingStores={loadingStores}
+        isStaffStoreLocked={isStaffStoreLocked}
+        staffStoreId={staffStoreId}
       />
     </Dialog>
   );

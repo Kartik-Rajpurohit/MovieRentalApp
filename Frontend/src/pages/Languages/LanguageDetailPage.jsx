@@ -4,12 +4,13 @@ import { Card } from "primereact/card";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Tag } from "primereact/tag";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import { InputText } from "primereact/inputtext";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import LanguageDialog from "../../components/languages/LanguageDialog";
+import useDeleteEntity from "../../hooks/useDeleteEntity";
 import { getLanguageById, getMoviesByLanguage, deleteLanguage } from "../../services/languageService";
 import { AuthContext } from "../../context/AuthContext";
 import { useToastContext } from "../../context/ToastContext";
@@ -88,23 +89,19 @@ export default function LanguageDetailPage() {
     setPage(0);
   };
 
+  const { confirmDelete } = useDeleteEntity({
+    deleteFn: deleteLanguage,
+    redirectPath: "/languages",
+    entityName: "Language",
+  });
+
   // Prompt confirmation dialog before deleting this language
   const handleDelete = () => {
-    confirmDialog({
-      message: `Delete language "${language?.name}"? Movies using this language will be affected.`,
-      header: "Delete Language",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        try {
-          await deleteLanguage(id);
-          showSuccess("Language deleted successfully");
-          navigate("/languages");
-        } catch (err) {
-          showError(err.response?.data?.message || err.message || "Failed to delete language");
-        }
-      },
-    });
+    confirmDelete(
+      id,
+      language?.name,
+      `Delete language "${language?.name}"? Movies using this language will be affected.`
+    );
   };
 
   // Show loading spinner while language profile is loading

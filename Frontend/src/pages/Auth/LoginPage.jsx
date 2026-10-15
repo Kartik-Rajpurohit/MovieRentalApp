@@ -87,7 +87,7 @@ export default function LoginPage() {
               placeholder="Enter your email"
               type="email"
               style={{ width: "100%" }}
-              onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             />
           </div>
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
               toggleMask
               style={{ width: "100%" }}
               feedback={false}
-              onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             />
           </div>
 

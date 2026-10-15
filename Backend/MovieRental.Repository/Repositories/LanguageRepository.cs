@@ -18,12 +18,11 @@ public class LanguageRepository : ILanguageRepository
 
     // Reads all active languages without tracking, including related movies for counting.
     public IQueryable<Language> GetAllLanguages()
-        => _context.Languages.AsNoTracking().Where(l => !l.IsDeleted).Include(l => l.Movies).AsQueryable();
+        => _context.Languages.AsNoTracking().Include(l => l.Movies).AsQueryable();
 
     // Finds an active language by its ID along with its associated movies.
     public async Task<Language?> GetLanguageByIdAsync(int id)
         => await _context.Languages
-            .Where(l => !l.IsDeleted)
             .Include(l => l.Movies)
             .FirstOrDefaultAsync(l => l.LanguageId == id);
 
@@ -61,7 +60,7 @@ public class LanguageRepository : ILanguageRepository
     public IQueryable<Movie> GetMoviesByLanguageId(int languageId)
         => _context.Movies
             .AsNoTracking()
-            .Where(m => m.LanguageId == languageId && !m.IsDeleted)
+            .Where(m => m.LanguageId == languageId)
             .Include(m => m.Language)
             .Include(m => m.MovieCategories)
                 .ThenInclude(mc => mc.Category) // Load categories for mapping in service

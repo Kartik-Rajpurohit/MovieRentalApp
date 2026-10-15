@@ -60,6 +60,9 @@ export default function LanguageDialog({ visible, onHide, onSuccess, mode = "add
       footer={footer}
       style={{ width: "380px" }}
       modal
+      closeOnEscape
+      focusOnShow
+      dismissableMask
     >
       <div style={{ paddingTop: "8px" }}>
         <label style={labelStyle}>Name</label>

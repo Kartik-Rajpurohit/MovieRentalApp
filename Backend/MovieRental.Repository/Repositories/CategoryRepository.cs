@@ -21,7 +21,6 @@ namespace MovieRental.Repository.Repositories
         {
             return _context.Categories
                 .AsNoTracking()
-                .Where(c => !c.IsDeleted)
                 .Include(c => c.MovieCategories);
         }
 
@@ -29,7 +28,6 @@ namespace MovieRental.Repository.Repositories
         public async Task<Category?> GetCategoryByIdAsync(int id)
         {
             return await _context.Categories
-                .Where(c => !c.IsDeleted)
                 .Include(c => c.MovieCategories)
                 .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
@@ -65,7 +63,7 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Movie> GetMoviesByCategoryId(int categoryId)
             => _context.MovieCategories
                 .AsNoTracking()
-                .Where(mc => mc.CategoryId == categoryId && !mc.Movie.IsDeleted)
+                .Where(mc => mc.CategoryId == categoryId)
                 .Select(mc => mc.Movie)
                 .AsQueryable();
     }

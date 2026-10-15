@@ -1,4 +1,4 @@
-import { Dialog } from "primereact/dialog";
+import Modal from "./Modal";
 import { Button } from "primereact/button";
 
 // Reusable modal dialog for configuring and applying table filters
@@ -25,13 +25,12 @@ export default function FilterDialog({
   );
 
   return (
-    <Dialog
+    <Modal
       header={title}
       visible={visible}
       onHide={onHide}
       footer={footer}
       style={{ width: "380px" }}
-      modal
     >
       <div
         style={{
@@ -43,6 +42,6 @@ export default function FilterDialog({
       >
         {children}
       </div>
-    </Dialog>
+    </Modal>
   );
 }

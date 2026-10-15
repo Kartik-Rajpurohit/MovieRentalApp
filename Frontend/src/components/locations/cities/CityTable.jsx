@@ -127,6 +127,7 @@ export default function CityTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter cities"
           />
           {filters.countryId !== null && (
             <Badge

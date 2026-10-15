@@ -17,7 +17,6 @@ namespace MovieRental.Repository.Repositories
         {
             return _context.Staff
                 .AsNoTracking()
-                .Where(s => !s.IsDeleted)
                 .Include(s => s.User)
                 .AsQueryable();
         }
@@ -26,7 +25,6 @@ namespace MovieRental.Repository.Repositories
         public async Task<Staff?> GetStaffByIdAsync(int id)
         {
             return await _context.Staff
-                .Where(s => !s.IsDeleted)
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Role)
                 .Include(s => s.User)

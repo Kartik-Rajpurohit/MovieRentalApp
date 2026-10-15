@@ -22,22 +22,20 @@ namespace MovieRental.Repository.Repositories
         public IQueryable<Movie> GetAllMovies()
         {
             return _context.Movies
-                .AsNoTracking()
-                .Where(m => !m.IsDeleted);
+                .AsNoTracking();
         }
 
         // Finds an active movie by ID with all related categories, actors, languages, and inventory items.
         public async Task<Movie?> GetMovieByIdAsync(int id)
         {
             return await _context.Movies
-                .Where(m => !m.IsDeleted)
                 .Include(m => m.Language)
                 .Include(m => m.OriginalLanguage)
                 .Include(m => m.MovieCategories)
                     .ThenInclude(mc => mc.Category)
                 .Include(m => m.MovieActors)
                     .ThenInclude(ma => ma.Actor)
-                .Include(m => m.Inventories.Where(i => !i.IsDeleted))
+                .Include(m => m.Inventories)
                 .FirstOrDefaultAsync(m => m.MovieId == id);
         }
 
@@ -75,14 +73,14 @@ namespace MovieRental.Repository.Repositories
 
         // Returns all active languages without tracking for movie form dropdowns.
         public IQueryable<Language> GetAllLanguages()
-            => _context.Languages.AsNoTracking().Where(l => !l.IsDeleted).AsQueryable();
+            => _context.Languages.AsNoTracking().AsQueryable();
 
         // Returns all active categories without tracking for movie genre selection.
         public IQueryable<Category> GetAllCategories()
-            => _context.Categories.AsNoTracking().Where(c => !c.IsDeleted).AsQueryable();
+            => _context.Categories.AsNoTracking().AsQueryable();
 
         // Returns all active actors without tracking for movie cast selection.
         public IQueryable<Actor> GetAllActors()
-            => _context.Actors.AsNoTracking().Where(a => !a.IsDeleted).AsQueryable();
+            => _context.Actors.AsNoTracking().AsQueryable();
     }
 }

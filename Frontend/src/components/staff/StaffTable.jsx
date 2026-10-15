@@ -142,6 +142,7 @@ export default function StaffTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={openFilter}
+            aria-label="Filter staff"
           />
           {activeCount > 0 && (
             <Badge

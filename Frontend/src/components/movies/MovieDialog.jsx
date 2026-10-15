@@ -94,17 +94,19 @@ export default function MovieDialog({
   const validate = () => {
     const e = {};
     if (!form.title?.trim()) e.title = "Title is required";
-    if (!form.languageId) e.languageId = "Language is required";
-    if (!form.rentalDuration) e.rentalDuration = "Rental duration is required";
-    if (!form.rentalRate) e.rentalRate = "Rental rate is required";
-    if (!form.replacementCost)
+    if (!form.languageId || Number(form.languageId) <= 0)
+      e.languageId = "Language is required";
+    if (!form.rentalDuration || Number(form.rentalDuration) <= 0)
+      e.rentalDuration = "Rental duration is required";
+    if (form.rentalRate === null || form.rentalRate === undefined || Number(form.rentalRate) < 0)
+      e.rentalRate = "Rental rate is required";
+    if (form.replacementCost === null || form.replacementCost === undefined || Number(form.replacementCost) < 0)
       e.replacementCost = "Replacement cost is required";
     return e;
   };
 
   // Create or update the movie record via API
   const handleSubmit = async () => {
-
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -113,39 +115,31 @@ export default function MovieDialog({
 
     setLoading(true);
     try {
+      const payload = {
+        title: form.title?.trim(),
+        description: form.description?.trim() || null,
+        releaseYear: form.releaseYear ? Number(form.releaseYear) : null,
+        languageId: form.languageId ? Number(form.languageId) : null,
+        originalLanguageId: form.originalLanguageId
+          ? Number(form.originalLanguageId)
+          : null,
+        rentalDuration: Number(form.rentalDuration),
+        rentalRate: Number(form.rentalRate),
+        length: form.length ? Number(form.length) : null,
+        replacementCost: Number(form.replacementCost),
+        rating: form.rating || null,
+        specialFeatures: form.specialFeatures ?? [],
+        categoryIds: form.categoryIds ?? [],
+        actorIds: form.actorIds ?? [],
+      };
+
       if (isEdit) {
         await updateMovie({
           movieId: form.movieId,
-          title: form.title,
-          description: form.description,
-          releaseYear: form.releaseYear,
-          languageId: form.languageId,
-          originalLanguageId: form.originalLanguageId,
-          rentalDuration: form.rentalDuration,
-          rentalRate: form.rentalRate,
-          length: form.length,
-          replacementCost: form.replacementCost,
-          rating: form.rating,
-          specialFeatures: form.specialFeatures,
-          categoryIds: form.categoryIds,
-          actorIds: form.actorIds,
+          ...payload,
         });
       } else {
-        await createMovie({
-          title: form.title,
-          description: form.description,
-          releaseYear: form.releaseYear,
-          languageId: form.languageId,
-          originalLanguageId: form.originalLanguageId,
-          rentalDuration: form.rentalDuration,
-          rentalRate: form.rentalRate,
-          length: form.length,
-          replacementCost: form.replacementCost,
-          rating: form.rating,
-          specialFeatures: form.specialFeatures,
-          categoryIds: form.categoryIds,
-          actorIds: form.actorIds,
-        });
+        await createMovie(payload);
       }
 
       setForm(emptyForm);
@@ -188,6 +182,9 @@ export default function MovieDialog({
       footer={footer}
       style={{ width: "560px" }}
       modal
+      closeOnEscape
+      focusOnShow
+      dismissableMask
     >
       <MovieFormFields
         form={form}

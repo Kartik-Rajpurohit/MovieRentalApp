@@ -4,13 +4,14 @@ import { Tag } from "primereact/tag";
 import { Card } from "primereact/card";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import CategoryDialog from "../../components/categories/CategoryDialog";
 import SearchBar from "../../components/common/SearchBar";
 import usePagination from "../../hooks/usePagination";
+import useDeleteEntity from "../../hooks/useDeleteEntity";
 import {
   getCategoryById,
   deleteCategory,
@@ -109,23 +110,19 @@ export default function CategoryDetailPage() {
     reset();
   };
 
+  const { confirmDelete } = useDeleteEntity({
+    deleteFn: deleteCategory,
+    redirectPath: "/categories",
+    entityName: "Category",
+  });
+
   // Prompt confirmation before deleting the category
   const handleDelete = () => {
-    confirmDialog({
-      message: `Delete category "${category?.name}"? This will not delete associated movies.`,
-      header: "Delete Category",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        try {
-          await deleteCategory(id);
-          showSuccess("Category deleted successfully");
-          navigate("/categories");
-        } catch (err) {
-          showError(err.response?.data?.message || err.message || "Failed to delete category");
-        }
-      },
-    });
+    confirmDelete(
+      id,
+      category?.name,
+      `Delete category "${category?.name}"? This will not delete associated movies.`
+    );
   };
 
   // Show loading spinner while category details are being fetched

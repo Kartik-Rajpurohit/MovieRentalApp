@@ -2,11 +2,14 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Tag } from "primereact/tag";
 import { Card } from "primereact/card";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import UserDialog from "../../components/users/UserDialog";
 import { toggleUserStatus, getUserById } from "../../services/userService";
+import { useToastContext } from "../../context/ToastContext";
+import { getErrorMessage } from "../../utils/errorUtils";
 
 const fieldLabelStyle = {
   margin: "0 0 4px 0",
@@ -28,6 +31,7 @@ const fieldValueStyle = {
 export default function UserDetailPage() {
   // Read user ID from route parameters
   const { id } = useParams();
+  const { showSuccess, showError } = useToastContext();
 
   // State holding detailed user information
   const [user, setUser] = useState(null);
@@ -54,17 +58,29 @@ export default function UserDetailPage() {
     }
   };
 
-  // Toggle user active/inactive status
-  const handleToggle = async () => {
-    setToggleLoading(true);
-    try {
-      const updated = await toggleUserStatus(user.userId);
-      setUser(updated);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setToggleLoading(false);
-    }
+  // Toggle user active/inactive status with confirmation modal to prevent accidental lockouts
+  const handleToggle = () => {
+    const willDeactivate = user?.isActive;
+    confirmDialog({
+      header: willDeactivate ? "Confirm Account Deactivation" : "Confirm Account Activation",
+      message: `Are you sure you want to ${willDeactivate ? "deactivate" : "activate"} user "${user?.fullName}"? ${willDeactivate ? "This will prevent the user from logging into the system." : ""}`.trim(),
+      icon: "pi pi-exclamation-triangle",
+      acceptClassName: willDeactivate ? "p-button-danger" : "p-button-success",
+      acceptLabel: willDeactivate ? "Deactivate" : "Activate",
+      rejectLabel: "Cancel",
+      accept: async () => {
+        setToggleLoading(true);
+        try {
+          const updated = await toggleUserStatus(user.userId);
+          setUser(updated);
+          showSuccess(`User "${user?.fullName}" successfully ${updated.isActive ? "activated" : "deactivated"}.`);
+        } catch (err) {
+          showError(getErrorMessage(err, "Failed to update user status."));
+        } finally {
+          setToggleLoading(false);
+        }
+      },
+    });
   };
 
   // Show loading spinner while user profile is being fetched
@@ -79,6 +95,7 @@ export default function UserDetailPage() {
 
   return (
     <AppLayout>
+      <ConfirmDialog />
       <UserDialog
         visible={editVisible}
         onHide={() => setEditVisible(false)}

@@ -21,6 +21,7 @@ export default function DetailPageHeader({
         text
         onClick={() => navigate(backPath)}
         style={{ paddingLeft: 0, marginBottom: "12px", color: "#6366f1" }}
+        aria-label={`Back to ${backLabel}`}
       />
 
       {/* Breadcrumb */}
@@ -57,6 +58,7 @@ export default function DetailPageHeader({
                 outlined={action.outlined}
                 onClick={action.onClick}
                 loading={action.loading}
+                aria-label={action.ariaLabel || `${action.label} ${title ?? ""}`.trim()}
               />
             ))}
           </div>

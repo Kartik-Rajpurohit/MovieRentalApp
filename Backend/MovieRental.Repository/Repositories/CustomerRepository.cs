@@ -17,7 +17,6 @@ namespace MovieRental.Repository.Repositories
         {
             return _context.Customers
                 .AsNoTracking()
-                .Where(c => !c.IsDeleted)
                 .Include(c => c.User)
                 .AsQueryable();
         }
@@ -26,7 +25,6 @@ namespace MovieRental.Repository.Repositories
         public async Task<Customer?> GetCustomerByIdAsync(int id)
         {
             return await _context.Customers
-                .Where(c => !c.IsDeleted)
                 .Include(c => c.User)
                     .ThenInclude(u => u!.Role)
                 .Include(c => c.User)

@@ -167,6 +167,9 @@ export default function UserDialog({ visible, onHide, onSuccess, user = null }) 
       footer={footer}
       style={{ width: "440px" }}
       modal
+      closeOnEscape
+      focusOnShow
+      dismissableMask
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px" }}>
 

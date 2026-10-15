@@ -21,7 +21,6 @@ namespace MovieRental.Repository.Repositories
         {
             return _context.Stores
                 .AsNoTracking()
-                .Where(s => !s.IsDeleted)
                 .Include(s => s.ManagerStaff)
                     .ThenInclude(st => st!.User)
                 .Include(s => s.Address)
@@ -42,10 +41,10 @@ namespace MovieRental.Repository.Repositories
 
         // Checks whether an active address exists by ID.
         public async Task<bool> AddressExistsAsync(int addressId)
-            => await _context.Addresses.AnyAsync(a => a.AddressId == addressId && !a.IsDeleted);
+            => await _context.Addresses.AnyAsync(a => a.AddressId == addressId);
 
         // Checks whether an active staff member exists by ID.
         public async Task<bool> StaffExistsAsync(int staffId)
-            => await _context.Staff.AnyAsync(s => s.StaffId == staffId && !s.IsDeleted);
+            => await _context.Staff.AnyAsync(s => s.StaffId == staffId);
     }
 }

@@ -152,6 +152,7 @@ export default function AddressTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter addresses"
           />
           {Object.values(filters).filter((v) => v !== null).length > 0 && (
             <Badge

@@ -103,6 +103,7 @@ export default function InventoryTable() {
             icon="pi pi-sliders-h"
             outlined
             onClick={() => setFilterVisible(true)}
+            aria-label="Filter inventory"
           />
           {(filters.storeId !== null || filters.isAvailable !== null) && (
             <Badge

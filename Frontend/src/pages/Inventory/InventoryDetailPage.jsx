@@ -3,11 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "primereact/card";
 import { Tag } from "primereact/tag";
 import { Button } from "primereact/button";
-import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ConfirmDialog } from "primereact/confirmdialog";
 import AppLayout from "../../components/layout/AppLayout";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import DetailPageHeader from "../../components/common/DetailPageHeader";
 import InventoryDialog from "../../components/inventory/InventoryDialog";
+import useDeleteEntity from "../../hooks/useDeleteEntity";
 import { getInventoryById, deleteInventory } from "../../services/inventoryService";
 
 const FIELD_LABEL = {
@@ -56,18 +57,15 @@ export default function InventoryDetailPage() {
     }
   };
 
+  const { confirmDelete } = useDeleteEntity({
+    deleteFn: deleteInventory,
+    redirectPath: "/inventory",
+    entityName: "Inventory",
+  });
+
   // Prompt confirmation dialog before deleting this inventory item
   const handleDelete = () => {
-    confirmDialog({
-      message: `Are you sure you want to delete Inventory #${id}?`,
-      header: "Delete Inventory",
-      icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
-      accept: async () => {
-        await deleteInventory(id);
-        navigate("/inventory");
-      },
-    });
+    confirmDelete(id, `Inventory #${id}`, `Are you sure you want to delete Inventory #${id}?`);
   };
 
   // Show loading spinner while inventory item data is loading
