@@ -34,9 +34,9 @@ public class CityRepository : ICityRepository
     // Finds an active city by name and country ID with case-insensitive matching.
     public async Task<City?> GetCityByNameAndCountryIdAsync(string name, int countryId)
     {
-        var trimmed = name.Trim();
+        var trimmed = name.Trim().ToLower();
         return await _context.Cities
-            .FirstOrDefaultAsync(c => c.CountryId == countryId && EF.Functions.ILike(c.Name, trimmed));
+            .FirstOrDefaultAsync(c => c.CountryId == countryId && c.Name.ToLower() == trimmed);
     }
 
     // Adds a new city to the database and re-fetches it with related entities.

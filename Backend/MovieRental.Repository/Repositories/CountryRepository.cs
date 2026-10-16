@@ -29,9 +29,9 @@ namespace MovieRental.Repository.Repositories
         // Finds an active country by name with case-insensitive matching.
         public async Task<Country?> GetCountryByNameAsync(string name)
         {
-            var trimmed = name.Trim();
+            var trimmed = name.Trim().ToLower();
             return await _context.Countries
-                .FirstOrDefaultAsync(c => EF.Functions.ILike(c.Name, trimmed));
+                .FirstOrDefaultAsync(c => c.Name.ToLower() == trimmed);
         }
 
         // Adds a new country record to the database and saves changes.
